@@ -53,7 +53,7 @@ O parecer é baseado em inspeção estática: não foram executados builds, test
 - [ ] Definir campos obrigatórios/opcionais, quem registra e quem consulta cada dado.
 - [ ] Confirmar cálculo de duração, hora-aula, intervalos, arredondamento, fuso e passagem pela meia-noite.
 - [ ] Confirmar regras de correção, cancelamento, filtros e totalização.
-- [ ] Escrever a história principal e critérios de aceitação em um documento de requisitos.
+- [x] Escrever a história principal e critérios de aceitação em um documento de requisitos: [rascunho para revisão](docs/requisitos.md); aprovação da professora pendente.
 - [ ] Validar três exemplos com resultados esperados: aula comum, aula com intervalo e registro inválido.
 - [ ] Conferir se todas as informações exigidas pela planilha podem ser derivadas do registro.
 - [ ] Obter a revisão dos requisitos por Maria Luzia ou outra professora responsável.
@@ -228,5 +228,6 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 | Etapa | Data | Evidências e resultados | Pendências / decisão |
 | --- | --- | --- | --- |
 | Análise inicial | 12/10/2026 | Leitura do roadmap, instruções, questionário, código e configurações; sem execução da aplicação | Nenhuma etapa integralmente validada nesta análise |
+| 0 — História e critérios de aceitação | 12/10/2026 | Documento `docs/requisitos.md` conferido contra o fluxo do roadmap; critérios propostos e roteiro de revisão registrados | Respostas, exemplos e aprovação da professora pendentes; etapa 0 permanece aberta |
 
 **Próxima ação:** concluir a descoberta da etapa 0 com Maria Luzia. A estrutura da etapa 1 já foi iniciada, mas isso não substitui a confirmação dos requisitos nem a validação técnica do ambiente.
