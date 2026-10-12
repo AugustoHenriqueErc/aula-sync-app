@@ -7,15 +7,23 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json"
+    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
+    "format": "prettier --write \"src/**/*.{svelte,ts,js,css}\" \"*.{js,ts,json,html}\"",
+    "format:check": "prettier --check \"src/**/*.{svelte,ts,js,css}\" \"*.{js,ts,json,html}\""
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.2.0",
     "@tsconfig/svelte": "^5.0.8",
     "@types/node": "^24.13.3",
+    "prettier": "3.9.10",
+    "prettier-plugin-svelte": "4.1.1",
     "svelte": "^5.56.8",
     "svelte-check": "^4.7.3",
     "typescript": "~6.0.2",
     "vite": "^8.2.0"
+  },
+  "engines": {
+    "node": ">=22.23.0 <23",
+    "npm": ">=10.9.8 <11"
   }
 }
