@@ -4,6 +4,18 @@ Status: rascunho para revisão com Maria Luzia, elaborado em 12/10/2026.
 Base: [roadmap](../ROADMAP.md) e [roteiro de perguntas](perguntas-para-maria-luzia.md).
 Ainda não foram registradas respostas ou aprovação da professora.
 
+## Decisão sobre a primeira demonstração
+
+Em 12/10/2026, o desenvolvedor decidiu construir o MVP local antes do primeiro
+contato com Maria Luzia, para apresentar o fluxo e ajustar o produto a partir do
+feedback. A descoberta permanece pendente, mas não bloqueia a preparação técnica.
+
+A demonstração usará dados fictícios. Campos e regras adotados para o MVP deverão
+ser registrados como hipóteses ao chegar à etapa de domínio, acompanhados de
+exemplos de teste. Eles não representam regras institucionais aprovadas.
+O objetivo é chegar ao cadastro, persistência, histórico e total de carga horária,
+seguindo uma etapa por vez até o marco C. A integração Google fica para depois.
+
 ## História principal
 
 Como professora, quero registrar uma aula uma única vez, consultar esse registro
