@@ -1,0 +1,35 @@
+# Configurações locais e credenciais
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+/credentials*.json
+/token*.json
+
+# SQLite e arquivos auxiliares
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+
+# Backups locais
+backups/
+*.bak
+
+# Dependências e builds
+node_modules/
+dist/
+dist-ssr/
+/backend/bin/
+/backend/app-sync-backend
+/backend/app-sync-backend.exe
+*.test
+*.exe
+
+# Logs e cobertura
+*.log
+coverage/
+coverage.out
