@@ -8,12 +8,12 @@ Base: [ROADMAP.md](ROADMAP.md), [AGENTS.md](AGENTS.md), código e configuraçõe
 
 **Sim, o plano é tecnicamente viável para o escopo incremental descrito.** A separação entre frontend, API, regras de domínio e persistência permite construir e validar o fluxo local antes da integração. Não foi identificado, na leitura do repositório, impedimento estrutural que exija trocar a arquitetura proposta.
 
-O parecer é baseado em inspeção estática: não foram executados builds, testes, servidores nem chamadas ao Google. A compatibilidade das versões declaradas e o funcionamento no ambiente precisam ser comprovados na etapa 1. Viabilidade não significa que as etapas já estejam implementadas, nem permite estimar prazo sem conhecer disponibilidade e requisitos finais.
+O parecer inicial foi baseado em inspeção estática. A etapa 1 foi posteriormente validada com builds, verificações e respostas HTTP locais, conforme o registro abaixo; não foram feitas chamadas ao Google. Viabilidade não significa que as etapas já estejam implementadas, nem permite estimar prazo sem conhecer disponibilidade e requisitos finais.
 
 ### Condições e decisões pendentes
 
-- **Regras reais:** ainda não há respostas registradas ao questionário. Campos, intervalos, hora-aula, arredondamento, cancelamentos e fuso precisam ser confirmados antes da modelagem da etapa 4.
-- **Ambiente reproduzível:** conferir a versão `go 1.27.0` declarada no `backend/go.mod` e as dependências com o ambiente utilizado; definir também a versão de Node.js. Não alterar versões por suposição.
+- **Regras reais:** ainda não há respostas registradas ao questionário. Para o MVP demonstrativo, campos e regras poderão ser definidos como hipóteses explícitas na etapa 4; a confirmação institucional ocorrerá após a apresentação, conforme a decisão em `docs/requisitos.md`.
+- **Ambiente reproduzível:** Go 1.27.0, Node.js 22.23.0 e npm 10.9.8 validados na etapa 1. Versões e comandos documentados no README.
 - **Integração Google:** a viabilidade operacional depende de permissões, modelos de arquivos, autenticação e limites do ambiente institucional. Comprovar esses pontos com arquivos de teste nas etapas 10 a 12.
 - **Correções após sincronizar:** definir como edições e cancelamentos locais atualizam o Google, como detectar uma versão desatualizada e o que fazer se alguém editar a planilha manualmente. O SQLite continua sendo a fonte principal.
 - **Vários destinos:** acompanhar Sheets, Drive e Docs separadamente, para uma falha parcial não obrigar a repetir operações já concluídas nem gerar duplicatas.
@@ -25,12 +25,12 @@ O parecer é baseado em inspeção estática: não foram executados builds, test
 | Área | Evidência no repositório | Situação |
 | --- | --- | --- |
 | Planejamento | `ROADMAP.md`, `AGENTS.md` e questionário | Documentados; requisitos ainda precisam de confirmação |
-| Backend mínimo | `backend/main.go`: Fiber, `GET /` com texto e porta fixa `3000` | Código presente; execução não validada nesta análise |
+| Backend mínimo | `backend/main.go`: Fiber, `GET /` com texto e porta fixa `3000` | Build, análise estática e resposta HTTP validados na etapa 1 |
 | Frontend mínimo | `frontend/src/App.svelte`: mensagem estática | Código presente; ainda não consome a API |
-| Ferramentas do frontend | `package.json`, `package-lock.json`, configurações Svelte/Vite/TypeScript | Scripts `dev`, `check` e `build` presentes; execução pendente |
-| Documentação de execução | `README.md` da raiz vazio; README do frontend é do template | Pendente |
-| Configuração | `.env.example` vazio | Pendente |
-| Arquivos ignorados | `.gitgnore` da raiz vazio e com nome incorreto; `frontend/.gitignore` presente | Falta `.gitignore` adequado na raiz |
+| Ferramentas do frontend | `package.json`, `package-lock.json`, configurações Svelte/Vite/TypeScript | Scripts de formatação, checagem e build validados na etapa 1 |
+| Documentação de execução | README da raiz com comandos e limitações atuais | Comandos reproduzidos em cópia limpa do projeto |
+| Configuração | `.env.example` com valores previstos e carregamento explicado no README | Modelo documentado; consumo nas etapas 2 e 3 |
+| Arquivos ignorados | `.gitignore` na raiz e no frontend | Regras conferidas com `git check-ignore` |
 | Saúde e comunicação | Não há `GET /health` nem chamada `fetch` no componente principal | Pendente |
 | Domínio e persistência | Não foram encontrados modelo de aula, driver SQLite ou migrações | Pendente |
 | Testes da aplicação | Não foram encontrados arquivos de teste da aplicação | Pendente |
@@ -43,6 +43,12 @@ O parecer é baseado em inspeção estática: não foram executados builds, test
 - Trabalhar em uma etapa por vez, conforme `AGENTS.md`; este documento organiza o trabalho, sem autorizar antecipação de funcionalidades.
 - Só marcar **Etapa concluída** depois de executar a validação indicada e registrar a evidência.
 - Consultar o `ROADMAP.md` para os tópicos de estudo de cada etapa.
+
+**Decisão de execução (12/10/2026):** construir o MVP local para o primeiro contato
+com Maria Luzia, usando dados fictícios e hipóteses documentadas. A etapa 0 permanece
+pendente de revisão; a implementação técnica prossegue pela etapa 1, uma etapa por
+vez. Esta decisão substitui a exigência de validação prévia para a demonstração,
+sem representar aprovação das regras pela professora.
 
 ## Etapa 0 — Descoberta do processo real
 
@@ -64,15 +70,15 @@ O parecer é baseado em inspeção estática: não foram executados builds, test
 - [x] Criar a base do frontend com Svelte, Vite e TypeScript.
 - [x] Criar a base do backend com Go e Fiber.
 - [x] Declarar scripts de desenvolvimento, checagem e build do frontend.
-- [ ] Corrigir o arquivo `.gitgnore` para `.gitignore` e definir regras para segredos, banco local, backups, binários e artefatos gerados, preservando `.env.example`.
-- [ ] Preencher `.env.example` com configurações previstas e valores fictícios; explicar como cada aplicação as carregará.
-- [ ] Conferir versões e dependências declaradas e documentar as versões suportadas de Go, Node.js e npm.
-- [ ] Preencher o README da raiz com instalação, diretórios de execução, portas e comandos de desenvolvimento.
-- [ ] Definir comandos de formatação e verificações básicas para os dois projetos.
-- [ ] Validar a instalação em ambiente limpo e iniciar frontend/backend separadamente.
-- [ ] Executar `npm run check` e `npm run build` em `frontend/` e `go vet ./...` e `go build ./...` em `backend/`.
-- [ ] Conferir formatação e verificar que segredos e artefatos locais não estão versionados.
-- [ ] **Etapa 1 concluída:** outra pessoa consegue reproduzir a execução pelo README.
+- [x] Corrigir o arquivo `.gitgnore` para `.gitignore` e definir regras para segredos, banco local, backups, binários e artefatos gerados, preservando `.env.example`.
+- [x] Preencher `.env.example` com configurações previstas e valores fictícios; explicar como cada aplicação as carregará.
+- [x] Conferir versões e dependências declaradas e documentar as versões suportadas de Go, Node.js e npm.
+- [x] Preencher o README da raiz com instalação, diretórios de execução, portas e comandos de desenvolvimento.
+- [x] Definir comandos de formatação e verificações básicas para os dois projetos.
+- [x] Validar a instalação em ambiente limpo e iniciar frontend/backend separadamente.
+- [x] Executar `npm run check` e `npm run build` em `frontend/` e `go vet ./...` e `go build ./...` em `backend/`.
+- [x] Conferir formatação e verificar que segredos e artefatos locais não estão versionados.
+- [x] **Etapa 1 concluída:** outra pessoa consegue reproduzir a execução pelo README.
 
 ## Etapa 2 — Backend e primeiro endpoint
 
@@ -97,7 +103,7 @@ O parecer é baseado em inspeção estática: não foram executados builds, test
 
 ## Etapa 4 — Domínio de aula e carga horária
 
-- [ ] Conferir se as regras necessárias da etapa 0 estão aprovadas antes de modelar.
+- [ ] Documentar as hipóteses de campos e cálculo do MVP e os exemplos esperados antes de modelar; manter a aprovação da professora pendente até a apresentação.
 - [ ] Definir `Aula`, separando entrada HTTP, domínio e representação persistida quando necessário.
 - [ ] Implementar validações e cálculo de duração independentes de HTTP e banco.
 - [ ] Aplicar as regras confirmadas de intervalos, arredondamento, fuso e início/término.
@@ -229,5 +235,7 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 | --- | --- | --- | --- |
 | Análise inicial | 12/10/2026 | Leitura do roadmap, instruções, questionário, código e configurações; sem execução da aplicação | Nenhuma etapa integralmente validada nesta análise |
 | 0 — História e critérios de aceitação | 12/10/2026 | Documento `docs/requisitos.md` conferido contra o fluxo do roadmap; critérios propostos e roteiro de revisão registrados | Respostas, exemplos e aprovação da professora pendentes; etapa 0 permanece aberta |
+| 1 — Preparação inicial | 12/10/2026 | Regras do `.gitignore` verificadas; `.env.example` e README preenchidos; Node.js 22.23.0 e npm 10.9.8 disponíveis | Frontend: `npm ci`, `npm run check` (0 erros/avisos) e `npm run build` aprovados; npm reportou 2 vulnerabilidades altas, a investigar. Go não encontrado; execução dos servidores, validação do backend e conclusão da etapa pendentes |
+| 1 — Conclusão | 12/10/2026 | Go 1.27.0; `gofmt`, `go mod verify`, `go vet`, build; cópia limpa com `npm ci`, `format:check`, `check` e `build`; frontend e backend responderam HTTP 200; npm sem vulnerabilidades; revisão de arquivos versionados sem achados | Etapa 1 concluída no Linux; cache Go reutilizado; sem revisão visual. Mensagens em `docs/commits-etapa-1.md` |
 
-**Próxima ação:** concluir a descoberta da etapa 0 com Maria Luzia. A estrutura da etapa 1 já foi iniciada, mas isso não substitui a confirmação dos requisitos nem a validação técnica do ambiente.
+**Próxima ação:** iniciar a etapa 2 (backend e primeiro endpoint) e seguir incrementalmente até o MVP local. Validar as hipóteses com Maria Luzia após a demonstração; a etapa 0 continua pendente.

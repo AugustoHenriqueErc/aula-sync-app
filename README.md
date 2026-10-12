@@ -1,0 +1,133 @@
+# Aula Sync App
+
+Projeto de estudo para registrar aulas e consultar a carga horária. Frontend em
+Svelte, Vite e TypeScript; backend em Go com Fiber. O SQLite será a fonte principal
+dos dados quando a persistência for implementada.
+
+## Estado atual e MVP
+
+Existem apenas as bases do frontend e backend, com mensagens estáticas. Cadastro,
+cálculo, histórico e persistência ainda não estão implementados.
+O objetivo é construir um MVP local com dados fictícios para apresentar a Maria
+Luzia e ajustar as hipóteses após o primeiro contato. Consulte os
+[requisitos](docs/requisitos.md) e o [checklist](CHECKLIST_IMPLEMENTACAO.md).
+A integração Google será feita depois do funcionamento local.
+
+## Ferramentas
+
+Ambiente validado em Linux, com instalação em uma cópia limpa do projeto:
+
+- Node.js 22.23.0 e npm 10.9.8. A versão de Node está em `.nvmrc`;
+  com nvm instalado, execute `nvm install` e `nvm use` na raiz.
+- Go 1.27.0, conforme `backend/go.mod`. A instalação local 1.22.2 baixou
+  automaticamente essa toolchain ao executar Go dentro de `backend/`.
+  Esse primeiro uso requer acesso à rede; com `GOTOOLCHAIN=local`, é necessário
+  já ter Go 1.27.0 instalado.
+
+O frontend declara Node 22 a partir de 22.23.0 e npm 10 a partir de 10.9.8;
+estas são as versões exatas testadas. Preserve `frontend/package-lock.json`
+e `backend/go.sum` para reproduzir as dependências.
+
+## Executar o frontend
+
+Em um terminal, a partir da raiz do repositório:
+
+```bash
+cd frontend
+npm ci
+npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+```
+
+Abra http://127.0.0.1:5173. A página deve mostrar a mensagem do frontend mínimo.
+O frontend ainda não faz chamadas ao backend.
+
+## Executar o backend
+
+Com Go instalado, em outro terminal, a partir da raiz:
+
+```bash
+cd backend
+go version
+go mod download
+go run .
+```
+
+A porta atual é fixa em 3000. Em outro terminal:
+
+```bash
+curl --fail http://localhost:3000/
+```
+
+A resposta esperada é `Olá Este é o Backend Mínimo de aula-sync-app!`.
+O endpoint `/health` será implementado na etapa 2. Encerre cada servidor com Ctrl+C.
+
+## Configurações de ambiente
+
+O arquivo `.env.example` documenta valores locais previstos. No código atual,
+nenhuma das aplicações consome essas variáveis; copiá-lo não muda o comportamento.
+
+Na etapa 2, o backend lerá `PORT` do ambiente do processo. Go não carrega arquivos
+`.env` automaticamente; a forma de fornecer a variável será documentada junto
+com a implementação. Por enquanto, a porta permanece fixa em 3000.
+
+Na etapa 3, `VITE_API_URL` poderá ser copiada para `frontend/.env.local`, carregado
+pelo Vite ao iniciar o frontend. O acesso no código será implementado nessa etapa.
+Variáveis com prefixo `VITE_` são públicas e nunca devem conter segredos.
+
+## Verificações
+
+No diretório `frontend/`:
+
+```bash
+npm run format:check
+npm run check
+npm run build
+```
+
+Para aplicar a formatação do frontend, execute `npm run format`.
+
+No diretório `backend/`:
+
+```bash
+gofmt -l .
+go mod verify
+go vet ./...
+go build -o /tmp/aula-sync-backend .
+```
+
+`gofmt -l` não deve listar arquivos; para aplicar a formatação, use
+`gofmt -w .`. O build em `/tmp` evita deixar um binário na árvore do projeto.
+
+Para conferir as regras de arquivos ignorados, na raiz:
+
+```bash
+git check-ignore -v .env backend/aulas.db backend/aulas.db-wal backups/aulas.sql backend/bin/server frontend/dist/index.html
+git check-ignore .env.example frontend/package-lock.json backend/go.sum
+git diff --check
+```
+
+O primeiro comando deve listar as regras correspondentes. O segundo deve ficar
+sem saída e retornar código 1: esses arquivos devem continuar versionáveis.
+O terceiro deve ficar sem saída e retornar código 0.
+O `.gitignore` não remove do histórico arquivos que já estejam versionados.
+
+## Validação da etapa 1
+
+Em 12/10/2026, foram executados em uma cópia temporária sem `node_modules`,
+`dist` ou binário prévio: `npm ci`, formatação, checagem Svelte/TypeScript,
+build do frontend, download e verificação de módulos Go, `go vet` e build do
+backend. Todos passaram. O cache global de Go foi reutilizado; este teste
+não equivale a uma máquina nova ou à validação de outros sistemas operacionais.
+
+O frontend em 5173 e o backend em 3000 responderam HTTP 200 com o conteúdo
+esperado. O componente Svelte também foi servido corretamente. Essa conferência
+foi feita por HTTP, sem revisão visual em navegador. Os processos de teste
+foram encerrados ao final.
+
+Após atualizar `devalue` e `source-map-js` dentro das faixas permitidas,
+o npm reportou zero vulnerabilidades. A revisão dos arquivos versionados
+não encontrou artefatos locais ou padrões comuns de credenciais; isso não é
+uma auditoria completa do histórico do Git.
+
+As mensagens de commit por checkbox estão em
+[docs/commits-etapa-1.md](docs/commits-etapa-1.md). Nenhum commit foi executado.
