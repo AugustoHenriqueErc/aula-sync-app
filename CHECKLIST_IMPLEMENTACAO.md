@@ -93,13 +93,13 @@ sem representar aprovação das regras pela professora.
 
 ## Etapa 3 — Frontend e consumo da API
 
-- [ ] Configurar a URL da API no frontend e documentar o valor local.
-- [ ] Definir proxy de desenvolvimento ou CORS compatível com as origens utilizadas.
-- [ ] Criar página de diagnóstico consumindo `GET /health` de verdade.
-- [ ] Exibir estados de carregamento, sucesso e erro compreensível.
-- [ ] Validar o comportamento com a API ligada e desligada.
-- [ ] Executar `npm run check` e `npm run build` em `frontend/`.
-- [ ] **Etapa 3 concluída:** comunicação frontend/backend comprovada no navegador.
+- [x] Configurar a URL da API no frontend e documentar o valor local.
+- [x] Definir proxy de desenvolvimento ou CORS compatível com as origens utilizadas.
+- [x] Criar página de diagnóstico consumindo `GET /health` de verdade.
+- [x] Exibir estados de carregamento, sucesso e erro compreensível.
+- [x] Validar o comportamento com a API ligada e desligada.
+- [x] Executar `npm run check` e `npm run build` em `frontend/`.
+- [x] **Etapa 3 concluída:** comunicação frontend/backend comprovada no navegador.
 
 ## Etapa 4 — Domínio de aula e carga horária
 
@@ -220,7 +220,7 @@ sem representar aprovação das regras pela professora.
 
 ## Marcos
 
-- [ ] **A — Comunicação web:** etapas 1 a 3 validadas.
+- [x] **A — Comunicação web:** etapas 1 a 3 validadas.
 - [ ] **B — Regra confiável:** etapa 4 validada com os exemplos da descoberta.
 - [ ] **C — Produto local útil:** etapas 5 a 8 validadas.
 - [ ] **D — Operação segura:** etapa 9 validada.
@@ -237,7 +237,7 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 | 0 — História e critérios de aceitação | 12/10/2026 | Documento `docs/requisitos.md` conferido contra o fluxo do roadmap; critérios propostos e roteiro de revisão registrados | Respostas, exemplos e aprovação da professora pendentes; etapa 0 permanece aberta |
 | 1 — Preparação inicial | 12/10/2026 | Regras do `.gitignore` verificadas; `.env.example` e README preenchidos; Node.js 22.23.0 e npm 10.9.8 disponíveis | Frontend: `npm ci`, `npm run check` (0 erros/avisos) e `npm run build` aprovados; npm reportou 2 vulnerabilidades altas, a investigar. Go não encontrado; execução dos servidores, validação do backend e conclusão da etapa pendentes |
 | 1 — Conclusão | 12/10/2026 | Go 1.27.0; `gofmt`, `go mod verify`, `go vet`, build; cópia limpa com `npm ci`, `format:check`, `check` e `build`; frontend e backend responderam HTTP 200; npm sem vulnerabilidades; revisão de arquivos versionados sem achados | Etapa 1 concluída no Linux; cache Go reutilizado; sem revisão visual. Mensagens em `docs/commits-etapa-1.md` |
-
 | 2 — Backend e primeiro endpoint | 12/10/2026 | `go test ./...`, `go vet ./...` e build aprovados; `/health` validado com HTTP 200 e JSON nas portas 3000 e 3001 via curl; porta inválida rejeitada; testes de erros 400, 404, 500 e 503; contrato e comandos no README | Etapa 2 concluída; processos de teste encerrados |
+| 3 — Frontend e consumo da API | 13/10/2026 | Formatação, check (0 erros/avisos) e build aprovados; Go test/vet/build aprovados; Chrome headless validou proxy em porta alternativa, carregamento, sucesso, backend desligado e recuperação; JSON incompatível e timeout simulados; captura de 375px revisada | Etapa 3 e marco A concluídos; comandos e configuração no README; processos de teste encerrados |
 
-**Próxima ação:** iniciar a etapa 3 (frontend e consumo da API) e seguir incrementalmente até o MVP local. Validar as hipóteses com Maria Luzia após a demonstração; a etapa 0 continua pendente.
+**Próxima ação:** iniciar a etapa 4 (domínio de aula e carga horária), documentando primeiro as hipóteses e os exemplos do MVP. Validar as hipóteses com Maria Luzia após a demonstração; a etapa 0 continua pendente.

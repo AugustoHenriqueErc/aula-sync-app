@@ -7,7 +7,7 @@ dos dados quando a persistência for implementada.
 ## Estado atual e MVP
 
 O backend possui um endpoint de saúde JSON, porta configurável e testes HTTP.
-O frontend ainda exibe uma mensagem estática. Cadastro,
+O frontend consulta a API e exibe carregamento, sucesso ou erro, com nova tentativa. Cadastro,
 cálculo, histórico e persistência ainda não estão implementados.
 O objetivo é construir um MVP local com dados fictícios para apresentar a Maria
 Luzia e ajustar as hipóteses após o primeiro contato. Consulte os
@@ -39,8 +39,9 @@ npm ci
 npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
-Abra http://127.0.0.1:5173. A página deve mostrar a mensagem do frontend mínimo.
-O frontend ainda não faz chamadas ao backend.
+Abra http://127.0.0.1:5173. A página de diagnóstico consulta o backend ao abrir.
+Com a API ligada, deve mostrar **Backend conectado.**; se estiver desligada,
+mostra uma falha e permite tentar novamente.
 
 ## Executar o backend
 
@@ -88,9 +89,28 @@ inteiros entre 1 e 65535 encerram a inicialização com uma mensagem de erro.
 Go não carrega arquivos `.env` automaticamente: use `PORT=3001 go run ./cmd/api`
 ou `export PORT=3001` antes de executar. Copiar `.env.example` não carrega a configuração.
 
-Na etapa 3, `VITE_API_URL` poderá ser copiada para `frontend/.env.local`, carregado
-pelo Vite ao iniciar o frontend. O acesso no código será implementado nessa etapa.
+O frontend funciona com os padrões abaixo sem criar arquivos de configuração.
+Para personalizar, crie `frontend/.env.local` com:
+
+```dotenv
+VITE_API_URL=/api
+API_PROXY_TARGET=http://127.0.0.1:3000
+```
+
+`VITE_API_URL` é a base usada pelo `fetch` no navegador. No desenvolvimento,
+`/api/health` chega ao Vite, que remove `/api` e encaminha `/health` para
+`API_PROXY_TARGET`. O navegador usa a mesma origem do frontend, evitando a
+necessidade de CORS entre as portas locais. Os dois servidores continuam separados.
+
+Se iniciar o Go com `PORT=3001`, altere `API_PROXY_TARGET` para
+`http://127.0.0.1:3001`. Reinicie o Vite após alterar o arquivo. O `.env.example`
+da raiz serve como referência e não é carregado pelo frontend automaticamente.
 Variáveis com prefixo `VITE_` são públicas e nunca devem conter segredos.
+
+Mantenha `VITE_API_URL=/api` para usar o proxy configurado. Uma URL absoluta
+apontando diretamente para outra origem exigiria configurar CORS no backend.
+O proxy atende ao desenvolvimento com `npm run dev`; o build gera arquivos
+estáticos e a hospedagem futura precisará encaminhar `/api` ao backend.
 
 ## Verificações
 
@@ -158,3 +178,32 @@ Em `backend/`, execute `go test -v ./...`. Os testes HTTP usam `httptest` e
 contrato de saúde, rota inexistente, erro de validação e ocultação de detalhes
 em erros 500 e 503. Os testes da configuração cobrem porta padrão, alternativa,
 limites e valores inválidos. As rotas que provocam erros existem somente nos testes.
+
+## Testar a etapa 3
+
+1. Inicie o backend em `backend/` com `go run ./cmd/api`.
+2. Inicie o frontend em `frontend/` com `npm run dev -- --host 127.0.0.1 --port 5173 --strictPort`.
+3. Abra http://127.0.0.1:5173 e confira **Backend conectado.**.
+4. No DevTools, abra a aba Network e confira a chamada `/api/health`, status 200
+   e JSON `{"status":"ok"}`. O estado **Verificando conexão…** pode ser breve;
+   use a limitação de velocidade da aba Network para observá-lo.
+5. Encerre o Go com Ctrl+C e clique em **Verificar novamente**: a página deve
+   mostrar **Falha na conexão.** e orientar a verificar se o backend está ligado.
+6. Reinicie o Go e clique novamente: o sucesso deve voltar sem recarregar a página.
+7. Confira que o botão fica desabilitado durante a consulta e pode receber foco
+   por Tab e ser acionado por Enter. Em largura de celular, a página deve caber
+   sem rolagem horizontal.
+
+A consulta tem limite de cinco segundos e confere se o JSON contém `status: "ok"`.
+Respostas HTTP sem sucesso, JSON inválido ou incompatível e falhas de rede
+produzem mensagens de erro. O estado é uma union TypeScript discriminada pelo
+campo `status`; os dados recebidos são `unknown` até a validação. `onMount`
+inicia a consulta ao montar o componente e cancela a requisição ao desmontá-lo.
+
+Em 13/10/2026, passaram `npm run format:check`, `npm run check` (zero erros e
+avisos), `npm run build`, testes Go, `go vet` e build do backend. A validação no
+Chrome headless usou Go na porta 33003 e Vite na 5174, comprovando o proxy com
+porta alternativa, carregamento, sucesso, backend desligado e recuperação real.
+A interceptação de requisições no navegador foi usada apenas para simular JSON
+incompatível e timeout. A captura em largura de 375px foi revisada, sem rolagem
+horizontal. Os servidores e o navegador de teste foram encerrados ao final.
