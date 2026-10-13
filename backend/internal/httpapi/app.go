@@ -2,22 +2,41 @@ package httpapi
 
 import (
 	"errors"
+
+	"app-sync-backend/internal/aula"
+	"app-sync-backend/internal/storage"
+
 	"github.com/gofiber/fiber/v3"
 )
 
 // New configura a API sem abrir uma porta, permitindo testes HTTP em memória.
-func New() *fiber.App {
-	app := fiber.New(fiber.Config{ErrorHandler: handleError})
+func New(banco *storage.Banco) *fiber.App {
+	app := fiber.New(fiber.Config{ErrorHandler: handleError, BodyLimit: 64 * 1024})
 	app.Get("/", func(c fiber.Ctx) error {
 		return c.SendString("Olá Este é o Backend Mínimo de aula-sync-app!")
 	})
 	app.Get("/health", func(c fiber.Ctx) error {
 		return c.JSON(fiber.Map{"status": "ok"})
 	})
+	registrarRotasAulas(app, banco)
 	return app
 }
 
 func handleError(c fiber.Ctx, err error) error {
+	var validacao *aula.ErroValidacao
+	if errors.As(err, &validacao) {
+		campos := map[string]string{
+			"Data": "data", "Inicio": "inicio", "Fim": "fim", "Turma": "turma",
+			"Conteudo": "conteudo", "Observacoes": "observacoes", "IntervaloMinutos": "intervalo_minutos",
+		}
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+			"error": validacao.Mensagem, "field": campos[validacao.Campo],
+		})
+	}
+	if errors.Is(err, storage.ErrNaoEncontrada) {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Aula não encontrada"})
+	}
+
 	code := fiber.StatusInternalServerError
 	message := "Erro interno do servidor"
 	var httpError *fiber.Error

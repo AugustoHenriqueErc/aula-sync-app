@@ -113,25 +113,25 @@ sem representar aprovação das regras pela professora.
 
 ## Etapa 5 — Persistência com SQLite
 
-- [ ] Escolher e documentar o driver SQLite e seus requisitos de compilação/execução.
-- [ ] Configurar localização do banco e abertura/fechamento da conexão.
-- [ ] Criar a primeira migração versionada com restrições coerentes com o domínio.
-- [ ] Implementar inserção, busca por identificador e listagem de aulas.
-- [ ] Testar migração em banco vazio e comportamento de uma segunda execução.
-- [ ] Criar testes de integração com banco temporário para gravação, leitura e rejeição de dados inválidos.
-- [ ] Confirmar persistência após reiniciar o processo com o banco de desenvolvimento.
-- [ ] **Etapa 5 concluída:** persistência validada sem depender da API.
+- [x] Escolher e documentar o driver SQLite e seus requisitos de compilação/execução.
+- [x] Configurar localização do banco e abertura/fechamento da conexão.
+- [x] Criar a primeira migração versionada com restrições coerentes com o domínio.
+- [x] Implementar inserção, busca por identificador e listagem de aulas.
+- [x] Testar migração em banco vazio e comportamento de uma segunda execução.
+- [x] Criar testes de integração com banco temporário para gravação, leitura e rejeição de dados inválidos.
+- [x] Confirmar persistência após reiniciar o processo com o banco de desenvolvimento.
+- [x] **Etapa 5 concluída:** persistência validada sem depender da API.
 
 ## Etapa 6 — API de cadastro e consulta
 
-- [ ] Documentar e versionar o contrato JSON com exemplos de entrada, saída e erros.
-- [ ] Implementar `POST /aulas`, usando validação e cálculo oficiais do domínio.
-- [ ] Implementar `GET /aulas` com ordenação definida e contrato de paginação quando necessário.
-- [ ] Implementar `GET /aulas/:id`.
-- [ ] Mapear entrada inválida, registro inexistente e falha interna para respostas adequadas.
-- [ ] Testar cadastro e recuperação, JSON inválido, campos inválidos e identificador inexistente.
-- [ ] Comparar respostas com os registros no SQLite e executar testes unitários e de integração.
-- [ ] **Etapa 6 concluída:** cliente HTTP cadastra e consulta aulas com duração correta.
+- [x] Documentar e versionar o contrato JSON com exemplos de entrada, saída e erros.
+- [x] Implementar `POST /aulas`, usando validação e cálculo oficiais do domínio.
+- [x] Implementar `GET /aulas` com ordenação definida e contrato de paginação quando necessário.
+- [x] Implementar `GET /aulas/:id`.
+- [x] Mapear entrada inválida, registro inexistente e falha interna para respostas adequadas.
+- [x] Testar cadastro e recuperação, JSON inválido, campos inválidos e identificador inexistente.
+- [x] Comparar respostas com os registros no SQLite e executar testes unitários e de integração.
+- [x] **Etapa 6 concluída:** cliente HTTP cadastra e consulta aulas com duração correta.
 
 ## Etapa 7 — Formulário web
 
@@ -240,5 +240,7 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 | 2 — Backend e primeiro endpoint | 12/10/2026 | `go test ./...`, `go vet ./...` e build aprovados; `/health` validado com HTTP 200 e JSON nas portas 3000 e 3001 via curl; porta inválida rejeitada; testes de erros 400, 404, 500 e 503; contrato e comandos no README | Etapa 2 concluída; processos de teste encerrados |
 | 3 — Frontend e consumo da API | 13/10/2026 | Formatação, check (0 erros/avisos) e build aprovados; Go test/vet/build aprovados; Chrome headless validou proxy em porta alternativa, carregamento, sucesso, backend desligado e recuperação; JSON incompatível e timeout simulados; captura de 375px revisada | Etapa 3 e marco A concluídos; comandos e configuração no README; processos de teste encerrados |
 | 4 — Domínio de aula | 13/10/2026 | Hipóteses e exemplos em `docs/dominio-aula.md`; testes de tabela aprovados, 100% de cobertura de instruções em `internal/aula`; suíte Go, vet e build aprovados; cálculo sem relógio atual e testado em diferentes fusos locais | Conclusão técnica para o MVP; regras institucionais, etapa 0 e marco B ainda pendentes de revisão com Maria Luzia |
+| 5 — Persistência SQLite | 13/10/2026 | Driver modernc.org/sqlite v1.58.0; testes com CGO_ENABLED=0, vet, mod verify e builds de cmd/db e cmd/api aprovados; migração inicial, repetição, rollback, versão futura, restrições, inserção/busca/listagem e reabertura testados; comandos em processos separados preservaram ID e 105 minutos | Etapa 5 concluída; banco fictício `backend/aulas-demo-etapa5.db` ignorado pelo Git; API será ligada ao repositório na etapa 6; regras institucionais ainda pendentes |
+| 6 — API de cadastro e consulta | 13/10/2026 | Contrato `docs/api-v1.md`; POST /aulas e GET /aulas e /aulas/:id; testes HTTP com SQLite temporário, suíte sem CGO, vet e build aprovados; HTTP real na porta 33006, comparação SQL, persistência após reinício e encerramento por SIGINT/SIGTERM validados | Etapa 6 concluída; listagem integral sem paginação ou filtros; frontend continua diagnóstico; alterações locais de documentação da etapa 5 preservadas |
 
-**Próxima ação:** iniciar a etapa 5 (persistência com SQLite), usando as hipóteses documentadas do MVP. Validar as hipóteses com Maria Luzia após a demonstração; a etapa 0 continua pendente.
+**Próxima ação:** iniciar a etapa 7 (formulário web de cadastro), consumindo o contrato da API e as hipóteses documentadas do MVP. Validar as hipóteses com Maria Luzia após a demonstração; a etapa 0 continua pendente.

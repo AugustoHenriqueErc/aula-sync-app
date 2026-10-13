@@ -13,7 +13,7 @@ import (
 )
 
 func TestHTTPResponses(t *testing.T) {
-	app := New()
+	app, _ := novaAPITeste(t)
 	// Estas rotas existem apenas no teste para exercitar o tratamento de erros.
 	app.Get("/bad-request", func(c fiber.Ctx) error {
 		return fmt.Errorf("validação: %w", fiber.NewError(400, "Entrada inválida"))

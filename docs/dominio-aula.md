@@ -73,8 +73,10 @@ um campo calculado que possa ficar incoerente após alterar os horários. O cál
 valida todo o registro; entradas inválidas retornam zero e erro, nunca uma duração
 utilizável. `Validar` retorna o primeiro `*ErroValidacao`, com `Campo` e `Mensagem`,
 na ordem Data, Inicio, Fim, Turma, Conteudo, relação entre horários e intervalo.
-Ainda não há DTO HTTP nem representação de banco: serão definidos quando essas
-fronteiras existirem.
+A representação persistida da etapa 5 é `storage.Registro`, que reúne ID, aula
+e duração calculada. A etapa 6 define DTOs HTTP em `internal/httpapi/aulas.go`,
+conforme o [contrato JSON v1](api-v1.md). Consulte também a
+[persistência SQLite](persistencia-sqlite.md).
 
 Para executar os testes de tabela, em `backend/`:
 
@@ -84,5 +86,6 @@ go test ./...
 go vet ./...
 ```
 
-A interface web continua exibindo o diagnóstico da etapa 3. Cadastro de aulas e
-persistência serão implementados nas etapas correspondentes.
+A interface web continua exibindo o diagnóstico da etapa 3. A persistência está
+disponível pelo repositório, pelo comando de estudo da etapa 5 e pelos endpoints
+de cadastro e consulta da etapa 6. O formulário web será a etapa 7.

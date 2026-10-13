@@ -1,8 +1,8 @@
 # Aula Sync App
 
 Projeto de estudo para registrar aulas e consultar a carga horária. Frontend em
-Svelte, Vite e TypeScript; backend em Go com Fiber. O SQLite será a fonte principal
-dos dados quando a persistência for implementada.
+Svelte, Vite e TypeScript; backend em Go com Fiber. O SQLite é a fonte principal
+dos registros persistidos localmente.
 
 ## Estado atual e MVP
 
@@ -10,8 +10,10 @@ O backend possui um endpoint de saúde JSON, porta configurável e testes HTTP.
 O frontend consulta a API e exibe carregamento, sucesso ou erro, com nova tentativa.
 O pacote Go `internal/aula` valida aulas e calcula a duração líquida em minutos,
 conforme as [hipóteses do MVP](docs/dominio-aula.md), ainda pendentes de revisão
-com a professora. Cadastro via API/interface, histórico e persistência ainda não
-estão implementados.
+com a professora. A persistência SQLite permite inserir, buscar e listar aulas
+pelo repositório, pelo comando de estudo e pela API HTTP. Os endpoints de cadastro
+e consulta estão descritos no [contrato v1](docs/api-v1.md). O formulário e o
+histórico no navegador ainda não estão implementados.
 O objetivo é construir um MVP local com dados fictícios para apresentar a Maria
 Luzia e ajustar as hipóteses após o primeiro contato. Consulte os
 [requisitos](docs/requisitos.md) e o [checklist](CHECKLIST_IMPLEMENTACAO.md).
@@ -57,7 +59,9 @@ go mod download
 go run ./cmd/api
 ```
 
-A porta padrão é 3000. Em outro terminal:
+A porta padrão é 3000. Ao iniciar, a API abre o SQLite e aplica as migrações.
+O banco padrão é `aulas.db` no diretório de execução; use `DATABASE_PATH` para
+escolher outro arquivo. A pasta deve existir. Em outro terminal:
 
 ```bash
 curl --fail --include http://localhost:3000/health
@@ -81,7 +85,8 @@ a resposta terá `{"error":"Not Found"}`.
 As rotas ficam em `backend/internal/httpapi/app.go`; o ponto de entrada em
 `backend/cmd/api/main.go` lê a configuração e inicia o servidor. O tratamento
 central transforma erros retornados pelos handlers em `{"error":"mensagem"}`,
-preservando o status HTTP. Erros 5xx usam a mensagem genérica
+preservando o status HTTP. Erros de validação de aula retornam 422 e também
+incluem `field`, com o nome do campo JSON. Erros 5xx usam a mensagem genérica
 `Erro interno do servidor` para não expor detalhes internos.
 
 ## Configurações de ambiente
@@ -91,6 +96,13 @@ ambiente do processo; quando ausente ou vazia, usa 3000. Valores que não sejam
 inteiros entre 1 e 65535 encerram a inicialização com uma mensagem de erro.
 Go não carrega arquivos `.env` automaticamente: use `PORT=3001 go run ./cmd/api`
 ou `export PORT=3001` antes de executar. Copiar `.env.example` não carrega a configuração.
+
+`cmd/api` e `cmd/db` leem `DATABASE_PATH`, com padrão `aulas.db` relativo ao
+local de execução. Exemplo em `backend/`:
+`DATABASE_PATH=aulas-api-estudo.db go run ./cmd/api`.
+A API recusa iniciar se o banco não puder ser aberto ou migrado. Ctrl+C ou
+SIGTERM solicita o encerramento HTTP, com espera de até cinco segundos pelas
+requisições em andamento, antes de fechar o banco.
 
 O frontend funciona com os padrões abaixo sem criar arquivos de configuração.
 Para personalizar, crie `frontend/.env.local` com:
@@ -236,3 +248,66 @@ passaram. `go test -cover ./...` registrou 100% de cobertura de instruções no
 pacote `internal/aula`; isso não substitui a validação das hipóteses com Maria
 Luzia. Os exemplos e as decisões de datas, intervalos e unidade de duração estão
 em [docs/dominio-aula.md](docs/dominio-aula.md).
+
+## Testar a etapa 5
+
+A persistência pode ser testada sem iniciar frontend ou API. Em `backend/`:
+
+```bash
+export DATABASE_PATH="$PWD/aulas-estudo.db"
+go run ./cmd/db migrar
+go run ./cmd/db inserir-exemplo
+go run ./cmd/db listar
+unset DATABASE_PATH
+```
+
+O exemplo fictício deve aparecer com ID e duração de 105 minutos. Cada comando
+é um processo separado: os dados permanecem no arquivo após o encerramento.
+Repetir `migrar` preserva os registros; repetir `inserir-exemplo` cria outra aula.
+Sem `DATABASE_PATH`, o caminho padrão é `aulas.db` no diretório de execução.
+O comando Go não carrega `.env` automaticamente; a pasta do banco deve existir.
+
+Para os testes automatizados em bancos temporários e o build do comando:
+
+```bash
+CGO_ENABLED=0 go test -v ./internal/storage
+go test ./...
+go vet ./...
+CGO_ENABLED=0 go build -o /tmp/aula-sync-db ./cmd/db
+```
+
+O driver, a migração, as restrições, as operações e os limites desta etapa estão
+em [docs/persistencia-sqlite.md](docs/persistencia-sqlite.md). A etapa 6 conecta
+essas operações à API; o comando de estudo continua disponível.
+
+## Testar a etapa 6
+
+Inicie a API em `backend/` com `DATABASE_PATH=aulas-api-estudo.db go run ./cmd/api`.
+Em outro terminal, na raiz do projeto:
+
+```bash
+curl --include -X POST http://localhost:3000/aulas \
+  -H 'Content-Type: application/json' \
+  --data-binary @docs/exemplos/aula.json
+curl --include http://localhost:3000/aulas
+curl --include http://localhost:3000/aulas/1
+```
+
+O cadastro responde 201, `Location` e o registro com duração de 105 minutos.
+Substitua `1` pelo ID recebido. Reinicie a API com o mesmo caminho de banco e
+consulte novamente: a aula deve permanecer. A listagem retorna todos os registros
+em ordem de data, início e ID decrescentes; ainda não aceita filtros ou paginação.
+
+O [contrato JSON v1](docs/api-v1.md) documenta campos, exemplos, códigos de erro e
+requisições inválidas para testar. Em `backend/`, execute
+`go test -v ./internal/httpapi`, `go test ./...` e `go vet ./...`.
+
+Em 13/10/2026, passaram a suíte com `CGO_ENABLED=0`, `go vet` e o build da API.
+Os testes HTTP usam SQLite temporário, com comparação entre JSON e registro salvo,
+ordenação, validação de conteúdo/tipos/campos, IDs inválidos/inexistentes e falha do
+banco sem exposição de detalhes. O limite de corpo foi testado por HTTP real.
+Também foi validado o binário na porta 33006: cadastro, consultas, erros, leitura
+direta por SQL, persistência após reinício, encerramento por SIGINT/SIGTERM e
+recusa de inicialização com caminho de banco inválido. Os processos foram
+encerrados e os arquivos temporários removidos. O frontend permanece no diagnóstico;
+o formulário de cadastro é a etapa 7.
