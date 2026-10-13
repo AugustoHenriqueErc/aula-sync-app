@@ -13,6 +13,10 @@ feedback. A descoberta permanece pendente, mas não bloqueia a preparação téc
 A demonstração usará dados fictícios. Campos e regras adotados para o MVP deverão
 ser registrados como hipóteses ao chegar à etapa de domínio, acompanhados de
 exemplos de teste. Eles não representam regras institucionais aprovadas.
+As hipóteses técnicas adotadas na etapa 4 e seus exemplos fictícios estão em
+[domínio de aula](dominio-aula.md). A implementação não representa aprovação
+das regras pela professora.
+
 O objetivo é chegar ao cadastro, persistência, histórico e total de carga horária,
 seguindo uma etapa por vez até o marco C. A integração Google fica para depois.
 

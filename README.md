@@ -7,8 +7,11 @@ dos dados quando a persistência for implementada.
 ## Estado atual e MVP
 
 O backend possui um endpoint de saúde JSON, porta configurável e testes HTTP.
-O frontend consulta a API e exibe carregamento, sucesso ou erro, com nova tentativa. Cadastro,
-cálculo, histórico e persistência ainda não estão implementados.
+O frontend consulta a API e exibe carregamento, sucesso ou erro, com nova tentativa.
+O pacote Go `internal/aula` valida aulas e calcula a duração líquida em minutos,
+conforme as [hipóteses do MVP](docs/dominio-aula.md), ainda pendentes de revisão
+com a professora. Cadastro via API/interface, histórico e persistência ainda não
+estão implementados.
 O objetivo é construir um MVP local com dados fictícios para apresentar a Maria
 Luzia e ajustar as hipóteses após o primeiro contato. Consulte os
 [requisitos](docs/requisitos.md) e o [checklist](CHECKLIST_IMPLEMENTACAO.md).
@@ -207,3 +210,29 @@ porta alternativa, carregamento, sucesso, backend desligado e recuperação real
 A interceptação de requisições no navegador foi usada apenas para simular JSON
 incompatível e timeout. A captura em largura de 375px foi revisada, sem rolagem
 horizontal. Os servidores e o navegador de teste foram encerrados ao final.
+
+## Testar a etapa 4
+
+A etapa 4 implementa o domínio no backend; a página continua sendo o diagnóstico
+de conexão. Não é necessário iniciar servidores para testar o cálculo:
+
+```bash
+cd backend
+go test -v ./internal/aula
+go test ./...
+go vet ./...
+```
+
+Os testes usam tabelas: cada linha descreve uma entrada e seu resultado esperado.
+Por exemplo, 08:00–10:00 menos 15 minutos de intervalo resulta em 105 minutos.
+Datas inválidas, formatos incorretos, campos obrigatórios em branco, término
+anterior ou igual ao início e intervalos inválidos devem retornar erro por campo.
+Há casos de ano bissexto, duração mínima, limites do dia, repetição do cálculo e
+independência do fuso local. A duração é calculada sob demanda e não fica guardada
+em um campo que possa se tornar desatualizado.
+
+Em 13/10/2026, os testes de todos os pacotes, `go vet ./...` e o build do backend
+passaram. `go test -cover ./...` registrou 100% de cobertura de instruções no
+pacote `internal/aula`; isso não substitui a validação das hipóteses com Maria
+Luzia. Os exemplos e as decisões de datas, intervalos e unidade de duração estão
+em [docs/dominio-aula.md](docs/dominio-aula.md).

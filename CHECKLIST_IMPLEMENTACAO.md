@@ -103,13 +103,13 @@ sem representar aprovação das regras pela professora.
 
 ## Etapa 4 — Domínio de aula e carga horária
 
-- [ ] Documentar as hipóteses de campos e cálculo do MVP e os exemplos esperados antes de modelar; manter a aprovação da professora pendente até a apresentação.
-- [ ] Definir `Aula`, separando entrada HTTP, domínio e representação persistida quando necessário.
-- [ ] Implementar validações e cálculo de duração independentes de HTTP e banco.
-- [ ] Aplicar as regras confirmadas de intervalos, arredondamento, fuso e início/término.
-- [ ] Criar testes de tabela para casos comuns, limites e entradas inválidas.
-- [ ] Comparar os resultados com os exemplos aprovados e verificar independência do relógio da máquina.
-- [ ] **Etapa 4 concluída:** cálculo determinístico documentado por testes aprovados.
+- [x] Documentar as hipóteses de campos e cálculo do MVP e os exemplos esperados antes de modelar; manter a aprovação da professora pendente até a apresentação.
+- [x] Definir `Aula`, separando entrada HTTP, domínio e representação persistida quando necessário.
+- [x] Implementar validações e cálculo de duração independentes de HTTP e banco.
+- [x] Aplicar as hipóteses documentadas do MVP para intervalos, ausência de arredondamento, horários civis e início/término; confirmação institucional pendente.
+- [x] Criar testes de tabela para casos comuns, limites e entradas inválidas.
+- [x] Comparar os resultados com os exemplos fictícios documentados e verificar independência do relógio e fuso da máquina; exemplos aprovados pela professora continuam pendentes.
+- [x] **Etapa 4 concluída tecnicamente para o MVP:** cálculo determinístico documentado por testes aprovados. A validação institucional e o marco B permanecem pendentes.
 
 ## Etapa 5 — Persistência com SQLite
 
@@ -239,5 +239,6 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 | 1 — Conclusão | 12/10/2026 | Go 1.27.0; `gofmt`, `go mod verify`, `go vet`, build; cópia limpa com `npm ci`, `format:check`, `check` e `build`; frontend e backend responderam HTTP 200; npm sem vulnerabilidades; revisão de arquivos versionados sem achados | Etapa 1 concluída no Linux; cache Go reutilizado; sem revisão visual. Mensagens em `docs/commits-etapa-1.md` |
 | 2 — Backend e primeiro endpoint | 12/10/2026 | `go test ./...`, `go vet ./...` e build aprovados; `/health` validado com HTTP 200 e JSON nas portas 3000 e 3001 via curl; porta inválida rejeitada; testes de erros 400, 404, 500 e 503; contrato e comandos no README | Etapa 2 concluída; processos de teste encerrados |
 | 3 — Frontend e consumo da API | 13/10/2026 | Formatação, check (0 erros/avisos) e build aprovados; Go test/vet/build aprovados; Chrome headless validou proxy em porta alternativa, carregamento, sucesso, backend desligado e recuperação; JSON incompatível e timeout simulados; captura de 375px revisada | Etapa 3 e marco A concluídos; comandos e configuração no README; processos de teste encerrados |
+| 4 — Domínio de aula | 13/10/2026 | Hipóteses e exemplos em `docs/dominio-aula.md`; testes de tabela aprovados, 100% de cobertura de instruções em `internal/aula`; suíte Go, vet e build aprovados; cálculo sem relógio atual e testado em diferentes fusos locais | Conclusão técnica para o MVP; regras institucionais, etapa 0 e marco B ainda pendentes de revisão com Maria Luzia |
 
-**Próxima ação:** iniciar a etapa 4 (domínio de aula e carga horária), documentando primeiro as hipóteses e os exemplos do MVP. Validar as hipóteses com Maria Luzia após a demonstração; a etapa 0 continua pendente.
+**Próxima ação:** iniciar a etapa 5 (persistência com SQLite), usando as hipóteses documentadas do MVP. Validar as hipóteses com Maria Luzia após a demonstração; a etapa 0 continua pendente.
