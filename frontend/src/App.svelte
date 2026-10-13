@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import AulaForm from './lib/AulaForm.svelte'
 
   type ConnectionState =
     | { status: 'loading' }
@@ -77,8 +78,10 @@
 
 <main>
   <p class="eyebrow">Aula Sync App</p>
-  <h1>Diagnóstico de conexão</h1>
-  <p>Confira se a aplicação consegue se comunicar com o backend local.</p>
+  <h1>Registrar aula</h1>
+  <p>Registre o conteúdo e os horários da aula em um só lugar.</p>
+
+  <AulaForm {apiUrl} />
 
   <section aria-labelledby="connection-title">
     <h2 id="connection-title">Conexão com o backend</h2>

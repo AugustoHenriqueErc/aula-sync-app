@@ -135,14 +135,14 @@ sem representar aprovação das regras pela professora.
 
 ## Etapa 7 — Formulário web
 
-- [ ] Criar formulário com campos aprovados, labels e mensagens acessíveis.
-- [ ] Exibir prévia de duração como auxílio, preservando a autoridade do cálculo do backend.
-- [ ] Enviar dados para `POST /aulas` e apresentar confirmação e erros por campo.
-- [ ] Bloquear novos envios enquanto a requisição estiver em andamento.
-- [ ] Tratar falha de rede preservando os dados preenchidos para correção ou nova tentativa.
-- [ ] Validar teclado, largura de celular, obrigatórios ausentes, horários inválidos e duplo clique.
-- [ ] Conferir se os dados salvos correspondem ao formulário e executar checagem/build do frontend.
-- [ ] **Etapa 7 concluída:** uma professora consegue cadastrar uma aula pelo navegador.
+- [x] Criar formulário com os campos das hipóteses documentadas do MVP, labels e mensagens acessíveis; revisão institucional ainda pendente.
+- [x] Exibir prévia de duração como auxílio, preservando a autoridade do cálculo do backend.
+- [x] Enviar dados para `POST /aulas` e apresentar confirmação e erros por campo.
+- [x] Bloquear novos envios enquanto a requisição estiver em andamento.
+- [x] Tratar falha de rede preservando os dados preenchidos para correção ou nova tentativa.
+- [x] Validar teclado, largura de celular, obrigatórios ausentes, horários inválidos e duplo clique.
+- [x] Conferir se os dados salvos correspondem ao formulário e executar checagem/build do frontend.
+- [x] **Etapa 7 concluída:** uma professora consegue cadastrar uma aula pelo navegador.
 
 ## Etapa 8 — Histórico e carga horária acumulada
 
@@ -242,5 +242,6 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 | 4 — Domínio de aula | 13/10/2026 | Hipóteses e exemplos em `docs/dominio-aula.md`; testes de tabela aprovados, 100% de cobertura de instruções em `internal/aula`; suíte Go, vet e build aprovados; cálculo sem relógio atual e testado em diferentes fusos locais | Conclusão técnica para o MVP; regras institucionais, etapa 0 e marco B ainda pendentes de revisão com Maria Luzia |
 | 5 — Persistência SQLite | 13/10/2026 | Driver modernc.org/sqlite v1.58.0; testes com CGO_ENABLED=0, vet, mod verify e builds de cmd/db e cmd/api aprovados; migração inicial, repetição, rollback, versão futura, restrições, inserção/busca/listagem e reabertura testados; comandos em processos separados preservaram ID e 105 minutos | Etapa 5 concluída; banco fictício `backend/aulas-demo-etapa5.db` ignorado pelo Git; API será ligada ao repositório na etapa 6; regras institucionais ainda pendentes |
 | 6 — API de cadastro e consulta | 13/10/2026 | Contrato `docs/api-v1.md`; POST /aulas e GET /aulas e /aulas/:id; testes HTTP com SQLite temporário, suíte sem CGO, vet e build aprovados; HTTP real na porta 33006, comparação SQL, persistência após reinício e encerramento por SIGINT/SIGTERM validados | Etapa 6 concluída; listagem integral sem paginação ou filtros; frontend continua diagnóstico; alterações locais de documentação da etapa 5 preservadas |
+| 7 — Formulário web | 13/10/2026 | Formatação, check (0 erros/avisos) e build aprovados; Chrome com API e banco de teste validou cadastro, dados persistidos via GET, prévia, obrigatórios, horários/intervalo, erros 422, Tab/Enter, bloqueio de envio repetido, backend desligado e recuperação; resposta incompatível e timeout simulados; captura de 375px revisada | Etapa 7 concluída tecnicamente para o MVP; roteiro em `docs/formulario-aula.md`; hipóteses ainda pendentes de revisão com a professora |
 
-**Próxima ação:** iniciar a etapa 7 (formulário web de cadastro), consumindo o contrato da API e as hipóteses documentadas do MVP. Validar as hipóteses com Maria Luzia após a demonstração; a etapa 0 continua pendente.
+**Próxima ação:** iniciar a etapa 8 (histórico e carga horária acumulada), definindo os filtros mínimos para o MVP. Validar as hipóteses com Maria Luzia após a demonstração; a etapa 0 continua pendente.

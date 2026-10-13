@@ -34,8 +34,8 @@ Usamos o journal padrão do SQLite, sem configurar WAL nesta etapa.
 
 Desde a etapa 6, `cmd/api` também abre e migra o banco ao iniciar, e fecha a
 conexão após o encerramento HTTP. Os endpoints estão no [contrato v1](api-v1.md).
-`/health` continua verificando somente a resposta HTTP, e o frontend continua
-sendo a página de diagnóstico.
+`/health` continua verificando somente a resposta HTTP. Na etapa 7, o frontend
+oferece o formulário de cadastro e mantém o diagnóstico de conexão.
 
 ## Migração e restrições
 

@@ -12,8 +12,9 @@ O pacote Go `internal/aula` valida aulas e calcula a duração líquida em minut
 conforme as [hipóteses do MVP](docs/dominio-aula.md), ainda pendentes de revisão
 com a professora. A persistência SQLite permite inserir, buscar e listar aulas
 pelo repositório, pelo comando de estudo e pela API HTTP. Os endpoints de cadastro
-e consulta estão descritos no [contrato v1](docs/api-v1.md). O formulário e o
-histórico no navegador ainda não estão implementados.
+e consulta estão descritos no [contrato v1](docs/api-v1.md). O formulário web
+permite cadastrar aulas com prévia, validação e confirmação. O histórico no
+navegador ainda não está implementado.
 O objetivo é construir um MVP local com dados fictícios para apresentar a Maria
 Luzia e ajustar as hipóteses após o primeiro contato. Consulte os
 [requisitos](docs/requisitos.md) e o [checklist](CHECKLIST_IMPLEMENTACAO.md).
@@ -44,9 +45,9 @@ npm ci
 npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
-Abra http://127.0.0.1:5173. A página de diagnóstico consulta o backend ao abrir.
-Com a API ligada, deve mostrar **Backend conectado.**; se estiver desligada,
-mostra uma falha e permite tentar novamente.
+Abra http://127.0.0.1:5173 para preencher o formulário **Registrar aula**.
+Com a API ligada, o cadastro grava no SQLite e confirma a duração calculada.
+O diagnóstico abaixo do formulário mostra se o backend está acessível.
 
 ## Executar o backend
 
@@ -225,8 +226,8 @@ horizontal. Os servidores e o navegador de teste foram encerrados ao final.
 
 ## Testar a etapa 4
 
-A etapa 4 implementa o domínio no backend; a página continua sendo o diagnóstico
-de conexão. Não é necessário iniciar servidores para testar o cálculo:
+A etapa 4 implementa o domínio no backend. Não é necessário iniciar servidores
+para testar o cálculo:
 
 ```bash
 cd backend
@@ -309,5 +310,23 @@ banco sem exposição de detalhes. O limite de corpo foi testado por HTTP real.
 Também foi validado o binário na porta 33006: cadastro, consultas, erros, leitura
 direta por SQL, persistência após reinício, encerramento por SIGINT/SIGTERM e
 recusa de inicialização com caminho de banco inválido. Os processos foram
-encerrados e os arquivos temporários removidos. O frontend permanece no diagnóstico;
-o formulário de cadastro é a etapa 7.
+encerrados e os arquivos temporários removidos. O formulário que consome esse
+contrato está implementado na etapa 7.
+
+## Testar a etapa 7
+
+Com backend e frontend ligados, abra http://127.0.0.1:5173 e preencha uma aula
+fictícia: data válida, início 08:00, término 10:00, intervalo 15, turma e conteúdo.
+A prévia deve indicar **105 minutos**. Clique em **Salvar aula**: a confirmação
+usa a duração retornada pelo servidor, e o formulário é limpo para outra aula.
+
+Confira também campos obrigatórios vazios, término anterior ao início e intervalo
+que ocupa toda a aula. Desligue o backend e tente salvar outro registro: os campos
+devem permanecer preenchidos. Durante o envio, o formulário fica bloqueado.
+O [roteiro do formulário](docs/formulario-aula.md) inclui teclado, celular,
+comparação com os dados salvos e as limitações de uma tentativa após falha de rede.
+
+Formatação, checagem e build passaram. A validação no Chrome cobriu cadastro real,
+erros locais e do servidor, teclado, bloqueio de envios repetidos, falha e
+recuperação da conexão, timeout e largura de 375 px. As regras de aula ainda são
+hipóteses do MVP pendentes de revisão com Maria Luzia.

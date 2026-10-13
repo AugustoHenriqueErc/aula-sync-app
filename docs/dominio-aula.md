@@ -86,6 +86,8 @@ go test ./...
 go vet ./...
 ```
 
-A interface web continua exibindo o diagnóstico da etapa 3. A persistência está
+A interface web oferece o formulário de cadastro e o diagnóstico de conexão.
+A persistência está
 disponível pelo repositório, pelo comando de estudo da etapa 5 e pelos endpoints
-de cadastro e consulta da etapa 6. O formulário web será a etapa 7.
+de cadastro e consulta da etapa 6. O formulário web da etapa 7 exibe uma prévia,
+mas confirma a duração retornada pelo backend.

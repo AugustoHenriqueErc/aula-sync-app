@@ -127,4 +127,5 @@ go test ./...
 go vet ./...
 ```
 
-O frontend continua exibindo o diagnóstico. O formulário de cadastro é a etapa 7.
+O [formulário da etapa 7](formulario-aula.md) consome POST /aulas e mantém o
+diagnóstico de conexão disponível. O histórico web será a etapa 8.
