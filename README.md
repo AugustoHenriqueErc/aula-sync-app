@@ -6,7 +6,8 @@ dos dados quando a persistência for implementada.
 
 ## Estado atual e MVP
 
-Existem apenas as bases do frontend e backend, com mensagens estáticas. Cadastro,
+O backend possui um endpoint de saúde JSON, porta configurável e testes HTTP.
+O frontend ainda exibe uma mensagem estática. Cadastro,
 cálculo, histórico e persistência ainda não estão implementados.
 O objetivo é construir um MVP local com dados fictícios para apresentar a Maria
 Luzia e ajustar as hipóteses após o primeiro contato. Consulte os
@@ -49,26 +50,43 @@ Com Go instalado, em outro terminal, a partir da raiz:
 cd backend
 go version
 go mod download
-go run .
+go run ./cmd/api
 ```
 
-A porta atual é fixa em 3000. Em outro terminal:
+A porta padrão é 3000. Em outro terminal:
 
 ```bash
-curl --fail http://localhost:3000/
+curl --fail --include http://localhost:3000/health
 ```
 
-A resposta esperada é `Olá Este é o Backend Mínimo de aula-sync-app!`.
-O endpoint `/health` será implementado na etapa 2. Encerre cada servidor com Ctrl+C.
+A resposta esperada é HTTP 200, `Content-Type: application/json` e
+`{"status":"ok"}`. Esse endpoint confirma que a API responde; ainda não verifica
+banco de dados ou serviços externos. A rota `/` mantém a mensagem inicial.
+Encerre cada servidor com Ctrl+C.
+
+Para testar outra porta, execute em `backend/`:
+
+```bash
+PORT=3001 go run ./cmd/api
+```
+
+Em outro terminal, execute `curl --fail --include http://localhost:3001/health`.
+Para conferir o erro 404 em JSON, use `curl --include http://localhost:3001/inexistente`;
+a resposta terá `{"error":"Not Found"}`.
+
+As rotas ficam em `backend/internal/httpapi/app.go`; o ponto de entrada em
+`backend/cmd/api/main.go` lê a configuração e inicia o servidor. O tratamento
+central transforma erros retornados pelos handlers em `{"error":"mensagem"}`,
+preservando o status HTTP. Erros 5xx usam a mensagem genérica
+`Erro interno do servidor` para não expor detalhes internos.
 
 ## Configurações de ambiente
 
-O arquivo `.env.example` documenta valores locais previstos. No código atual,
-nenhuma das aplicações consome essas variáveis; copiá-lo não muda o comportamento.
-
-Na etapa 2, o backend lerá `PORT` do ambiente do processo. Go não carrega arquivos
-`.env` automaticamente; a forma de fornecer a variável será documentada junto
-com a implementação. Por enquanto, a porta permanece fixa em 3000.
+O arquivo `.env.example` documenta os valores locais. O backend lê `PORT` do
+ambiente do processo; quando ausente ou vazia, usa 3000. Valores que não sejam
+inteiros entre 1 e 65535 encerram a inicialização com uma mensagem de erro.
+Go não carrega arquivos `.env` automaticamente: use `PORT=3001 go run ./cmd/api`
+ou `export PORT=3001` antes de executar. Copiar `.env.example` não carrega a configuração.
 
 Na etapa 3, `VITE_API_URL` poderá ser copiada para `frontend/.env.local`, carregado
 pelo Vite ao iniciar o frontend. O acesso no código será implementado nessa etapa.
@@ -91,8 +109,9 @@ No diretório `backend/`:
 ```bash
 gofmt -l .
 go mod verify
+go test ./...
 go vet ./...
-go build -o /tmp/aula-sync-backend .
+go build -o /tmp/aula-sync-backend ./cmd/api
 ```
 
 `gofmt -l` não deve listar arquivos; para aplicar a formatação, use
@@ -131,3 +150,11 @@ uma auditoria completa do histórico do Git.
 
 As mensagens de commit por checkbox estão em
 [docs/commits-etapa-1.md](docs/commits-etapa-1.md). Nenhum commit foi executado.
+
+## Testes da etapa 2
+
+Em `backend/`, execute `go test -v ./...`. Os testes HTTP usam `httptest` e
+`app.Test` do Fiber, sem abrir portas reais. Conferem status, cabeçalho JSON,
+contrato de saúde, rota inexistente, erro de validação e ocultação de detalhes
+em erros 500 e 503. Os testes da configuração cobrem porta padrão, alternativa,
+limites e valores inválidos. As rotas que provocam erros existem somente nos testes.

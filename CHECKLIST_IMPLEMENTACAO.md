@@ -82,14 +82,14 @@ sem representar aprovação das regras pela professora.
 
 ## Etapa 2 — Backend e primeiro endpoint
 
-- [ ] Organizar o ponto de entrada e as rotas, criando apenas os diretórios necessários.
-- [ ] Implementar `GET /health` com status e JSON estáveis.
-- [ ] Configurar a porta por variável de ambiente.
-- [ ] Implementar tratamento central de erros com respostas consistentes.
-- [ ] Criar o primeiro teste HTTP automatizado.
-- [ ] Validar `/health` com `curl` ou cliente HTTP e testar uma porta alternativa.
-- [ ] Executar `go test ./...` e `go vet ./...` em `backend/`.
-- [ ] **Etapa 2 concluída:** contrato de saúde documentado e teste aprovado.
+- [x] Organizar o ponto de entrada e as rotas, criando apenas os diretórios necessários.
+- [x] Implementar `GET /health` com status e JSON estáveis.
+- [x] Configurar a porta por variável de ambiente.
+- [x] Implementar tratamento central de erros com respostas consistentes.
+- [x] Criar o primeiro teste HTTP automatizado.
+- [x] Validar `/health` com `curl` ou cliente HTTP e testar uma porta alternativa.
+- [x] Executar `go test ./...` e `go vet ./...` em `backend/`.
+- [x] **Etapa 2 concluída:** contrato de saúde documentado e teste aprovado.
 
 ## Etapa 3 — Frontend e consumo da API
 
@@ -238,4 +238,6 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 | 1 — Preparação inicial | 12/10/2026 | Regras do `.gitignore` verificadas; `.env.example` e README preenchidos; Node.js 22.23.0 e npm 10.9.8 disponíveis | Frontend: `npm ci`, `npm run check` (0 erros/avisos) e `npm run build` aprovados; npm reportou 2 vulnerabilidades altas, a investigar. Go não encontrado; execução dos servidores, validação do backend e conclusão da etapa pendentes |
 | 1 — Conclusão | 12/10/2026 | Go 1.27.0; `gofmt`, `go mod verify`, `go vet`, build; cópia limpa com `npm ci`, `format:check`, `check` e `build`; frontend e backend responderam HTTP 200; npm sem vulnerabilidades; revisão de arquivos versionados sem achados | Etapa 1 concluída no Linux; cache Go reutilizado; sem revisão visual. Mensagens em `docs/commits-etapa-1.md` |
 
-**Próxima ação:** iniciar a etapa 2 (backend e primeiro endpoint) e seguir incrementalmente até o MVP local. Validar as hipóteses com Maria Luzia após a demonstração; a etapa 0 continua pendente.
+| 2 — Backend e primeiro endpoint | 12/10/2026 | `go test ./...`, `go vet ./...` e build aprovados; `/health` validado com HTTP 200 e JSON nas portas 3000 e 3001 via curl; porta inválida rejeitada; testes de erros 400, 404, 500 e 503; contrato e comandos no README | Etapa 2 concluída; processos de teste encerrados |
+
+**Próxima ação:** iniciar a etapa 3 (frontend e consumo da API) e seguir incrementalmente até o MVP local. Validar as hipóteses com Maria Luzia após a demonstração; a etapa 0 continua pendente.
