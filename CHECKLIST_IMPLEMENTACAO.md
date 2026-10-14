@@ -14,13 +14,17 @@ O parecer inicial foi baseado em inspeção estática. A etapa 1 foi posteriorme
 
 - **Regras reais:** ainda não há respostas registradas ao questionário. Para o MVP demonstrativo, campos e regras poderão ser definidos como hipóteses explícitas na etapa 4; a confirmação institucional ocorrerá após a apresentação, conforme a decisão em `docs/requisitos.md`.
 - **Ambiente reproduzível:** Go 1.27.0, Node.js 22.23.0 e npm 10.9.8 validados na etapa 1. Versões e comandos documentados no README.
-- **Integração Google:** a viabilidade operacional depende de permissões, modelos de arquivos, autenticação e limites do ambiente institucional. Comprovar esses pontos com arquivos de teste nas etapas 10 a 12.
+- **Integração Google:** a viabilidade operacional depende de permissões, autenticação e limites do ambiente institucional. Comprovar esses pontos com a planilha de teste nas etapas 10 e 11.
 - **Correções após sincronizar:** definir como edições e cancelamentos locais atualizam o Google, como detectar uma versão desatualizada e o que fazer se alguém editar a planilha manualmente. O SQLite continua sendo a fonte principal.
-- **Vários destinos:** acompanhar Sheets, Drive e Docs separadamente, para uma falha parcial não obrigar a repetir operações já concluídas nem gerar duplicatas.
+- **Relatório PDF:** gerar a partir dos dados locais e dos filtros do histórico, independentemente do Google. O modelo inicial é uma proposta a revisar com Maria Luiza.
+- **Destinos futuros:** Drive e Docs ficam para reavaliação após o PDF; se adotados, acompanhar cada destino separadamente para recuperar falhas parciais sem duplicações.
 - **Piloto:** manter as etapas anteriores à autenticação restritas a desenvolvimento/testes com dados fictícios ou anonimizados. O controle de acesso deve existir antes do uso com dados reais.
 - **Hospedagem:** confirmar volume e concorrência esperados e planejar armazenamento persistente, migrações e restauração do SQLite na etapa 13.
 
-## Estado observado
+## Estado observado na análise inicial (12/10/2026)
+
+Retrato histórico da análise inicial. O progresso posterior está registrado nas
+etapas e no registro de validação abaixo; esta tabela não representa o estado atual.
 
 | Área | Evidência no repositório | Situação |
 | --- | --- | --- |
@@ -49,6 +53,15 @@ com Maria Luzia, usando dados fictícios e hipóteses documentadas. A etapa 0 pe
 pendente de revisão; a implementação técnica prossegue pela etapa 1, uma etapa por
 vez. Esta decisão substitui a exigência de validação prévia para a demonstração,
 sem representar aprovação das regras pela professora.
+
+**Revisão do plano (13/10/2026):** as etapas técnicas 1 a 7 estão registradas como
+concluídas. A próxima implementação é somente a etapa 8. Concluir histórico,
+totais, correções e backup (8 e 9), depois preparar e integrar Google Sheets
+(10 e 11) e exportar o relatório PDF (12). A etapa 13 continua dedicada ao acesso
+protegido e ao piloto. Drive/Docs passam a evolução futura. O relatório inicial
+terá modelo fixo, com campos e apresentação ajustados posteriormente conforme o
+retorno de Maria Luiza; sua aprovação continua pendente. Esta revisão altera
+somente o planejamento, sem concluir tarefas de implementação.
 
 ## Etapa 0 — Descoberta do processo real
 
@@ -146,12 +159,14 @@ sem representar aprovação das regras pela professora.
 
 ## Etapa 8 — Histórico e carga horária acumulada
 
-- [ ] Exibir histórico com ordenação por data definida.
-- [ ] Implementar filtros de período e demais filtros confirmados pelas usuárias.
+- [ ] Exibir histórico com as aulas mais recentes primeiro, incluindo data, turma/estudante, horários, conteúdo e duração.
+- [ ] Implementar filtros de data inicial, data final e turma/estudante como hipóteses do MVP, a revisar com Maria Luiza.
+- [ ] Ampliar `GET /aulas` para aceitar os filtros documentados.
 - [ ] Calcular o total no backend para todo o conjunto filtrado, sem limitá-lo à página exibida.
-- [ ] Exibir total, carregamento, lista vazia e falhas de consulta.
+- [ ] Exibir total em horas e minutos, carregamento, lista vazia e falhas de consulta.
+- [ ] Atualizar o histórico e o total após cadastrar uma aula, respeitando os filtros ativos.
 - [ ] Definir limites inclusivos/exclusivos de datas de forma consistente entre API, interface e banco.
-- [ ] Comparar os totais com um conjunto conhecido calculado manualmente.
+- [ ] Conferir aulas fictícias de 60, 90 e 45 minutos: total de 3h15 e subtotais coerentes com os filtros.
 - [ ] Validar zero, um e vários resultados, mudança de mês e um volume maior de registros.
 - [ ] **Etapa 8 concluída:** cadastro e histórico formam um produto local útil.
 
@@ -170,13 +185,12 @@ sem representar aprovação das regras pela professora.
 ## Etapa 10 — Preparação da integração Google
 
 - [ ] Confirmar autorização, responsáveis, propriedade dos arquivos e ambiente Google de teste.
-- [ ] Mapear campos para Sheets, Drive e Docs e criar arquivos descartáveis de teste.
+- [ ] Mapear campos para Google Sheets e criar uma planilha descartável de teste.
 - [ ] Definir onde o Apps Script será executado e documentar a decisão arquitetural.
 - [ ] Definir contrato, autenticação, escopos mínimos e armazenamento de segredos no servidor.
 - [ ] Definir identificador idempotente, versão do registro, timeouts e política de retentativas.
 - [ ] Modelar estado, tentativas, data da última tentativa e erro no SQLite.
 - [ ] Definir como edições/cancelamentos voltam a ficar pendentes e como tratar alterações manuais no Google.
-- [ ] Prever estado por destino para recuperar falhas parciais nas etapas seguintes.
 - [ ] Revisar mapeamento com usuária e responsável pelos arquivos; verificar ausência de segredos no frontend, Git e logs.
 - [ ] Revisar os cenários de repetição e concorrência para evitar duplicação.
 - [ ] **Etapa 10 concluída:** contrato e ambiente de teste preparados, sem sincronização de dados reais.
@@ -193,15 +207,21 @@ sem representar aprovação das regras pela professora.
 - [ ] Conferir colunas, valores e comportamento de correções/cancelamentos na planilha.
 - [ ] **Etapa 11 concluída:** sincronização com Sheets recuperável e sem duplicações nos cenários testados.
 
-## Etapa 12 — Drive e Docs
+## Etapa 12 — Relatório de aulas em PDF
 
-- [ ] Confirmar template, pasta, nomeação, propriedade e permissões esperadas.
-- [ ] Gerar ou atualizar documento a partir do modelo aprovado.
-- [ ] Organizar o arquivo na pasta correta e persistir IDs e links necessários.
-- [ ] Rastrear cada destino e recuperar falhas parciais sem refazer efeitos já concluídos.
-- [ ] Conferir conteúdo, pasta, nome e permissões com o modelo institucional.
-- [ ] Testar repetição, atualização e falha intermediária sem duplicação de documentos.
-- [ ] **Etapa 12 concluída:** aula de teste chega aos destinos previstos com estado rastreável.
+Executar após a etapa 11 conforme a sequência acordada. A geração depende das
+consultas e regras locais das etapas 8 e 9, sem dependência técnica do Google.
+
+- [ ] Oferecer exportação em PDF usando os filtros ativos do histórico.
+- [ ] Consultar pelo backend os registros do SQLite e o total de todo o conjunto filtrado, independentemente da paginação da tela.
+- [ ] Criar modelo fixo inicial com período, data, turma/estudante, conteúdo, horários, duração e carga horária total.
+- [ ] Aplicar as mesmas regras do histórico para correções e cancelamentos.
+- [ ] Definir o comportamento sem resultados e apresentar falhas de exportação.
+- [ ] Comparar aulas e total do PDF com o histórico para os mesmos filtros; conferir o exemplo de 3h15.
+- [ ] Validar zero, um e vários registros, múltiplas páginas, textos longos, acentos e legibilidade em leitor de PDF.
+- [ ] Validar a exportação com o serviço Google indisponível.
+- [ ] Documentar o modelo inicial como proposta e registrar os ajustes de campos e apresentação após retorno de Maria Luiza, sem criar editor de relatórios.
+- [ ] **Etapa 12 concluída tecnicamente:** PDF legível e coerente com o histórico, gerado a partir dos dados locais; registrar separadamente a situação da revisão pela cliente.
 
 ## Etapa 13 — Autenticação, publicação e piloto
 
@@ -218,13 +238,22 @@ sem representar aprovação das regras pela professora.
 - [ ] Acompanhar aulas reais, comparar resultados com o processo anterior e coletar feedback.
 - [ ] **Etapa 13 concluída:** piloto validado antes de ampliar o uso.
 
+## Evolução futura — Drive e Docs
+
+Reavaliar após o PDF e o retorno de Maria Luiza, sem bloquear a etapa 13.
+
+- [ ] Confirmar necessidade, template, pasta, nomeação, propriedade e permissões.
+- [ ] Gerar ou atualizar documentos e organizar arquivos no Drive.
+- [ ] Persistir IDs e links e acompanhar o estado de cada destino.
+- [ ] Validar conteúdo, permissões, repetição e recuperação de falhas parciais sem duplicações.
+
 ## Marcos
 
 - [x] **A — Comunicação web:** etapas 1 a 3 validadas.
 - [ ] **B — Regra confiável:** etapa 4 validada com os exemplos da descoberta.
 - [ ] **C — Produto local útil:** etapas 5 a 8 validadas.
 - [ ] **D — Operação segura:** etapa 9 validada.
-- [ ] **E — Integração controlada:** etapas 10 a 12 validadas.
+- [ ] **E — Integração e relatório:** Sheets recuperável e sem duplicações, PDF coerente com o histórico; etapas 10 a 12 validadas.
 - [ ] **F — Piloto real:** etapa 13 validada.
 
 ## Registro de validação

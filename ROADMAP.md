@@ -3,9 +3,10 @@
 ## 1. Visão do produto
 
 O Aula Sync App deve permitir que professoras registrem uma aula uma única vez,
-consultem o histórico e obtenham automaticamente a carga horária. Em uma fase
-posterior, os mesmos dados serão enviados aos documentos usados pela instituição
-no Google Sheets, Google Drive e Google Docs.
+consultem o histórico e obtenham automaticamente a carga horária. Após concluir
+o fluxo local, os registros serão sincronizados com Google Sheets e poderão ser
+exportados em um relatório PDF a partir do SQLite. Google Drive e Google Docs
+ficam como evolução futura, conforme as necessidades confirmadas pela cliente.
 
 O projeto também tem um objetivo didático: cada incremento deve ser pequeno o
 suficiente para estudar uma tecnologia, aplicá-la e validar o resultado antes de
@@ -28,7 +29,8 @@ avançar.
 - Cálculo de duração e carga horária acumulada.
 - Persistência local em SQLite.
 - Histórico com filtros básicos.
-- Integração incremental com Google Sheets, Drive e Docs.
+- Integração com Google Sheets após concluir o fluxo local.
+- Exportação de relatório PDF com aulas e carga horária do conjunto filtrado.
 - Indicação e rastreamento do estado de sincronização.
 
 ### Fora do primeiro ciclo
@@ -39,6 +41,8 @@ avançar.
 - Arquitetura de microsserviços.
 - Permissões institucionais complexas.
 - Relatórios avançados e dashboards analíticos.
+- Editor de relatórios e personalização de campos pela interface.
+- Integrações com Google Drive e Google Docs, a reavaliar após o PDF.
 
 Esses itens podem ser reavaliados depois que o fluxo principal estiver sendo
 usado e houver necessidades reais observadas.
@@ -123,6 +127,10 @@ arredondamento, intervalos, fusos horários e formato exigido pela instituição
 8. **Autenticação é adiada, não ignorada.** O protótipo local vem primeiro, mas
    nenhuma publicação com dados reais deve ocorrer sem controle de acesso,
    segredos protegidos e revisão de privacidade.
+9. **O PDF usa os dados locais.** A exportação consulta o SQLite por meio do
+   backend e segue os filtros e totais do histórico, sem depender de Sheets,
+   Drive ou Docs. O primeiro modelo será fixo; campos e apresentação poderão ser
+   ajustados posteriormente com base no retorno de Maria Luiza.
 
 ## 5. Roadmap incremental
 
@@ -396,9 +404,13 @@ clara sem precisar usar ferramentas técnicas.
 
 **Implementar**
 
-- Exibir histórico ordenado por data.
-- Adicionar filtros mínimos definidos pelas usuárias, como período e turma.
-- Exibir carga horária total do conjunto filtrado.
+- Exibir histórico com as aulas mais recentes primeiro, mostrando data,
+  turma/estudante, horários, conteúdo e duração.
+- Adotar inicialmente filtros de data inicial, data final e turma/estudante,
+  como hipóteses do MVP a revisar com Maria Luiza.
+- Ampliar `GET /aulas` para aceitar os filtros e calcular no backend a carga
+  horária de todo o conjunto filtrado, independentemente da paginação.
+- Exibir o total em horas e minutos e atualizar o histórico após um cadastro.
 - Incluir estados de carregamento, vazio e falha.
 
 **Resultado esperado**
@@ -408,7 +420,8 @@ filtro aplicado.
 
 **Como validar**
 
-- Preparar um conjunto conhecido e calcular o total manualmente.
+- Cadastrar aulas fictícias de 60, 90 e 45 minutos e confirmar o total de 3h15;
+  conferir também os subtotais por período e turma.
 - Testar filtros com zero, um e vários resultados.
 - Testar mudança de mês e limites de datas.
 - Verificar o comportamento com uma quantidade maior de registros de teste.
@@ -464,8 +477,8 @@ os cálculos do histórico.
 
 **Implementar**
 
-- Mapear exatamente qual dado vai para Sheets, Drive e Docs.
-- Criar uma planilha e documentos exclusivamente de teste.
+- Mapear exatamente qual dado vai para Google Sheets.
+- Criar uma planilha exclusivamente de teste.
 - Definir contrato entre API e Apps Script, autenticação e identificador
   idempotente, sem ainda ativar sincronização de dados reais.
 - Modelar no SQLite o estado e as tentativas de sincronização.
@@ -506,6 +519,8 @@ permissões compreendidos antes de enviar qualquer dado real.
 - Gravar identificador externo, estado, tentativas e última mensagem de erro.
 - Oferecer ação de nova tentativa sem recriar a aula.
 - Exibir o estado de sincronização no histórico.
+- Atualizar aulas já sincronizadas e refletir correções/cancelamentos conforme
+  a política definida, preservando o identificador para evitar duplicatas.
 
 **Resultado esperado**
 
@@ -524,38 +539,48 @@ mantém o registro local e pode ser tentada novamente.
 - Etapa 10.
 - Conhecimento básico de JavaScript e segurança de requisições.
 
-### Etapa 12 — Google Drive e Google Docs
+### Etapa 12 — Relatório de aulas em PDF
 
 **Estudar**
 
-- APIs de Drive e Docs no Apps Script.
-- Templates, permissões de arquivos e propriedade de documentos.
-- Consistência entre múltiplos destinos e compensação de falhas.
-- Auditoria e limites de execução do Apps Script.
+- Geração e download de PDF, formatação de tabelas e quebras de página.
+- Reutilização das regras de filtros e totalização do histórico.
+- Apresentação de datas, horários, acentos e duração em horas e minutos.
 
 **Implementar**
 
-- Gerar ou atualizar um documento a partir de um template aprovado.
-- Organizar o arquivo na pasta correta do Drive.
-- Armazenar IDs e links externos necessários, sem expor permissões indevidas.
-- Definir comportamento quando Sheets funciona, mas Drive ou Docs falha.
+- Oferecer exportação em PDF a partir dos filtros do histórico.
+- Obter pelo backend os registros do SQLite e o total de todo o conjunto
+  filtrado, sem limitar o relatório à página visível.
+- Criar um modelo fixo inicial com período, data de cada aula,
+  turma/estudante, conteúdo, horários, duração e carga horária total.
+- Aplicar a mesma política de cancelamento e correções usada pelo histórico.
+- Manter a exportação disponível mesmo quando o Google estiver indisponível.
+- Definir o comportamento sem resultados e apresentar erros de exportação.
+- Registrar o modelo como proposta para Maria Luiza, ajustando posteriormente
+  campos e apresentação conforme seu retorno, sem criar um editor de relatórios.
 
 **Resultado esperado**
 
-Uma aula de teste alimenta a planilha e produz/atualiza o documento esperado na
-pasta correta, com estado de cada destino rastreável.
+A professora baixa um PDF legível com as aulas e o total correspondentes aos
+filtros do histórico, independentemente do estado da sincronização Google.
 
 **Como validar**
 
-- Comparar o documento produzido com o modelo institucional.
-- Conferir pasta, nome, conteúdo e permissões.
-- Forçar uma falha intermediária e verificar recuperação sem duplicação.
-- Testar repetição da operação.
+- Comparar registros e total do PDF com o histórico usando os mesmos filtros.
+- Conferir o exemplo de 60, 90 e 45 minutos, com total de 3h15.
+- Testar zero, um e vários registros, múltiplas páginas, textos longos e acentos.
+- Conferir filtros por período/turma e reflexos de edições e cancelamentos.
+- Gerar o PDF com o serviço Google indisponível e verificar que funciona.
+- Abrir o arquivo em um leitor de PDF e revisar cortes de texto e legibilidade.
+- Apresentar o modelo com dados fictícios a Maria Luiza e registrar os ajustes
+  solicitados, distinguindo validação técnica de aprovação pela cliente.
 
 **Pré-requisitos**
 
-- Etapa 11.
-- Templates e política de compartilhamento definidos pela instituição.
+- Etapas 8 e 9 fornecem as consultas e regras locais necessárias.
+- Executar após a etapa 11 pela sequência acordada; não há dependência técnica
+  de Google Sheets, Drive ou Docs para gerar o PDF.
 
 ### Etapa 13 — Autenticação, publicação e operação piloto
 
@@ -594,14 +619,25 @@ backup verificável e caminho de recuperação.
 - Ambiente de hospedagem, domínio/HTTPS e decisões institucionais de identidade e
   privacidade.
 
+### Evolução futura — Google Drive e Google Docs
+
+Reavaliar após o relatório PDF e a revisão das necessidades com Maria Luiza.
+Esta evolução não é pré-requisito do PDF nem do piloto da etapa 13.
+
+- Confirmar templates, pasta, nomeação, propriedade e permissões dos arquivos.
+- Gerar ou atualizar documentos e organizar os arquivos no Drive.
+- Persistir IDs e links externos e rastrear o estado de cada destino.
+- Validar conteúdo, permissões, repetição e recuperação de falhas parciais sem
+  duplicação, incluindo o caso em que Sheets funciona e Drive/Docs falha.
+
 ## 6. Marcos de aprendizado
 
 - **Marco A — Comunicação web:** etapas 1 a 3; frontend e backend conversam.
 - **Marco B — Regra confiável:** etapa 4; carga horária é compreendida e testada.
 - **Marco C — Produto local útil:** etapas 5 a 8; cadastro e histórico funcionam.
 - **Marco D — Operação segura:** etapa 9; correção, testes e backup existem.
-- **Marco E — Integração controlada:** etapas 10 a 12; dados chegam ao Google sem
-  duplicação e com falhas rastreáveis.
+- **Marco E — Integração e relatório:** etapas 10 a 12; aulas chegam ao Sheets
+  sem duplicação, falhas são rastreáveis e o PDF corresponde ao histórico local.
 - **Marco F — Piloto real:** etapa 13; acesso, implantação e operação foram
   validados.
 
@@ -619,7 +655,13 @@ Uma etapa está concluída quando:
 
 ## 8. Próxima ação recomendada
 
-Iniciar somente a **Etapa 0**. O melhor próximo artefato é uma descrição
-anonimizada de um registro real do caderno e da linha correspondente na planilha.
-Isso permitirá fechar o modelo de aula e as regras de carga horária sem adivinhar
-campos que depois precisariam ser refeitos.
+Conforme a revisão do plano em **13/10/2026**, iniciar somente a **Etapa 8**:
+histórico, filtros e carga horária acumulada. As etapas técnicas 1 a 7 estão
+registradas como concluídas no checklist; a etapa 0 continua pendente de revisão
+com a professora, usando hipóteses documentadas e dados fictícios na demonstração.
+
+A sequência acordada é: concluir o fluxo local (etapas 8 e 9), preparar e
+integrar Google Sheets (10 e 11), exportar o PDF (12) e preparar o piloto com
+acesso protegido (13). O primeiro relatório será uma proposta fixa para Maria
+Luiza; os dados e a apresentação serão ajustados após seu retorno. Esta revisão
+documenta o plano, sem marcar funcionalidades futuras como implementadas.
