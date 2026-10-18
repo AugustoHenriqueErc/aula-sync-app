@@ -7,6 +7,11 @@ export type Aula = {
   fim: string
   turma: string
   conteudo: string
+  versao: number
+  cancelada: boolean
+  updated_at: string
+  intervalo_minutos: number
+  observacoes: string
   duracao_minutos: number
 }
 export type Historico = {
@@ -23,6 +28,26 @@ const inteiro = (v: unknown, min = 0): v is number =>
 export function isTurma(v: unknown): v is Turma {
   return object(v) && inteiro(v.id, 1) && typeof v.nome === 'string'
 }
+export function isAula(a: unknown): a is Aula {
+  return (
+    object(a) &&
+    inteiro(a.id, 1) &&
+    inteiro(a.turma_id, 1) &&
+    inteiro(a.versao, 1) &&
+    inteiro(a.intervalo_minutos) &&
+    inteiro(a.duracao_minutos, 1) &&
+    typeof a.cancelada === 'boolean' &&
+    [
+      'data',
+      'inicio',
+      'fim',
+      'turma',
+      'conteudo',
+      'observacoes',
+      'updated_at',
+    ].every((k) => typeof a[k] === 'string')
+  )
+}
 export function isHistorico(v: unknown): v is Historico {
   return (
     object(v) &&
@@ -32,16 +57,7 @@ export function isHistorico(v: unknown): v is Historico {
     inteiro(v.duracao_total_minutos) &&
     Array.isArray(v.aulas) &&
     v.aulas.length <= 20 &&
-    v.aulas.every(
-      (a) =>
-        object(a) &&
-        inteiro(a.id, 1) &&
-        inteiro(a.turma_id, 1) &&
-        inteiro(a.duracao_minutos, 1) &&
-        ['data', 'inicio', 'fim', 'turma', 'conteudo'].every(
-          (k) => typeof a[k] === 'string',
-        ),
-    )
+    v.aulas.every(isAula)
   )
 }
 export function duracao(minutos: number) {

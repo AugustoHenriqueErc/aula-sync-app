@@ -1,5 +1,8 @@
 # Contrato HTTP v2 — histórico e turmas
 
+> Base da etapa 8. Consulte as [extensões do contrato v3](api-v3.md) para
+> metadados, edição, cancelamento e o filtro padrão de aulas ativas.
+
 Contrato local da etapa 8. A versão é documental; os caminhos continuam sem
 prefixo de versão. Substitui o contrato v1: POST /aulas recebe `turma_id` em vez
 de texto livre, e GET /aulas retorna um objeto com página e totais.

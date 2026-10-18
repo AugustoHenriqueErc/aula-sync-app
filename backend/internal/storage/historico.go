@@ -6,6 +6,7 @@ type Filtro struct {
 	DataInicial, DataFinal string
 	TurmaID                int64
 	Pagina                 int
+	Situacao               string
 }
 type Historico struct {
 	Aulas               []Registro
@@ -18,6 +19,13 @@ func (b *Banco) Historico(ctx context.Context, f Filtro) (Historico, error) {
 	h := Historico{Aulas: make([]Registro, 0)}
 	where := " WHERE 1=1"
 	args := []any{}
+	switch f.Situacao {
+	case "todas":
+	case "canceladas":
+		where += " AND cancelada = 1"
+	default:
+		where += " AND cancelada = 0"
+	}
 	if f.DataInicial != "" {
 		where += " AND data >= ?"
 		args = append(args, f.DataInicial)
@@ -35,7 +43,7 @@ func (b *Banco) Historico(ctx context.Context, f Filtro) (Historico, error) {
 		return h, err
 	}
 	defer tx.Rollback()
-	if err := tx.QueryRowContext(ctx, "SELECT count(*),coalesce(sum(duracao_minutos),0) FROM aulas"+where, args...).Scan(&h.TotalRegistros, &h.DuracaoTotalMinutos); err != nil {
+	if err := tx.QueryRowContext(ctx, "SELECT count(*),coalesce(sum(CASE WHEN cancelada = 0 THEN duracao_minutos ELSE 0 END),0) FROM aulas"+where, args...).Scan(&h.TotalRegistros, &h.DuracaoTotalMinutos); err != nil {
 		return h, err
 	}
 	if f.Pagina < 1 {

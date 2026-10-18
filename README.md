@@ -12,11 +12,13 @@ O pacote Go `internal/aula` valida aulas e calcula a duração líquida em minut
 conforme as [hipóteses do MVP](docs/dominio-aula.md), ainda pendentes de revisão
 com a professora. A persistência SQLite permite inserir, buscar e listar aulas
 pelo repositório, pelo comando de estudo e pela API HTTP. Os endpoints de cadastro
-e consulta estão descritos no [contrato v2](docs/api-v2.md). O formulário web
+e consulta estão descritos no [contrato v3](docs/api-v3.md). O formulário web
 permite cadastrar aulas com prévia, validação e confirmação. O histórico no
 navegador oferece filtros inclusivos de datas, seleção de turma/estudante,
 páginas de 20 aulas e carga horária de todo o conjunto filtrado. O formulário
 permite criar e selecionar turmas com nomes únicos após normalização.
+A etapa 9 permite editar aulas, recalcular a duração, cancelar e reativar
+registros, com controle de versão e trilha de alterações no SQLite.
 O objetivo é construir um MVP local com dados fictícios para apresentar a Maria
 Luzia e ajustar as hipóteses após o primeiro contato. Consulte os
 [requisitos](docs/requisitos.md) e o [checklist](CHECKLIST_IMPLEMENTACAO.md).
@@ -303,7 +305,7 @@ Substitua `1` pelo ID recebido. Reinicie a API com o mesmo caminho de banco e
 consulte novamente: a aula deve permanecer. A listagem retorna um objeto com página, registros e totais,
 em ordem de data, início e ID decrescentes; consulte o contrato v2 para filtros.
 
-O [contrato JSON v2](docs/api-v2.md) documenta campos, exemplos, códigos de erro e
+O [contrato JSON v3](docs/api-v3.md) documenta campos, exemplos, códigos de erro e
 requisições inválidas para testar. Em `backend/`, execute
 `go test -v ./internal/httpapi`, `go test ./...` e `go vet ./...`.
 
@@ -349,5 +351,28 @@ Na interface, use **Criar turma ou estudante**, informe um nome e clique em
 use **Filtrar**, **Limpar**, **Anterior** e **Próxima**. O total corresponde a
 todas as aulas do filtro, mesmo ao mudar de página.
 
-Consulte o [contrato v2](docs/api-v2.md) e o
+Consulte o [contrato v3](docs/api-v3.md) e o
 [roteiro de teste da etapa 8](docs/historico-aulas.md).
+
+
+## Etapa 9 — Editar, cancelar e recuperar dados
+
+No histórico, clique **Editar** para carregar a aula no formulário e depois
+**Salvar alterações**. **Cancelar aula** preserva o registro e o retira da carga
+horária; use o filtro **Canceladas** para consultar ou **Reativar aula** para
+incluí-lo novamente. A consulta padrão mostra somente as aulas ativas.
+
+Duas abas não podem sobrescrever silenciosamente a mesma versão. Um conflito
+preserva os campos: feche a edição e abra novamente a aula para conferir os dados
+atuais. O SQLite migra automaticamente para a versão 3 ao iniciar.
+
+Para executar o teste de interface completo, na raiz:
+
+```bash
+node scripts/test-etapa9.cjs
+```
+
+Consulte o [contrato v3](docs/api-v3.md) e o
+[roteiro de correção e backup](docs/correcao-backup.md), que inclui os comandos de
+backup consistente e restauração em outro arquivo. Nenhuma integração Google foi
+adicionada nesta etapa.

@@ -1,8 +1,10 @@
 <script lang="ts">
-  import { untrack } from 'svelte'
+  import { untrack, onDestroy } from 'svelte'
   import {
     jsonRequest,
     isHistorico,
+    isAula,
+    type Aula,
     duracao,
     type Historico,
     type Turma,
@@ -11,11 +13,70 @@
     apiUrl,
     turmas,
     revisao,
-  }: { apiUrl: string; turmas: Turma[]; revisao: number } = $props()
+    onEdit,
+    bloqueado,
+  }: {
+    apiUrl: string
+    turmas: Turma[]
+    revisao: number
+    onEdit: (aula: Aula) => void
+    bloqueado: boolean
+  } = $props()
   let inicial = $state('')
   let final = $state('')
   let turma = $state('')
-  let aplicados = $state({ inicial: '', final: '', turma: '' })
+  let situacao = $state('ativas')
+  let alterando = $state(false)
+  let aviso = $state('')
+  let alteracaoRequest: AbortController | undefined
+  async function mudarSituacao(aula: Aula) {
+    if (alterando) return
+    const cancelar = !aula.cancelada
+    if (
+      !window.confirm(
+        cancelar
+          ? 'Cancelar esta aula? Ela será preservada, mas deixará de contar na carga horária.'
+          : 'Reativar esta aula e incluí-la novamente na carga horária?',
+      )
+    )
+      return
+    alterando = true
+    aviso = ''
+    const controller = new AbortController()
+    alteracaoRequest = controller
+    try {
+      const data = await jsonRequest(`${apiUrl}/aulas/${aula.id}/situacao`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ versao: aula.versao, cancelada: cancelar }),
+        signal: controller.signal,
+      })
+      if (!isAula(data))
+        throw new Error(
+          'Não foi possível confirmar a alteração. Atualize o histórico antes de tentar novamente.',
+        )
+      if (!controller.signal.aborted)
+        aviso = cancelar ? 'Aula cancelada.' : 'Aula reativada.'
+    } catch (error) {
+      if (!controller.signal.aborted)
+        aviso =
+          error instanceof Error && error.name === 'Error'
+            ? error.message
+            : 'Não foi possível confirmar a alteração. Confira o histórico antes de tentar novamente.'
+    } finally {
+      if (!controller.signal.aborted) {
+        alterando = false
+        tentativa++
+      }
+    }
+  }
+  onDestroy(() => alteracaoRequest?.abort())
+  let aplicados = $state({
+    inicial: '',
+    final: '',
+    turma: '',
+    situacao: 'ativas',
+  })
   let pagina = $state(1)
   let tentativa = $state(0)
   let carregando = $state(true)
@@ -30,21 +91,23 @@
     }
     erroFiltro = ''
     pagina = 1
-    aplicados = { inicial, final, turma }
+    aplicados = { inicial, final, turma, situacao }
   }
   function limpar() {
     inicial = ''
     final = ''
     turma = ''
+    situacao = 'ativas'
     erroFiltro = ''
     pagina = 1
-    aplicados = { inicial: '', final: '', turma: '' }
+    aplicados = { inicial: '', final: '', turma: '', situacao: 'ativas' }
   }
   $effect(() => {
     const params = new URLSearchParams({ pagina: String(pagina) })
     if (aplicados.inicial) params.set('data_inicial', aplicados.inicial)
     if (aplicados.final) params.set('data_final', aplicados.final)
     if (aplicados.turma) params.set('turma_id', aplicados.turma)
+    params.set('situacao', aplicados.situacao)
     const url = `${apiUrl}/aulas?${params}`
     void revisao
     void tentativa
@@ -59,7 +122,14 @@
         const data = await jsonRequest(url, { signal: controller.signal })
         if (!isHistorico(data))
           throw new Error('O servidor enviou uma resposta inesperada.')
-        if (!controller.signal.aborted) resultado = data
+        if (!controller.signal.aborted) {
+          const ultima = Math.max(1, Math.ceil(data.total_registros / 20))
+          if (data.pagina > ultima) {
+            pagina = ultima
+            return
+          }
+          resultado = data
+        }
       } catch (error) {
         if (!controller.signal.aborted)
           erro =
@@ -109,6 +179,15 @@
             >{/each}</select
         >
       </div>
+      <div class="field full-width">
+        <label for="situacao">Situação</label><select
+          id="situacao"
+          bind:value={situacao}
+          ><option value="ativas">Ativas</option><option value="canceladas"
+            >Canceladas</option
+          ><option value="todas">Todas</option></select
+        >
+      </div>
     </div>
     <p class="hint">O período inclui as datas inicial e final.</p>
     {#if erroFiltro}<p class="error" role="alert">{erroFiltro}</p>{/if}
@@ -119,6 +198,8 @@
       >
     </div>
   </form>
+  <p class="hint">Aulas canceladas não entram na carga horária.</p>
+  <p role="status">{aviso}</p>
   <div role="status" aria-live="polite">
     {#if carregando}<p>Carregando histórico…</p>
     {:else if erro}<p class="error">{erro}</p>
@@ -143,6 +224,23 @@
             <h3>{dataLocal(aula.data)} · {aula.turma}</h3>
             <p>{aula.inicio}–{aula.fim} · {duracao(aula.duracao_minutos)}</p>
             <p class="conteudo">{aula.conteudo}</p>
+            {#if aula.cancelada}<p><strong>Cancelada</strong></p>{/if}
+            {#if aula.updated_at}<p class="hint">
+                Atualizada em {new Date(aula.updated_at).toLocaleString(
+                  'pt-BR',
+                )}
+              </p>{/if}
+            <div class="actions">
+              {#if !aula.cancelada}<button
+                  disabled={alterando || bloqueado}
+                  onclick={() => onEdit(aula)}>Editar</button
+                >{/if}
+              <button
+                disabled={alterando || bloqueado}
+                onclick={() => mudarSituacao(aula)}
+                >{aula.cancelada ? 'Reativar aula' : 'Cancelar aula'}</button
+              >
+            </div>
           </li>
         {/each}
       </ul>

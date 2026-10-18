@@ -11,7 +11,9 @@
 - O cadastro confirmado atualiza a consulta sem remover os filtros ativos.
 - Datas civis são formatadas sem conversão para UTC no histórico.
 
-Não há edição, exclusão, integração Google ou exportação nesta etapa.
+Na etapa 8 não havia edição. A etapa 9 adicionou edição e cancelamento
+reversível, mantendo o histórico padrão somente com aulas ativas. Veja
+[correção e backup](correcao-backup.md). Google e exportação seguem futuros.
 
 ## Banco e migração
 

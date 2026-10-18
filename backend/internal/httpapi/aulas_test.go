@@ -84,7 +84,7 @@ func TestCadastrarConsultarEConferirSQLite(t *testing.T) {
 		t.Fatalf("ID inválido: %v", recebido)
 	}
 	esperado := map[string]any{
-		"turma_id": float64(1), "id": id, "data": "2026-10-13", "inicio": "08:00", "fim": "10:00",
+		"versao": float64(1), "cancelada": false, "updated_at": recebido["updated_at"], "turma_id": float64(1), "id": id, "data": "2026-10-13", "inicio": "08:00", "fim": "10:00",
 		"turma": "Turma fictícia", "conteudo": "Leitura", "observacoes": "Exemplo",
 		"intervalo_minutos": float64(15), "duracao_minutos": float64(105),
 	}

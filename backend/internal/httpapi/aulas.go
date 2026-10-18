@@ -1,10 +1,6 @@
 package httpapi
 
 import (
-	"bytes"
-	"encoding/json"
-	"io"
-	"mime"
 	"net/url"
 	"strconv"
 	"strings"
@@ -28,6 +24,9 @@ type criarAulaRequest struct {
 }
 
 type aulaResponse struct {
+	Versao           int64  `json:"versao"`
+	Cancelada        bool   `json:"cancelada"`
+	UpdatedAt        string `json:"updated_at"`
 	TurmaID          int64  `json:"turma_id"`
 	ID               int64  `json:"id"`
 	Data             string `json:"data"`
@@ -42,6 +41,7 @@ type aulaResponse struct {
 
 func respostaAula(r storage.Registro) aulaResponse {
 	return aulaResponse{
+		Versao: r.Versao, Cancelada: r.Cancelada, UpdatedAt: r.UpdatedAt,
 		TurmaID: r.TurmaID, ID: r.ID, Data: r.Aula.Data, Inicio: r.Aula.Inicio, Fim: r.Aula.Fim,
 		Turma: r.Aula.Turma, Conteudo: r.Aula.Conteudo, Observacoes: r.Aula.Observacoes,
 		IntervaloMinutos: r.Aula.IntervaloMinutos, DuracaoMinutos: r.DuracaoMinutos,
@@ -49,22 +49,11 @@ func respostaAula(r storage.Registro) aulaResponse {
 }
 
 func registrarRotasAulas(app *fiber.App, banco *storage.Banco) {
+	registrarRotasCorrecao(app, banco)
 	app.Post("/aulas", func(c fiber.Ctx) error {
-		contentType, _, err := mime.ParseMediaType(c.Get(fiber.HeaderContentType))
-		if err != nil || contentType != "application/json" {
-			return fiber.NewError(fiber.StatusUnsupportedMediaType, "Use Content-Type: application/json")
-		}
-		// Decodificar para um ponteiro permite diferenciar um objeto de null.
-		var entrada *criarAulaRequest
-		decoder := json.NewDecoder(bytes.NewReader(c.Body()))
-		decoder.DisallowUnknownFields()
-		erroJSON := fiber.NewError(fiber.StatusBadRequest, "Envie um único objeto JSON com os campos e tipos documentados")
-		if err := decoder.Decode(&entrada); err != nil || entrada == nil {
-			return erroJSON
-		}
-		// Um segundo valor ou conteúdo extra não deve passar silenciosamente.
-		if err := decoder.Decode(new(any)); err != io.EOF {
-			return erroJSON
+		entrada, err := lerJSON[criarAulaRequest](c)
+		if err != nil {
+			return err
 		}
 
 		if entrada.TurmaID <= 0 {
@@ -135,6 +124,11 @@ func lerFiltro(query string) (storage.Filtro, error) {
 		}
 		v := values[0]
 		switch k {
+		case "situacao":
+			if v != "ativas" && v != "canceladas" && v != "todas" {
+				return f, fiber.NewError(400, "Situação inválida")
+			}
+			f.Situacao = v
 		case "data_inicial", "data_final":
 			d, err := time.Parse("2006-01-02", v)
 			if err != nil || d.Year() < 1 || d.Format("2006-01-02") != v {

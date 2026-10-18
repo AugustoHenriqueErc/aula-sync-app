@@ -1,8 +1,28 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { onMount, tick } from 'svelte'
   import AulaForm from './lib/AulaForm.svelte'
   import Historico from './lib/Historico.svelte'
-  import { isTurma, jsonRequest, type Turma } from './lib/api'
+  import { isTurma, jsonRequest, type Turma, type Aula } from './lib/api'
+  let salvando = $state(false)
+  let avisoEdicao = $state('')
+  let editando = $state<Aula | null>(null)
+  async function editar(aula: Aula) {
+    if (salvando) return
+    avisoEdicao = ''
+    editando = aula
+    await tick()
+    document
+      .getElementById('form-title')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    document.getElementById('data')?.focus({ preventScroll: true })
+  }
+  function salvo() {
+    avisoEdicao = editando
+      ? 'Alterações salvas. O histórico foi atualizado.'
+      : ''
+    editando = null
+    revisao++
+  }
   let turmas = $state<Turma[]>([])
   let turmasErro = $state('')
   let turmasCarregando = $state(true)
@@ -128,14 +148,21 @@
   <button onclick={carregarTurmas} disabled={turmasCarregando}
     >Atualizar turmas</button
   >
+  <p role="status">{avisoEdicao}</p>
   <AulaForm
     {apiUrl}
     {turmas}
     {turmasCarregando}
     {turmaCriada}
-    onSaved={() => revisao++}
+    onSaved={salvo}
+    onBusy={(value) => (salvando = value)}
+    {editando}
+    onCancel={() => {
+      editando = null
+      revisao++
+    }}
   />
-  <Historico {apiUrl} {turmas} {revisao} />
+  <Historico {apiUrl} {turmas} {revisao} onEdit={editar} bloqueado={salvando} />
 
   <section aria-labelledby="connection-title">
     <h2 id="connection-title">Conexão com o backend</h2>

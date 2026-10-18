@@ -1,3 +1,6 @@
+> Etapa 9: o esquema atual é v3, com versão, situação, updated_at e trilha
+> transacional de alterações. Consulte [correção e backup](correcao-backup.md).
+
 > Evolução na etapa 8: o esquema atual é v2, com catálogo de turmas,
 > nomes normalizados únicos e `turma_id` obrigatório nas aulas. A migração
 > preserva os registros v1. Veja [histórico e migração](historico-aulas.md).

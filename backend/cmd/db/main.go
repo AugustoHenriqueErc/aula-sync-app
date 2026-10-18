@@ -19,12 +19,24 @@ func main() {
 }
 
 func executar() error {
-	if len(os.Args) != 2 {
-		return fmt.Errorf("uso: go run ./cmd/db migrar|inserir-exemplo|listar")
+	if len(os.Args) < 2 {
+		return fmt.Errorf("uso: go run ./cmd/db migrar|inserir-exemplo|listar|verificar|backup DESTINO")
 	}
 	comando := os.Args[1]
-	if comando != "migrar" && comando != "inserir-exemplo" && comando != "listar" {
+	if comando != "migrar" && comando != "inserir-exemplo" && comando != "listar" && comando != "backup" && comando != "verificar" {
 		return fmt.Errorf("comando desconhecido: %s", comando)
+	}
+	if (comando == "backup" && len(os.Args) != 3) || (comando != "backup" && len(os.Args) != 2) {
+		return fmt.Errorf("argumentos inválidos; backup exige um arquivo de destino")
+	}
+	if comando == "backup" || comando == "verificar" {
+		caminho := os.Getenv("DATABASE_PATH")
+		if caminho == "" {
+			caminho = storage.CaminhoPadrao
+		}
+		if _, err := os.Stat(caminho); err != nil {
+			return fmt.Errorf("o banco de origem deve existir: %w", err)
+		}
 	}
 	ctx := context.Background()
 	banco, err := storage.Abrir(ctx, os.Getenv("DATABASE_PATH"))
@@ -33,8 +45,18 @@ func executar() error {
 	}
 	defer banco.Close()
 	switch comando {
+	case "backup":
+		if err := banco.Backup(ctx, os.Args[2]); err != nil {
+			return err
+		}
+		fmt.Println("Backup concluído.")
+	case "verificar":
+		if err := banco.Verificar(ctx); err != nil {
+			return err
+		}
+		fmt.Println("Integridade e referências verificadas.")
 	case "migrar":
-		fmt.Println("Banco pronto: migração 001 aplicada ou já existente.")
+		fmt.Println("Banco pronto: migrações até a versão 3 aplicadas.")
 	case "inserir-exemplo":
 		registro, err := banco.Inserir(ctx, aula.Aula{
 			Data: "2026-10-13", Inicio: "08:00", Fim: "10:00", Turma: "Turma fictícia",

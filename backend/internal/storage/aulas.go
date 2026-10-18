@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"app-sync-backend/internal/aula"
 )
@@ -13,6 +14,9 @@ var ErrNaoEncontrada = errors.New("aula não encontrada")
 
 // Registro separa os dados de persistência do modelo de domínio.
 type Registro struct {
+	Versao         int64
+	Cancelada      bool
+	UpdatedAt      string
 	ID             int64
 	TurmaID        int64
 	Aula           aula.Aula
@@ -37,10 +41,11 @@ func (b *Banco) Inserir(ctx context.Context, a aula.Aula) (Registro, error) {
 	if err = tx.QueryRowContext(ctx, "SELECT id FROM turmas WHERE nome_normalizado = ?", normalizarNome(a.Turma)).Scan(&turmaID); err != nil {
 		return Registro{}, err
 	}
+	atualizada := time.Now().UTC().Format(time.RFC3339Nano)
 	result, err := tx.ExecContext(ctx, `INSERT INTO aulas
-  (data, inicio, fim, turma, conteudo, observacoes, intervalo_minutos, duracao_minutos, turma_id)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		a.Data, a.Inicio, a.Fim, a.Turma, a.Conteudo, a.Observacoes, a.IntervaloMinutos, duracao, turmaID)
+  (data, inicio, fim, turma, conteudo, observacoes, intervalo_minutos, duracao_minutos, turma_id, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		a.Data, a.Inicio, a.Fim, a.Turma, a.Conteudo, a.Observacoes, a.IntervaloMinutos, duracao, turmaID, atualizada)
 	if err != nil {
 		return Registro{}, fmt.Errorf("inserir aula: %w", err)
 	}
@@ -51,10 +56,10 @@ func (b *Banco) Inserir(ctx context.Context, a aula.Aula) (Registro, error) {
 	if err := tx.Commit(); err != nil {
 		return Registro{}, err
 	}
-	return Registro{ID: id, TurmaID: turmaID, Aula: a, DuracaoMinutos: duracao}, nil
+	return Registro{Versao: 1, UpdatedAt: atualizada, ID: id, TurmaID: turmaID, Aula: a, DuracaoMinutos: duracao}, nil
 }
 
-const colunasAula = "id, data, inicio, fim, turma, conteudo, observacoes, intervalo_minutos, duracao_minutos, turma_id"
+const colunasAula = "id, data, inicio, fim, turma, conteudo, observacoes, intervalo_minutos, duracao_minutos, turma_id, versao, cancelada, updated_at"
 
 func (b *Banco) Buscar(ctx context.Context, id int64) (Registro, error) {
 	registro, err := lerRegistro(b.db.QueryRowContext(ctx, "SELECT "+colunasAula+" FROM aulas WHERE id = ?", id))
@@ -93,6 +98,6 @@ func (b *Banco) Listar(ctx context.Context) ([]Registro, error) {
 func lerRegistro(row interface{ Scan(...any) error }) (Registro, error) {
 	var r Registro
 	err := row.Scan(&r.ID, &r.Aula.Data, &r.Aula.Inicio, &r.Aula.Fim, &r.Aula.Turma,
-		&r.Aula.Conteudo, &r.Aula.Observacoes, &r.Aula.IntervaloMinutos, &r.DuracaoMinutos, &r.TurmaID)
+		&r.Aula.Conteudo, &r.Aula.Observacoes, &r.Aula.IntervaloMinutos, &r.DuracaoMinutos, &r.TurmaID, &r.Versao, &r.Cancelada, &r.UpdatedAt)
 	return r, err
 }

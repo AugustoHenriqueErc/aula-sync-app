@@ -174,15 +174,15 @@ somente o planejamento, sem concluir tarefas de implementação.
 
 ## Etapa 9 — Correção, regressões e backup
 
-- [ ] Definir contrato de atualização e implementar edição com recálculo da duração.
-- [ ] Definir política de arquivamento/cancelamento e seu efeito sobre filtros e totais.
-- [ ] Registrar `updated_at` e os demais dados de rastreabilidade exigidos pelos requisitos.
-- [ ] Definir o comportamento de edições concorrentes, se houver esse cenário de uso.
-- [ ] Cobrir o fluxo principal com testes e registrar logs sem dados sensíveis.
-- [ ] Documentar criação e restauração de backup consistente do SQLite.
-- [ ] Validar edição de horários, novo total, cancelamento, registro inexistente e dados inválidos.
-- [ ] Executar a suíte de testes e restaurar um backup em banco separado.
-- [ ] **Etapa 9 concluída:** correções e recuperação local comprovadas.
+- [x] Definir contrato de atualização e implementar edição com recálculo da duração.
+- [x] Definir política de arquivamento/cancelamento e seu efeito sobre filtros e totais.
+- [x] Registrar `updated_at` e os demais dados de rastreabilidade exigidos pelos requisitos.
+- [x] Definir o comportamento de edições concorrentes, se houver esse cenário de uso.
+- [x] Cobrir o fluxo principal com testes e registrar logs sem dados sensíveis.
+- [x] Documentar criação e restauração de backup consistente do SQLite.
+- [x] Validar edição de horários, novo total, cancelamento, registro inexistente e dados inválidos.
+- [x] Executar a suíte de testes e restaurar um backup em banco separado.
+- [x] **Etapa 9 concluída:** correções e recuperação local comprovadas.
 
 ## Etapa 10 — Preparação da integração Google
 
@@ -254,7 +254,7 @@ Reavaliar após o PDF e o retorno de Maria Luiza, sem bloquear a etapa 13.
 - [x] **A — Comunicação web:** etapas 1 a 3 validadas.
 - [ ] **B — Regra confiável:** etapa 4 validada com os exemplos da descoberta.
 - [x] **C — Produto local útil:** etapas 5 a 8 validadas.
-- [ ] **D — Operação segura:** etapa 9 validada.
+- [x] **D — Operação segura:** etapa 9 validada.
 - [ ] **E — Integração e relatório:** Sheets recuperável e sem duplicações, PDF coerente com o histórico; etapas 10 a 12 validadas.
 - [ ] **F — Piloto real:** etapa 13 validada.
 
@@ -275,5 +275,7 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 | 6 — API de cadastro e consulta | 13/10/2026 | Contrato `docs/api-v1.md`; POST /aulas e GET /aulas e /aulas/:id; testes HTTP com SQLite temporário, suíte sem CGO, vet e build aprovados; HTTP real na porta 33006, comparação SQL, persistência após reinício e encerramento por SIGINT/SIGTERM validados | Etapa 6 concluída; listagem integral sem paginação ou filtros; frontend continua diagnóstico; alterações locais de documentação da etapa 5 preservadas |
 | 7 — Formulário web | 13/10/2026 | Formatação, check (0 erros/avisos) e build aprovados; Chrome com API e banco de teste validou cadastro, dados persistidos via GET, prévia, obrigatórios, horários/intervalo, erros 422, Tab/Enter, bloqueio de envio repetido, backend desligado e recuperação; resposta incompatível e timeout simulados; captura de 375px revisada | Etapa 7 concluída tecnicamente para o MVP; roteiro em `docs/formulario-aula.md`; hipóteses ainda pendentes de revisão com a professora |
 | 8 — Histórico e carga horária | 17/10/2026 | Migração v2, catálogo único por nome normalizado, filtros inclusivos, paginação de 20, totais globais e contrato HTTP v2; testes Go, vet e build aprovados; frontend check sem erros/avisos e build; Chrome validou cadastro, duplicidade, filtros, atualização, 3h15, 21 registros em duas páginas, falha e recuperação de conexão; captura 375px sem rolagem horizontal | Conclusão técnica do MVP e marco C; regras institucionais e etapa 0 seguem pendentes; roteiro em `docs/historico-aulas.md` |
+| 8 — Validação pelo desenvolvedor | 18/10/2026 | Desenvolvedor informou testes de busca aprovados e envio das alterações para origin | Etapa 8 confirmada no uso local |
+| 9 — Correção, regressões e backup | 18/10/2026 | Migração v3, PUT de edição, PATCH de situação, conflito 409 por versão e trilha transacional; testes Go, vet e builds aprovados; frontend check sem erros/avisos, formatação e build aprovados; Chrome validou edição, recálculo, conflito, cancelamento/reativação, retorno da última página, 375px e falha/recuperação; backup restaurado em outro arquivo com integridade e igualdade dos 21 registros | Conclusão técnica do MVP e marco D; contrato `docs/api-v3.md`, roteiro `docs/correcao-backup.md` e teste reproduzível `scripts/test-etapa9.cjs`; regras institucionais ainda pendentes |
 
-**Próxima ação:** discutir a etapa 9 (correção de registros, regressões e backup), sem iniciar sua implementação automaticamente. Validar as hipóteses com Maria Luzia após a demonstração; a etapa 0 continua pendente.
+**Próxima ação:** discutir a etapa 10 (preparação segura da integração Google), incluindo ambiente de teste, mapeamento e autenticação, sem ativar sincronização. Validar as hipóteses com Maria Luzia após a demonstração; a etapa 0 continua pendente.

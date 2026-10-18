@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"errors"
+	"log/slog"
 
 	"app-sync-backend/internal/aula"
 	"app-sync-backend/internal/storage"
@@ -24,6 +25,9 @@ func New(banco *storage.Banco) *fiber.App {
 }
 
 func handleError(c fiber.Ctx, err error) error {
+	if errors.Is(err, storage.ErrConflito) || errors.Is(err, storage.ErrCancelada) {
+		return c.Status(409).JSON(fiber.Map{"error": err.Error()})
+	}
 	if errors.Is(err, storage.ErrTurmaDuplicada) {
 		return c.Status(409).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -52,6 +56,9 @@ func handleError(c fiber.Ctx, err error) error {
 		if code < fiber.StatusInternalServerError {
 			message = httpError.Message
 		}
+	}
+	if code >= 500 {
+		slog.Error("falha_http", "status", code)
 	}
 	return c.Status(code).JSON(fiber.Map{"error": message})
 }

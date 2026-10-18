@@ -1,19 +1,25 @@
 <script lang="ts">
-  import { onDestroy, tick } from 'svelte'
+  import { onDestroy, tick, untrack } from 'svelte'
 
-  import { isTurma, jsonRequest, type Turma } from './api'
+  import { isTurma, jsonRequest, type Turma, type Aula } from './api'
   let {
     apiUrl,
     turmas,
     turmasCarregando,
     turmaCriada,
     onSaved,
+    editando = null,
+    onCancel,
+    onBusy,
   }: {
     apiUrl: string
     turmas: Turma[]
     turmasCarregando: boolean
     turmaCriada: (t: Turma) => void
     onSaved: () => void
+    editando?: Aula | null
+    onCancel: () => void
+    onBusy: (value: boolean) => void
   } = $props()
   let novoNome = $state('')
   let criandoTurma = $state(false)
@@ -22,6 +28,7 @@
   async function criarTurma() {
     if (criandoTurma) return
     criandoTurma = true
+    onBusy(true)
     erroTurma = ''
     const controller = new AbortController()
     turmaRequest = controller
@@ -46,6 +53,7 @@
             : 'Não foi possível confirmar o cadastro. Recarregue as turmas antes de tentar novamente.'
     } finally {
       criandoTurma = false
+      onBusy(false)
     }
   }
 
@@ -76,6 +84,24 @@
   let values = $state<FormValues>(emptyForm())
   let errors = $state<Partial<Record<Field, string>>>({})
   let submission = $state<SubmitState>({ status: 'idle' })
+  $effect(() => {
+    const aula = editando
+    untrack(() => {
+      values = aula
+        ? {
+            data: aula.data,
+            inicio: aula.inicio,
+            fim: aula.fim,
+            turma: String(aula.turma_id),
+            conteudo: aula.conteudo,
+            observacoes: aula.observacoes,
+            intervalo_minutos: String(aula.intervalo_minutos),
+          }
+        : emptyForm()
+      errors = {}
+      submission = { status: 'idle' }
+    })
+  })
   let form: HTMLFormElement
   let feedback: HTMLDivElement
   let activeRequest: AbortController | undefined
@@ -175,12 +201,14 @@
     const { turma, ...campos } = values
     const payload = {
       ...campos,
+      ...(editando ? { versao: editando.versao } : {}),
       turma_id: Number(turma),
       intervalo_minutos: Number(values.intervalo_minutos),
     }
     const controller = new AbortController()
     activeRequest = controller
     submission = { status: 'sending' }
+    onBusy(true)
     let timedOut = false
     const timeout = window.setTimeout(() => {
       timedOut = true
@@ -188,12 +216,15 @@
     }, 10000)
 
     try {
-      const response = await fetch(`${apiUrl}/aulas`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-      })
+      const response = await fetch(
+        editando ? `${apiUrl}/aulas/${editando.id}` : `${apiUrl}/aulas`,
+        {
+          method: editando ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        },
+      )
       const data: unknown = await response.json().catch(() => null)
       if (!response.ok) {
         if (
@@ -217,15 +248,17 @@
           submission = {
             status: 'error',
             message:
-              response.status === 413
-                ? 'O conteúdo enviado é muito grande. Reduza os textos e tente novamente.'
-                : 'Não foi possível salvar a aula. Os campos foram preservados. Verifique a conexão e tente novamente.',
+              response.status === 409
+                ? 'Esta aula mudou desde que foi aberta. Seus campos foram preservados. Feche a edição e abra a aula novamente no histórico para conferir a versão atual.'
+                : response.status === 413
+                  ? 'O conteúdo enviado é muito grande. Reduza os textos e tente novamente.'
+                  : 'Não foi possível salvar a aula. Os campos foram preservados. Verifique a conexão e tente novamente.',
           }
         }
         return
       }
       if (
-        response.status !== 201 ||
+        response.status !== (editando ? 200 : 201) ||
         typeof data !== 'object' ||
         data === null ||
         !('id' in data) ||
@@ -256,6 +289,7 @@
     } finally {
       window.clearTimeout(timeout)
       activeRequest = undefined
+      onBusy(false)
       if (!controller.signal.aborted || timedOut) {
         if (submission.status === 'error') await focusError()
         else {
@@ -273,7 +307,7 @@
 </script>
 
 <section aria-labelledby="form-title">
-  <h2 id="form-title">Dados da aula</h2>
+  <h2 id="form-title">{editando ? 'Editar aula' : 'Dados da aula'}</h2>
   <p id="form-help">
     Preencha os campos obrigatórios. Observações são opcionais.
   </p>
@@ -284,7 +318,7 @@
     aria-describedby="form-help"
     aria-busy={submission.status === 'sending'}
   >
-    <fieldset disabled={submission.status === 'sending'}>
+    <fieldset disabled={submission.status === 'sending' || criandoTurma}>
       <legend class="sr-only">Dados para registrar uma aula</legend>
       <div class="form-grid">
         <div class="field full-width">
@@ -436,8 +470,15 @@
         </p>
       </div>
       <button type="submit" disabled={criandoTurma || turmasCarregando}
-        >{submission.status === 'sending' ? 'Salvando…' : 'Salvar aula'}</button
+        >{submission.status === 'sending'
+          ? 'Salvando…'
+          : editando
+            ? 'Salvar alterações'
+            : 'Salvar aula'}</button
       >
+      {#if editando}<button type="button" onclick={onCancel}
+          >Fechar edição</button
+        >{/if}
     </fieldset>
     <div
       bind:this={feedback}
@@ -451,7 +492,7 @@
         <p>Salvando aula…</p>
       {:else if submission.status === 'success'}
         <p class="success">
-          Aula cadastrada com sucesso. Duração registrada: {submission.duration} minutos.
+          Aula salva com sucesso. Duração registrada: {submission.duration} minutos.
         </p>
         <p>Você já pode preencher uma nova aula.</p>
       {:else if submission.status === 'error'}
