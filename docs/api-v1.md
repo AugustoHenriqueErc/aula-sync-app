@@ -1,5 +1,8 @@
 # Contrato HTTP v1 — aulas
 
+> Contrato histórico da etapa 6, substituído pelo [contrato v2](api-v2.md).
+> Os exemplos abaixo descrevem a versão anterior, não a API atual.
+
 Contrato inicial da etapa 6, versionado neste arquivo e no Git. A versão não faz
 parte da URL nesta etapa. Base local: `http://localhost:3000`. As regras de aula
 são as [hipóteses do MVP](dominio-aula.md), ainda pendentes de revisão institucional.

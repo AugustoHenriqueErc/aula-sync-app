@@ -2,8 +2,8 @@
   "data": "2026-10-13",
   "inicio": "08:00",
   "fim": "10:00",
-  "turma": "Turma fictícia",
   "conteudo": "Leitura de demonstração",
   "observacoes": "Exemplo da API",
-  "intervalo_minutos": 15
+  "intervalo_minutos": 15,
+  "turma_id": 1
 }

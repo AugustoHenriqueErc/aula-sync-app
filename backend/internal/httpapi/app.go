@@ -19,14 +19,21 @@ func New(banco *storage.Banco) *fiber.App {
 		return c.JSON(fiber.Map{"status": "ok"})
 	})
 	registrarRotasAulas(app, banco)
+	registrarRotasTurmas(app, banco)
 	return app
 }
 
 func handleError(c fiber.Ctx, err error) error {
+	if errors.Is(err, storage.ErrTurmaDuplicada) {
+		return c.Status(409).JSON(fiber.Map{"error": err.Error()})
+	}
+	if errors.Is(err, storage.ErrTurmaAusente) {
+		return c.Status(422).JSON(fiber.Map{"error": err.Error(), "field": "turma_id"})
+	}
 	var validacao *aula.ErroValidacao
 	if errors.As(err, &validacao) {
 		campos := map[string]string{
-			"Data": "data", "Inicio": "inicio", "Fim": "fim", "Turma": "turma",
+			"Nome": "nome", "Data": "data", "Inicio": "inicio", "Fim": "fim", "Turma": "turma",
 			"Conteudo": "conteudo", "Observacoes": "observacoes", "IntervaloMinutos": "intervalo_minutos",
 		}
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{

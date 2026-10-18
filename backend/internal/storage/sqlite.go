@@ -33,7 +33,8 @@ func Abrir(ctx context.Context, caminho string) (*Banco, error) {
 	dsn := url.URL{Scheme: "file", Path: filepath.ToSlash(absoluto)}
 	options := url.Values{}
 	options.Set("mode", "rwc")
-	options.Set("_pragma", "busy_timeout(5000)")
+	options.Add("_pragma", "busy_timeout(5000)")
+	options.Add("_pragma", "foreign_keys(1)")
 	options.Set("_txlock", "immediate")
 	dsn.RawQuery = options.Encode()
 	db, err := sql.Open("sqlite", dsn.String())
@@ -75,10 +76,15 @@ func (b *Banco) migrar(ctx context.Context) error {
 		if _, err := tx.ExecContext(ctx, "PRAGMA user_version = 1"); err != nil {
 			return fmt.Errorf("registrar migração 001: %w", err)
 		}
-	case 1:
+	case 1, 2:
 		// A migração já foi aplicada. Não recriar nem apagar tabelas.
 	default:
-		return fmt.Errorf("versão de banco não suportada: %d (máxima: 1)", versao)
+		return fmt.Errorf("versão de banco não suportada: %d (máxima: 2)", versao)
+	}
+	if versao < 2 {
+		if err := migrarTurmas(ctx, tx); err != nil {
+			return err
+		}
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("concluir migração: %w", err)

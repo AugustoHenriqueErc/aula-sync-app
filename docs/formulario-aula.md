@@ -1,3 +1,8 @@
+> Atualização da etapa 8: turma/estudante agora é selecionada em um combobox.
+> Use “Criar turma ou estudante” para cadastrar uma opção antes de salvar.
+> O POST envia `turma_id`; consulte [contrato v2](api-v2.md) e
+> [histórico](historico-aulas.md). As validações dos demais campos continuam.
+
 # Formulário de aula — etapa 7
 
 A página inicial agora permite cadastrar uma aula. Os campos seguem as

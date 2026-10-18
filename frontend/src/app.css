@@ -99,6 +99,7 @@ label {
   margin-bottom: 6px;
 }
 input,
+select,
 textarea {
   display: block;
   width: 100%;
@@ -122,6 +123,7 @@ input[aria-invalid='true'],
 textarea[aria-invalid='true'] {
   border-color: #b91c1c;
 }
+select:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 .form-feedback:focus-visible {
@@ -174,4 +176,37 @@ textarea:focus-visible,
   form button {
     width: 100%;
   }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+.aulas {
+  list-style: none;
+  padding: 0;
+}
+.aulas li {
+  border-top: 1px solid #d5dce5;
+  padding: 16px 0;
+  overflow-wrap: anywhere;
+}
+.aulas h3 {
+  font-size: 1rem;
+  margin: 0 0 8px;
+}
+.conteudo {
+  white-space: pre-wrap;
+}
+details {
+  margin-top: 12px;
+}
+summary {
+  cursor: pointer;
+}
+details button {
+  margin-top: 12px;
 }

@@ -12,9 +12,11 @@ O pacote Go `internal/aula` valida aulas e calcula a duração líquida em minut
 conforme as [hipóteses do MVP](docs/dominio-aula.md), ainda pendentes de revisão
 com a professora. A persistência SQLite permite inserir, buscar e listar aulas
 pelo repositório, pelo comando de estudo e pela API HTTP. Os endpoints de cadastro
-e consulta estão descritos no [contrato v1](docs/api-v1.md). O formulário web
+e consulta estão descritos no [contrato v2](docs/api-v2.md). O formulário web
 permite cadastrar aulas com prévia, validação e confirmação. O histórico no
-navegador ainda não está implementado.
+navegador oferece filtros inclusivos de datas, seleção de turma/estudante,
+páginas de 20 aulas e carga horária de todo o conjunto filtrado. O formulário
+permite criar e selecionar turmas com nomes únicos após normalização.
 O objetivo é construir um MVP local com dados fictícios para apresentar a Maria
 Luzia e ajustar as hipóteses após o primeiro contato. Consulte os
 [requisitos](docs/requisitos.md) e o [checklist](CHECKLIST_IMPLEMENTACAO.md).
@@ -284,7 +286,9 @@ essas operações à API; o comando de estudo continua disponível.
 ## Testar a etapa 6
 
 Inicie a API em `backend/` com `DATABASE_PATH=aulas-api-estudo.db go run ./cmd/api`.
-Em outro terminal, na raiz do projeto:
+Em outro terminal, crie primeiro uma turma via `POST /turmas` e ajuste
+`turma_id` em `docs/exemplos/aula.json` para o ID retornado, conforme o contrato v2.
+Na raiz do projeto:
 
 ```bash
 curl --include -X POST http://localhost:3000/aulas \
@@ -296,10 +300,10 @@ curl --include http://localhost:3000/aulas/1
 
 O cadastro responde 201, `Location` e o registro com duração de 105 minutos.
 Substitua `1` pelo ID recebido. Reinicie a API com o mesmo caminho de banco e
-consulte novamente: a aula deve permanecer. A listagem retorna todos os registros
-em ordem de data, início e ID decrescentes; ainda não aceita filtros ou paginação.
+consulte novamente: a aula deve permanecer. A listagem retorna um objeto com página, registros e totais,
+em ordem de data, início e ID decrescentes; consulte o contrato v2 para filtros.
 
-O [contrato JSON v1](docs/api-v1.md) documenta campos, exemplos, códigos de erro e
+O [contrato JSON v2](docs/api-v2.md) documenta campos, exemplos, códigos de erro e
 requisições inválidas para testar. Em `backend/`, execute
 `go test -v ./internal/httpapi`, `go test ./...` e `go vet ./...`.
 
@@ -316,7 +320,7 @@ contrato está implementado na etapa 7.
 ## Testar a etapa 7
 
 Com backend e frontend ligados, abra http://127.0.0.1:5173 e preencha uma aula
-fictícia: data válida, início 08:00, término 10:00, intervalo 15, turma e conteúdo.
+fictícia: data válida, início 08:00, término 10:00, intervalo 15 e conteúdo; crie ou selecione uma turma/estudante.
 A prévia deve indicar **105 minutos**. Clique em **Salvar aula**: a confirmação
 usa a duração retornada pelo servidor, e o formulário é limpo para outra aula.
 
@@ -330,3 +334,20 @@ Formatação, checagem e build passaram. A validação no Chrome cobriu cadastro
 erros locais e do servidor, teclado, bloqueio de envios repetidos, falha e
 recuperação da conexão, timeout e largura de 375 px. As regras de aula ainda são
 hipóteses do MVP pendentes de revisão com Maria Luzia.
+
+
+## Etapa 8 — Histórico e turmas
+
+Ao iniciar, a API migra o SQLite para a versão 2, preservando aulas e agrupando
+nomes equivalentes em um catálogo. Aulas antigas mantêm seu texto de turma;
+o filtro usa o ID compartilhado. O nome exibido no catálogo vem da primeira
+aula (menor ID), com espaços normalizados. Não foi aplicado nenhum script
+manual aos bancos locais durante o desenvolvimento desta etapa.
+
+Na interface, use **Criar turma ou estudante**, informe um nome e clique em
+**Criar e selecionar**. Selecione essa opção ao cadastrar uma aula. No histórico,
+use **Filtrar**, **Limpar**, **Anterior** e **Próxima**. O total corresponde a
+todas as aulas do filtro, mesmo ao mudar de página.
+
+Consulte o [contrato v2](docs/api-v2.md) e o
+[roteiro de teste da etapa 8](docs/historico-aulas.md).

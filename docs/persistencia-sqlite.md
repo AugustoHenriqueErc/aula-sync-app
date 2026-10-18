@@ -1,3 +1,8 @@
+> Evolução na etapa 8: o esquema atual é v2, com catálogo de turmas,
+> nomes normalizados únicos e `turma_id` obrigatório nas aulas. A migração
+> preserva os registros v1. Veja [histórico e migração](historico-aulas.md).
+> Este documento mantém a explicação da base implementada na etapa 5.
+
 # Persistência SQLite — etapa 5
 
 ## Driver e execução

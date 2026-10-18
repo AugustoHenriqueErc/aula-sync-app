@@ -1,6 +1,41 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import AulaForm from './lib/AulaForm.svelte'
+  import Historico from './lib/Historico.svelte'
+  import { isTurma, jsonRequest, type Turma } from './lib/api'
+  let turmas = $state<Turma[]>([])
+  let turmasErro = $state('')
+  let turmasCarregando = $state(true)
+  let revisao = $state(0)
+  let turmasRequest: AbortController | undefined
+  async function carregarTurmas() {
+    turmasRequest?.abort()
+    const controller = new AbortController()
+    turmasRequest = controller
+    turmasCarregando = true
+    turmasErro = ''
+    try {
+      const data = await jsonRequest(`${apiUrl}/turmas`, {
+        signal: controller.signal,
+      })
+      if (!Array.isArray(data) || !data.every(isTurma))
+        throw new Error('Resposta de turmas inválida.')
+      if (!controller.signal.aborted) turmas = data
+    } catch {
+      if (!controller.signal.aborted)
+        turmasErro = 'Não foi possível carregar turmas e estudantes.'
+    } finally {
+      if (!controller.signal.aborted) turmasCarregando = false
+    }
+  }
+  function turmaCriada(turma: Turma) {
+    turmasRequest?.abort()
+    turmasCarregando = false
+    turmasErro = ''
+    turmas = [...turmas.filter((t) => t.id !== turma.id), turma].sort((a, b) =>
+      a.nome.localeCompare(b.nome),
+    )
+  }
 
   type ConnectionState =
     | { status: 'loading' }
@@ -71,8 +106,12 @@
   }
 
   onMount(() => {
+    void carregarTurmas()
     void checkConnection()
-    return () => activeRequest?.abort()
+    return () => {
+      activeRequest?.abort()
+      turmasRequest?.abort()
+    }
   })
 </script>
 
@@ -81,7 +120,22 @@
   <h1>Registrar aula</h1>
   <p>Registre o conteúdo e os horários da aula em um só lugar.</p>
 
-  <AulaForm {apiUrl} />
+  {#if turmasCarregando}<p role="status">
+      Carregando turmas e estudantes…
+    </p>{/if}
+  {#if turmasErro}<p class="error" role="alert">{turmasErro}</p>
+  {/if}
+  <button onclick={carregarTurmas} disabled={turmasCarregando}
+    >Atualizar turmas</button
+  >
+  <AulaForm
+    {apiUrl}
+    {turmas}
+    {turmasCarregando}
+    {turmaCriada}
+    onSaved={() => revisao++}
+  />
+  <Historico {apiUrl} {turmas} {revisao} />
 
   <section aria-labelledby="connection-title">
     <h2 id="connection-title">Conexão com o backend</h2>

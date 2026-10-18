@@ -21,7 +21,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-const corpoValido = `{"data":"2026-10-13","inicio":"08:00","fim":"10:00","turma":"Turma fictícia","conteudo":"Leitura","observacoes":"Exemplo","intervalo_minutos":15}`
+const corpoValido = `{"data":"2026-10-13","inicio":"08:00","fim":"10:00","turma_id":1,"conteudo":"Leitura","observacoes":"Exemplo","intervalo_minutos":15}`
 
 func novaAPITeste(t *testing.T) (*fiber.App, *storage.Banco) {
 	t.Helper()
@@ -30,6 +30,9 @@ func novaAPITeste(t *testing.T) (*fiber.App, *storage.Banco) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { banco.Close() })
+	if _, err := banco.CriarTurma(context.Background(), "Turma fictícia"); err != nil {
+		t.Fatal(err)
+	}
 	return New(banco), banco
 }
 
@@ -64,7 +67,11 @@ func requisicao(t *testing.T, app *fiber.App, metodo, caminho, corpo, contentTyp
 func TestCadastrarConsultarEConferirSQLite(t *testing.T) {
 	app, banco := novaAPITeste(t)
 	vazio, _ := requisicao(t, app, "GET", "/aulas", "", "", 200)
-	if string(vazio) != "[]" {
+	var empty historicoResponse
+	if err := json.Unmarshal(vazio, &empty); err != nil {
+		t.Fatal(err)
+	}
+	if empty.Aulas == nil || len(empty.Aulas) != 0 || empty.TotalRegistros != 0 || empty.DuracaoTotalMinutos != 0 {
 		t.Fatalf("lista vazia = %s", vazio)
 	}
 	body, headers := requisicao(t, app, "POST", "/aulas", corpoValido, "application/json; charset=utf-8", 201)
@@ -77,7 +84,7 @@ func TestCadastrarConsultarEConferirSQLite(t *testing.T) {
 		t.Fatalf("ID inválido: %v", recebido)
 	}
 	esperado := map[string]any{
-		"id": id, "data": "2026-10-13", "inicio": "08:00", "fim": "10:00",
+		"turma_id": float64(1), "id": id, "data": "2026-10-13", "inicio": "08:00", "fim": "10:00",
 		"turma": "Turma fictícia", "conteudo": "Leitura", "observacoes": "Exemplo",
 		"intervalo_minutos": float64(15), "duracao_minutos": float64(105),
 	}
@@ -93,7 +100,12 @@ func TestCadastrarConsultarEConferirSQLite(t *testing.T) {
 		t.Fatalf("consulta difere do cadastro: %s", consulta)
 	}
 	lista, _ := requisicao(t, app, "GET", "/aulas", "", "", 200)
-	if string(lista) != "["+string(body)+"]" {
+	var page historicoResponse
+	if err := json.Unmarshal(lista, &page); err != nil {
+		t.Fatal(err)
+	}
+	encoded, _ := json.Marshal(page.Aulas)
+	if string(encoded) != "["+string(body)+"]" || page.TotalRegistros != 1 || page.DuracaoTotalMinutos != 105 {
 		t.Fatalf("lista difere do cadastro: %s", lista)
 	}
 	registro, err := banco.Buscar(context.Background(), int64(id))
@@ -127,10 +139,11 @@ func TestListagemOrdenada(t *testing.T) {
 		ids = append(ids, r.ID)
 	}
 	body, _ := requisicao(t, app, "GET", "/aulas", "", "", 200)
-	var lista []aulaResponse
-	if err := json.Unmarshal(body, &lista); err != nil {
+	var page historicoResponse
+	if err := json.Unmarshal(body, &page); err != nil {
 		t.Fatal(err)
 	}
+	lista := page.Aulas
 	if len(lista) != 4 {
 		t.Fatalf("total = %d", len(lista))
 	}
@@ -189,7 +202,7 @@ func TestErrosPorCampo(t *testing.T) {
 		valor any
 	}{
 		{"data", "2026-02-29"}, {"data", nil}, {"inicio", "8:00"},
-		{"fim", "07:00"}, {"turma", " \t"}, {"conteudo", ""},
+		{"fim", "07:00"}, {"turma_id", 0}, {"conteudo", ""},
 		{"intervalo_minutos", -1}, {"intervalo_minutos", 120},
 	} {
 		t.Run(tt.campo, func(t *testing.T) {
@@ -213,7 +226,7 @@ func TestErrosPorCampo(t *testing.T) {
 		})
 	}
 	body, _ := requisicao(t, app, "POST", "/aulas", "{}", "application/json", 422)
-	if !strings.Contains(string(body), `"field":"data"`) {
+	if !strings.Contains(string(body), `"field":"turma_id"`) {
 		t.Fatalf("campo ausente: %s", body)
 	}
 	registros, err := banco.Listar(context.Background())
@@ -225,8 +238,8 @@ func TestErrosPorCampo(t *testing.T) {
 func TestCamposOpcionais(t *testing.T) {
 	app, _ := novaAPITeste(t)
 	for _, body := range []string{
-		`{"data":"2026-10-13","inicio":"08:00","fim":"09:00","turma":"Turma","conteudo":"Leitura"}`,
-		`{"data":"2026-10-13","inicio":"08:00","fim":"09:00","turma":"Turma","conteudo":"Leitura","observacoes":null,"intervalo_minutos":null}`,
+		`{"data":"2026-10-13","inicio":"08:00","fim":"09:00","turma_id":1,"conteudo":"Leitura"}`,
+		`{"data":"2026-10-13","inicio":"08:00","fim":"09:00","turma_id":1,"conteudo":"Leitura","observacoes":null,"intervalo_minutos":null}`,
 	} {
 		resposta, _ := requisicao(t, app, "POST", "/aulas", body, "application/json", 201)
 		var r aulaResponse

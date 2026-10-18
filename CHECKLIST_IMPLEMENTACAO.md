@@ -159,16 +159,18 @@ somente o planejamento, sem concluir tarefas de implementação.
 
 ## Etapa 8 — Histórico e carga horária acumulada
 
-- [ ] Exibir histórico com as aulas mais recentes primeiro, incluindo data, turma/estudante, horários, conteúdo e duração.
-- [ ] Implementar filtros de data inicial, data final e turma/estudante como hipóteses do MVP, a revisar com Maria Luiza.
-- [ ] Ampliar `GET /aulas` para aceitar os filtros documentados.
-- [ ] Calcular o total no backend para todo o conjunto filtrado, sem limitá-lo à página exibida.
-- [ ] Exibir total em horas e minutos, carregamento, lista vazia e falhas de consulta.
-- [ ] Atualizar o histórico e o total após cadastrar uma aula, respeitando os filtros ativos.
-- [ ] Definir limites inclusivos/exclusivos de datas de forma consistente entre API, interface e banco.
-- [ ] Conferir aulas fictícias de 60, 90 e 45 minutos: total de 3h15 e subtotais coerentes com os filtros.
-- [ ] Validar zero, um e vários resultados, mudança de mês e um volume maior de registros.
-- [ ] **Etapa 8 concluída:** cadastro e histórico formam um produto local útil.
+- [x] Exibir histórico com as aulas mais recentes primeiro, incluindo data, turma/estudante, horários, conteúdo e duração.
+- [x] Implementar filtros de data inicial, data final e turma/estudante como hipóteses do MVP, a revisar com Maria Luiza.
+- [x] Ampliar `GET /aulas` para aceitar os filtros documentados.
+- [x] Calcular o total no backend para todo o conjunto filtrado, sem limitá-lo à página exibida.
+- [x] Exibir total em horas e minutos, carregamento, lista vazia e falhas de consulta.
+- [x] Atualizar o histórico e o total após cadastrar uma aula, respeitando os filtros ativos.
+- [x] Definir limites inclusivos/exclusivos de datas de forma consistente entre API, interface e banco.
+- [x] Conferir aulas fictícias de 60, 90 e 45 minutos: total de 3h15 e subtotais coerentes com os filtros.
+- [x] Validar zero, um e vários resultados, mudança de mês e um volume maior de registros.
+- [x] Criar e selecionar turma/estudante com nome único normalizado, migração preservando as aulas e referência por ID.
+- [x] Paginar em 20 aulas, com Anterior/Próxima e contrato HTTP v2 documentado.
+- [x] **Etapa 8 concluída:** cadastro e histórico formam um produto local útil.
 
 ## Etapa 9 — Correção, regressões e backup
 
@@ -251,7 +253,7 @@ Reavaliar após o PDF e o retorno de Maria Luiza, sem bloquear a etapa 13.
 
 - [x] **A — Comunicação web:** etapas 1 a 3 validadas.
 - [ ] **B — Regra confiável:** etapa 4 validada com os exemplos da descoberta.
-- [ ] **C — Produto local útil:** etapas 5 a 8 validadas.
+- [x] **C — Produto local útil:** etapas 5 a 8 validadas.
 - [ ] **D — Operação segura:** etapa 9 validada.
 - [ ] **E — Integração e relatório:** Sheets recuperável e sem duplicações, PDF coerente com o histórico; etapas 10 a 12 validadas.
 - [ ] **F — Piloto real:** etapa 13 validada.
@@ -272,5 +274,6 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 | 5 — Persistência SQLite | 13/10/2026 | Driver modernc.org/sqlite v1.58.0; testes com CGO_ENABLED=0, vet, mod verify e builds de cmd/db e cmd/api aprovados; migração inicial, repetição, rollback, versão futura, restrições, inserção/busca/listagem e reabertura testados; comandos em processos separados preservaram ID e 105 minutos | Etapa 5 concluída; banco fictício `backend/aulas-demo-etapa5.db` ignorado pelo Git; API será ligada ao repositório na etapa 6; regras institucionais ainda pendentes |
 | 6 — API de cadastro e consulta | 13/10/2026 | Contrato `docs/api-v1.md`; POST /aulas e GET /aulas e /aulas/:id; testes HTTP com SQLite temporário, suíte sem CGO, vet e build aprovados; HTTP real na porta 33006, comparação SQL, persistência após reinício e encerramento por SIGINT/SIGTERM validados | Etapa 6 concluída; listagem integral sem paginação ou filtros; frontend continua diagnóstico; alterações locais de documentação da etapa 5 preservadas |
 | 7 — Formulário web | 13/10/2026 | Formatação, check (0 erros/avisos) e build aprovados; Chrome com API e banco de teste validou cadastro, dados persistidos via GET, prévia, obrigatórios, horários/intervalo, erros 422, Tab/Enter, bloqueio de envio repetido, backend desligado e recuperação; resposta incompatível e timeout simulados; captura de 375px revisada | Etapa 7 concluída tecnicamente para o MVP; roteiro em `docs/formulario-aula.md`; hipóteses ainda pendentes de revisão com a professora |
+| 8 — Histórico e carga horária | 17/10/2026 | Migração v2, catálogo único por nome normalizado, filtros inclusivos, paginação de 20, totais globais e contrato HTTP v2; testes Go, vet e build aprovados; frontend check sem erros/avisos e build; Chrome validou cadastro, duplicidade, filtros, atualização, 3h15, 21 registros em duas páginas, falha e recuperação de conexão; captura 375px sem rolagem horizontal | Conclusão técnica do MVP e marco C; regras institucionais e etapa 0 seguem pendentes; roteiro em `docs/historico-aulas.md` |
 
-**Próxima ação:** iniciar a etapa 8 (histórico e carga horária acumulada), definindo os filtros mínimos para o MVP. Validar as hipóteses com Maria Luzia após a demonstração; a etapa 0 continua pendente.
+**Próxima ação:** discutir a etapa 9 (correção de registros, regressões e backup), sem iniciar sua implementação automaticamente. Validar as hipóteses com Maria Luzia após a demonstração; a etapa 0 continua pendente.

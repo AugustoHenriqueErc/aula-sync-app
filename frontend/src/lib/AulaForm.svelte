@@ -1,7 +1,53 @@
 <script lang="ts">
   import { onDestroy, tick } from 'svelte'
 
-  let { apiUrl }: { apiUrl: string } = $props()
+  import { isTurma, jsonRequest, type Turma } from './api'
+  let {
+    apiUrl,
+    turmas,
+    turmasCarregando,
+    turmaCriada,
+    onSaved,
+  }: {
+    apiUrl: string
+    turmas: Turma[]
+    turmasCarregando: boolean
+    turmaCriada: (t: Turma) => void
+    onSaved: () => void
+  } = $props()
+  let novoNome = $state('')
+  let criandoTurma = $state(false)
+  let erroTurma = $state('')
+  let turmaRequest: AbortController | undefined
+  async function criarTurma() {
+    if (criandoTurma) return
+    criandoTurma = true
+    erroTurma = ''
+    const controller = new AbortController()
+    turmaRequest = controller
+    try {
+      const data = await jsonRequest(`${apiUrl}/turmas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome: novoNome }),
+        signal: controller.signal,
+      })
+      if (!isTurma(data)) throw new Error('Resposta de cadastro inválida.')
+      if (controller.signal.aborted) return
+      turmaCriada(data)
+      values.turma = String(data.id)
+      novoNome = ''
+      errors.turma = undefined
+    } catch (error) {
+      if (!controller.signal.aborted)
+        erroTurma =
+          error instanceof Error && error.name === 'Error'
+            ? error.message
+            : 'Não foi possível confirmar o cadastro. Recarregue as turmas antes de tentar novamente.'
+    } finally {
+      criandoTurma = false
+    }
+  }
 
   type Field =
     | 'data'
@@ -126,8 +172,10 @@
       return
     }
 
+    const { turma, ...campos } = values
     const payload = {
-      ...values,
+      ...campos,
+      turma_id: Number(turma),
       intervalo_minutos: Number(values.intervalo_minutos),
     }
     const controller = new AbortController()
@@ -155,10 +203,12 @@
           'field' in data &&
           'error' in data &&
           typeof data.field === 'string' &&
-          fields.includes(data.field as Field) &&
+          (fields.includes(data.field as Field) || data.field === 'turma_id') &&
           typeof data.error === 'string'
         ) {
-          errors = { [data.field]: data.error }
+          errors = {
+            [data.field === 'turma_id' ? 'turma' : data.field]: data.error,
+          }
           submission = {
             status: 'error',
             message: 'Revise o campo indicado antes de salvar.',
@@ -194,6 +244,7 @@
       }
       submission = { status: 'success', duration: Number(data.duracao_minutos) }
       values = emptyForm()
+      onSaved()
     } catch {
       if (controller.signal.aborted && !timedOut) return
       submission = {
@@ -215,7 +266,10 @@
     }
   }
 
-  onDestroy(() => activeRequest?.abort())
+  onDestroy(() => {
+    activeRequest?.abort()
+    turmaRequest?.abort()
+  })
 </script>
 
 <section aria-labelledby="form-title">
@@ -304,15 +358,36 @@
         </div>
         <div class="field full-width">
           <label for="turma">Turma ou estudante</label>
-          <input
+          <select
             id="turma"
             name="turma"
-            type="text"
             required
             bind:value={values.turma}
+            disabled={turmasCarregando || criandoTurma}
             aria-invalid={!!errors.turma}
             aria-describedby={errors.turma ? 'turma-error' : undefined}
-          />
+          >
+            <option value="">Selecione uma turma ou estudante</option>
+            {#each turmas as turma (turma.id)}<option value={String(turma.id)}
+                >{turma.nome}</option
+              >{/each}
+          </select>
+          <details>
+            <summary>Criar turma ou estudante</summary>
+            <label for="novo-nome">Nome</label>
+            <input
+              id="novo-nome"
+              bind:value={novoNome}
+              disabled={criandoTurma}
+            />
+            <button
+              type="button"
+              onclick={criarTurma}
+              disabled={criandoTurma || !novoNome.trim()}
+              >{criandoTurma ? 'Criando…' : 'Criar e selecionar'}</button
+            >
+            {#if erroTurma}<p class="error" role="alert">{erroTurma}</p>{/if}
+          </details>
           {#if errors.turma}<p class="field-error" id="turma-error">
               {errors.turma}
             </p>{/if}
@@ -360,7 +435,7 @@
             : 'A duração será confirmada ao salvar a aula.'}
         </p>
       </div>
-      <button type="submit"
+      <button type="submit" disabled={criandoTurma || turmasCarregando}
         >{submission.status === 'sending' ? 'Salvando…' : 'Salvar aula'}</button
       >
     </fieldset>

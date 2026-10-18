@@ -35,8 +35,8 @@ func TestMigracaoEPersistencia(t *testing.T) {
 		t.Fatal(err)
 	}
 	var versao int
-	if err := banco.db.QueryRow("PRAGMA user_version").Scan(&versao); err != nil || versao != 1 {
-		t.Fatalf("versão = %d, erro = %v; esperado 1", versao, err)
+	if err := banco.db.QueryRow("PRAGMA user_version").Scan(&versao); err != nil || versao != 2 {
+		t.Fatalf("versão = %d, erro = %v; esperado 2", versao, err)
 	}
 	registros, err := banco.Listar(ctx)
 	if err != nil || registros == nil || len(registros) != 0 {
@@ -135,7 +135,11 @@ func TestRepositorioRejeitaAulaInvalida(t *testing.T) {
 
 func TestRestricoesSQL(t *testing.T) {
 	banco := abrirTeste(t, filepath.Join(t.TempDir(), "aulas.db"))
-	const insert = `INSERT INTO aulas (data, inicio, fim, turma, conteudo, observacoes, intervalo_minutos, duracao_minutos) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+	turma, err := banco.CriarTurma(context.Background(), "Turma")
+	if err != nil {
+		t.Fatal(err)
+	}
+	const insert = `INSERT INTO aulas (data, inicio, fim, turma, conteudo, observacoes, intervalo_minutos, duracao_minutos, turma_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	for _, tt := range []struct {
 		nome   string
 		coluna int
@@ -155,7 +159,7 @@ func TestRestricoesSQL(t *testing.T) {
 		{"duração fracionária", 7, 105.5},
 	} {
 		t.Run(tt.nome, func(t *testing.T) {
-			args := []any{"2026-10-13", "08:00", "10:00", "Turma", "Leitura", "", 15, 105}
+			args := []any{"2026-10-13", "08:00", "10:00", "Turma", "Leitura", "", 15, 105, turma.ID}
 			args[tt.coluna] = tt.valor
 			if _, err := banco.db.Exec(insert, args...); err == nil {
 				t.Fatal("SQL aceitou registro inválido")
@@ -210,7 +214,7 @@ func TestMigracaoReverteFalha(t *testing.T) {
 func TestVersaoFuturaRejeitada(t *testing.T) {
 	caminho := filepath.Join(t.TempDir(), "futuro.db")
 	banco := abrirTeste(t, caminho)
-	if _, err := banco.db.Exec("PRAGMA user_version = 2"); err != nil {
+	if _, err := banco.db.Exec("PRAGMA user_version = 3"); err != nil {
 		t.Fatal(err)
 	}
 	banco.Close()
@@ -224,7 +228,7 @@ func TestVersaoFuturaRejeitada(t *testing.T) {
 	}
 	defer db.Close()
 	var versao int
-	if err := db.QueryRow("PRAGMA user_version").Scan(&versao); err != nil || versao != 2 {
+	if err := db.QueryRow("PRAGMA user_version").Scan(&versao); err != nil || versao != 3 {
 		t.Fatalf("versão futura alterada: %d, %v", versao, err)
 	}
 }
