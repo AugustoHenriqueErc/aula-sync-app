@@ -20,6 +20,9 @@ var primeiraMigracao string
 //go:embed migrations/003_correcao.sql
 var terceiraMigracao string
 
+//go:embed migrations/004_google_config.sql
+var quartaMigracao string
+
 type Banco struct{ db *sql.DB }
 
 // Abrir cria ou abre um arquivo local e aplica as migrações pendentes.
@@ -79,10 +82,10 @@ func (b *Banco) migrar(ctx context.Context) error {
 		if _, err := tx.ExecContext(ctx, "PRAGMA user_version = 1"); err != nil {
 			return fmt.Errorf("registrar migração 001: %w", err)
 		}
-	case 1, 2, 3:
+	case 1, 2, 3, 4:
 		// A migração já foi aplicada. Não recriar nem apagar tabelas.
 	default:
-		return fmt.Errorf("versão de banco não suportada: %d (máxima: 3)", versao)
+		return fmt.Errorf("versão de banco não suportada: %d (máxima: 4)", versao)
 	}
 	if versao < 2 {
 		if err := migrarTurmas(ctx, tx); err != nil {
@@ -92,6 +95,11 @@ func (b *Banco) migrar(ctx context.Context) error {
 	if versao < 3 {
 		if _, err := tx.ExecContext(ctx, terceiraMigracao); err != nil {
 			return fmt.Errorf("aplicar migração 003: %w", err)
+		}
+	}
+	if versao < 4 {
+		if _, err := tx.ExecContext(ctx, quartaMigracao); err != nil {
+			return fmt.Errorf("aplicar migração 004: %w", err)
 		}
 	}
 	if err := tx.Commit(); err != nil {

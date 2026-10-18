@@ -210,3 +210,8 @@ summary {
 details button {
   margin-top: 12px;
 }
+
+.google-destino {
+  margin-top: 16px;
+  overflow-wrap: anywhere;
+}

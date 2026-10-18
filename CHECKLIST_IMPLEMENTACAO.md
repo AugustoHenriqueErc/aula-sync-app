@@ -188,16 +188,16 @@ somente o planejamento, sem concluir tarefas de implementação.
 
 - [ ] Confirmar autorização, responsáveis, propriedade dos arquivos e ambiente Google de teste.
 - [x] Registrar o comportamento inicial acordado: planilha configurável, abas mensais, confirmação e validação de cabeçalhos (`docs/integracao-google-mensal.md`); somente documentação.
-- [ ] Mapear campos/cabeçalhos propostos e preparar uma planilha vazia descartável de teste.
-- [ ] Definir e persistir a configuração editável de planilha no SQLite, sem endereço fixo no código.
-- [ ] Definir roteamento pela data da aula, padrão `Registros aulas - MM/AAAA` e vínculo confiável entre período e identificadores de destino.
-- [ ] Especificar inspeção e confirmação para criar aba ausente ou cabeçalhos em aba vazia; preservar conteúdo incompatível.
-- [ ] Definir a troca de destino e seus efeitos sobre o estado de sincronização, sem envio automático.
-- [ ] Definir onde o Apps Script será executado e documentar a decisão arquitetural.
-- [ ] Definir contrato, autenticação, escopos mínimos e armazenamento de segredos no servidor.
-- [ ] Definir identificador idempotente, versão do registro, timeouts e política de retentativas.
-- [ ] Modelar estado por aula/versão/destino, tentativas, última tentativa e erro no SQLite, distinguindo pendência de preparação de envio confirmado.
-- [ ] Definir como edições/cancelamentos voltam a ficar pendentes, incluindo mudança de mês e tratamento de alterações manuais/renomeação de abas no Google.
+- [x] Mapear campos/cabeçalhos propostos em `docs/google-etapa10.md`; planilha de teste criada pelo desenvolvedor, com inspeção inicial de leitura pelo conector. Revisão institucional pendente.
+- [x] Definir e persistir a configuração editável de planilha no SQLite, sem endereço fixo no código.
+- [x] Definir roteamento pela data da aula, padrão `Registros aulas - MM/AAAA` e vínculo confiável entre período e identificadores de destino.
+- [x] Especificar inspeção e confirmação para criar aba ausente ou cabeçalhos em aba vazia; preservar conteúdo incompatível.
+- [x] Definir a troca de destino e seus efeitos sobre o estado de sincronização, sem envio automático.
+- [x] Documentar proposta de Apps Script independente, executado pela conta de teste, em `docs/google-etapa10.md`; disponibilidade da implantação ainda precisa ser confirmada.
+- [ ] Validar no ambiente o contrato/autenticação, escopos e armazenamento de segredos propostos em `docs/google-etapa10.md`. Nenhum segredo ou Web App configurado neste incremento.
+- [x] Definir identificador idempotente, versão do registro, timeouts e política de retentativas.
+- [x] Modelar estado por aula/versão/destino, tentativas, última tentativa e erro no SQLite, distinguindo pendência de preparação de envio confirmado.
+- [x] Definir como edições/cancelamentos voltam a ficar pendentes, incluindo mudança de mês e tratamento de alterações manuais/renomeação de abas no Google.
 - [ ] Revisar mapeamento com usuária e responsável pelos arquivos; verificar ausência de segredos no frontend, Git e logs.
 - [ ] Revisar repetição, concorrência, planilha vazia, cabeçalhos incompatíveis, recusa, mudança de mês/ano e troca de destino.
 - [ ] **Etapa 10 concluída:** contrato e ambiente de teste preparados, sem sincronização de dados reais.
@@ -290,4 +290,4 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 | 9 — Correção, regressões e backup | 18/10/2026 | Migração v3, PUT de edição, PATCH de situação, conflito 409 por versão e trilha transacional; testes Go, vet e builds aprovados; frontend check sem erros/avisos, formatação e build aprovados; Chrome validou edição, recálculo, conflito, cancelamento/reativação, retorno da última página, 375px e falha/recuperação; backup restaurado em outro arquivo com integridade e igualdade dos 21 registros | Conclusão técnica do MVP e marco D; contrato `docs/api-v3.md`, roteiro `docs/correcao-backup.md` e teste reproduzível `scripts/test-etapa9.cjs`; regras institucionais ainda pendentes |
 | 10 — Comportamento inicial documentado | 18/10/2026 | Acordo do desenvolvedor registrado em `docs/integracao-google-mensal.md`; roadmap, checklist, requisitos e README alinhados | Sem código ou acesso ao Google; contrato técnico, cabeçalhos e aprovação institucional pendentes; etapa 10 permanece aberta |
 
-**Próxima ação:** detalhar o contrato da etapa 10 a partir de `docs/integracao-google-mensal.md`: configuração do destino, validação de período/cabeçalhos, autenticação e modelo de estados. A criação de abas e a escrita no Google serão implementadas na etapa 11. Comparar o modelo com a planilha da escola e revisar com Maria Luzia; a etapa 0 continua pendente.
+**Próxima ação:** validar a conta responsável, a autorização e a implantação do Apps Script para o contrato proposto em `docs/google-etapa10.md`; revisar os cabeçalhos com a responsável. Configuração e prévia locais já estão implementadas. A etapa 10 permanece aberta; criação de abas e envio pertencem à etapa 11.

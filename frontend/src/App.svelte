@@ -2,6 +2,7 @@
   import { onMount, tick } from 'svelte'
   import AulaForm from './lib/AulaForm.svelte'
   import Historico from './lib/Historico.svelte'
+  import GoogleConfig from './lib/GoogleConfig.svelte'
   import { isTurma, jsonRequest, type Turma, type Aula } from './lib/api'
   let salvando = $state(false)
   let avisoEdicao = $state('')
@@ -163,6 +164,8 @@
     }}
   />
   <Historico {apiUrl} {turmas} {revisao} onEdit={editar} bloqueado={salvando} />
+
+  <GoogleConfig {apiUrl} />
 
   <section aria-labelledby="connection-title">
     <h2 id="connection-title">Conexão com o backend</h2>

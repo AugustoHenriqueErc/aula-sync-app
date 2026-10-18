@@ -1,7 +1,9 @@
 # Integração Google — destino configurável e abas mensais
 
 Status: comportamento inicial do MVP acordado com o desenvolvedor em 18/10/2026.
-Planejamento das etapas 10 e 11; ainda não implementado. O modelo da escola e os
+Configuração persistida e prévia local implementadas na etapa 10.
+Inspeção remota, preparação de abas e envio seguem para a etapa 11.
+Detalhamento técnico em [google-etapa10.md](google-etapa10.md). O modelo da escola e os
 cabeçalhos serão revisados com Maria Luzia. Não representa aprovação institucional.
 
 ## Comportamento acordado

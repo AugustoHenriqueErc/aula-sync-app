@@ -35,8 +35,8 @@ func TestMigracaoEPersistencia(t *testing.T) {
 		t.Fatal(err)
 	}
 	var versao int
-	if err := banco.db.QueryRow("PRAGMA user_version").Scan(&versao); err != nil || versao != 3 {
-		t.Fatalf("versão = %d, erro = %v; esperado 3", versao, err)
+	if err := banco.db.QueryRow("PRAGMA user_version").Scan(&versao); err != nil || versao != 4 {
+		t.Fatalf("versão = %d, erro = %v; esperado 4", versao, err)
 	}
 	registros, err := banco.Listar(ctx)
 	if err != nil || registros == nil || len(registros) != 0 {
@@ -214,7 +214,7 @@ func TestMigracaoReverteFalha(t *testing.T) {
 func TestVersaoFuturaRejeitada(t *testing.T) {
 	caminho := filepath.Join(t.TempDir(), "futuro.db")
 	banco := abrirTeste(t, caminho)
-	if _, err := banco.db.Exec("PRAGMA user_version = 4"); err != nil {
+	if _, err := banco.db.Exec("PRAGMA user_version = 5"); err != nil {
 		t.Fatal(err)
 	}
 	banco.Close()
@@ -228,7 +228,7 @@ func TestVersaoFuturaRejeitada(t *testing.T) {
 	}
 	defer db.Close()
 	var versao int
-	if err := db.QueryRow("PRAGMA user_version").Scan(&versao); err != nil || versao != 4 {
+	if err := db.QueryRow("PRAGMA user_version").Scan(&versao); err != nil || versao != 5 {
 		t.Fatalf("versão futura alterada: %d, %v", versao, err)
 	}
 }

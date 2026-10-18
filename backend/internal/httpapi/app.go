@@ -21,6 +21,7 @@ func New(banco *storage.Banco) *fiber.App {
 	})
 	registrarRotasAulas(app, banco)
 	registrarRotasTurmas(app, banco)
+	registrarRotasGoogle(app, banco)
 	return app
 }
 

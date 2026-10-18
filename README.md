@@ -22,7 +22,8 @@ registros, com controle de versão e trilha de alterações no SQLite.
 O objetivo é construir um MVP local com dados fictícios para apresentar a Maria
 Luzia e ajustar as hipóteses após o primeiro contato. Consulte os
 [requisitos](docs/requisitos.md) e o [checklist](CHECKLIST_IMPLEMENTACAO.md).
-A integração Google ainda não está implementada. O comportamento inicial acordado
+A configuração local da integração Google está disponível na etapa 10;
+consulta remota, criação de abas e sincronização ainda não estão implementadas. O comportamento inicial acordado
 prevê planilha configurável, inicialmente vazia, com abas mensais determinadas
 pela data da aula. A criação de abas/cabeçalhos dependerá de confirmação, e
 estruturas incompatíveis bloquearão o envio sem alterar o conteúdo existente.
@@ -380,3 +381,25 @@ Consulte o [contrato v3](docs/api-v3.md) e o
 [roteiro de correção e backup](docs/correcao-backup.md), que inclui os comandos de
 backup consistente e restauração em outro arquivo. Nenhuma integração Google foi
 adicionada nesta etapa.
+
+
+## Etapa 10 — Configurar a planilha de teste
+
+Na seção **Integração com Google Sheets**, cole o link e clique em **Salvar
+destino**. A configuração fica no SQLite e pode ser alterada sem editar código.
+Use **Recarregar configuração e prévia** para conferir os meses das aulas locais.
+A data da aula determina a aba esperada, como `Registros aulas - 10/2026`.
+
+Salvar o link não valida permissões nem cria abas ou envia aulas. A API migra o
+banco para a versão 4 e mantém os dados existentes. O endereço da planilha de
+teste não está fixado no código nem nos exemplos versionados.
+
+O [contrato e roteiro da etapa 10](docs/google-etapa10.md) descreve endpoints,
+modelo de estados, cabeçalhos propostos e as pendências de autorização do Apps
+Script. A etapa 10 permanece aberta até a validação do ambiente e do contrato.
+
+Para testar o fluxo local e a configuração no navegador:
+
+```bash
+node scripts/test-etapa9.cjs --google
+```

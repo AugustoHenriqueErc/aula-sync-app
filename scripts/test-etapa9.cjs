@@ -296,6 +296,82 @@ async function run() {
   await waitFor(
     `document.querySelector('.aulas')?.textContent.includes('Preservar durante falha')`,
   );
+  if (process.argv.includes("--google")) {
+    const link =
+      process.env.GOOGLE_TEST_SHEET_URL ||
+      "https://docs.google.com/spreadsheets/d/teste-planilha-A/edit?usp=sharing";
+    const canonica = new URL(link);
+    canonica.search = "";
+    canonica.hash = "";
+    await waitFor(
+      `document.body.innerText.includes('Nenhuma planilha configurada.')`,
+    );
+    await set("#google-url", link);
+    await click("Salvar destino");
+    await waitFor(
+      `document.body.innerText.includes('Destino salvo localmente.')`,
+    );
+    const config = await request("GET", "/integracoes/google/configuracao");
+    assert.equal(config.destino.url, canonica.toString());
+    assert.equal(config.versao, 1);
+    // Aguarda o novo documento para não confundir o formulário antigo com
+    // a configuração carregada após o reload.
+    await evaluate("window.__googleAntesReload = true");
+    await cdp("Page.reload");
+    await waitFor(
+      `!window.__googleAntesReload && document.querySelector('#google-url')?.value===${JSON.stringify(canonica.toString())} && !document.querySelector('#google-url').matches(':disabled')`,
+    );
+    await request("PUT", "/integracoes/google/configuracao", {
+      url: "https://docs.google.com/spreadsheets/d/teste-planilha-B/edit",
+      versao: 1,
+    });
+    await set("#google-url", link);
+    await click("Salvar destino");
+    await waitFor(
+      `document.body.innerText.includes('A configuração mudou em outra aba')`,
+    );
+    assert.equal(
+      await evaluate(`document.querySelector('#google-url').value`),
+      link,
+    );
+    await click("Recarregar configuração e prévia");
+    await waitFor(
+      `document.querySelector('#google-url').value.includes('teste-planilha-B')`,
+    );
+    await set("#google-url", "https://example.com/planilha");
+    await click("Salvar destino");
+    await waitFor(`document.body.innerText.includes('Informe um link HTTPS')`);
+    await set("#google-url", link);
+    await click("Salvar destino");
+    await waitFor(
+      `document.body.innerText.includes('Destino salvo localmente.')`,
+    );
+    for (const data of ["2026-11-01", "2027-10-01"]) {
+      const { versao, ...novo } = corpo;
+      await request("POST", "/aulas", { ...novo, data }, 201);
+    }
+    await click("Recarregar configuração e prévia");
+    await waitFor(
+      `document.body.innerText.includes('Registros aulas - 10/2027') && document.body.innerText.includes('Registros aulas - 11/2026') && document.body.innerText.includes('Registros aulas - 10/2026')`,
+    );
+    assert(
+      await evaluate(
+        "document.documentElement.scrollWidth <= window.innerWidth",
+      ),
+    );
+    await evaluate(`document.querySelector('#google-title').scrollIntoView()`);
+    const googleShot = await cdp("Page.captureScreenshot", { format: "png" });
+    fs.writeFileSync(
+      path.join(dir, "google-config.png"),
+      Buffer.from(googleShot.data, "base64"),
+    );
+    const plano = await request("GET", "/integracoes/google/planejamento");
+    assert.equal(plano.verificacao_remota, "nao_realizada");
+    assert.equal(plano.configuracao.destino.id, config.destino.id);
+    console.log(
+      "PASS: configuração Google local, link normalizado, persistência, conflito, troca de destino, validação e prévia mensal. Nenhuma chamada ao Google.",
+    );
+  }
   console.log(
     "PASS: cadastro, edição, recálculo, validação, conflito, cancelamento, reativação, paginação, celular, foco e recuperação.",
   );

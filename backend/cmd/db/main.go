@@ -56,7 +56,7 @@ func executar() error {
 		}
 		fmt.Println("Integridade e referências verificadas.")
 	case "migrar":
-		fmt.Println("Banco pronto: migrações até a versão 3 aplicadas.")
+		fmt.Println("Banco pronto: migrações até a versão 4 aplicadas.")
 	case "inserir-exemplo":
 		registro, err := banco.Inserir(ctx, aula.Aula{
 			Data: "2026-10-13", Inicio: "08:00", Fim: "10:00", Turma: "Turma fictícia",
