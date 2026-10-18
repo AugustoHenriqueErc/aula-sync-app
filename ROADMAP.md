@@ -89,6 +89,21 @@ A sincronização deve guardar, no mínimo, estado (`pendente`, `sincronizado` o
 `erro`), data da última tentativa e mensagem de erro. Assim, uma falha do Google
 não causa perda do registro e pode ser corrigida ou tentada novamente.
 
+### Destino Google acordado para o MVP
+
+A planilha será configurável pela interface e poderá começar vazia, sem abas
+mensais preparadas. A data da aula determina a aba `Registros aulas - MM/AAAA`.
+Abas ausentes e cabeçalhos em abas completamente vazias só serão criados após
+confirmação. Conteúdo existente com cabeçalhos incompatíveis será preservado,
+com bloqueio do envio e explicação do problema. O cadastro local permanece
+independente dessa preparação.
+
+Trocar a planilha exige verificar os meses dos registros a enviar, sem herdar
+indevidamente o estado de sincronização anterior. A especificação, os cenários
+e as decisões ainda pendentes estão em
+[integração Google mensal](docs/integracao-google-mensal.md).
+O modelo de colunas será revisado com Maria Luzia.
+
 ### Modelo conceitual inicial
 
 O formato exato será decidido ao implementar, após comparar o caderno e a
@@ -478,10 +493,20 @@ os cálculos do histórico.
 **Implementar**
 
 - Mapear exatamente qual dado vai para Google Sheets.
-- Criar uma planilha exclusivamente de teste.
+- Preparar uma planilha vazia exclusivamente de teste, sem exigir abas mensais
+  ou cabeçalhos previamente montados.
+- Definir e persistir a configuração editável do destino no SQLite.
+- Definir o roteamento pela data da aula para `Registros aulas - MM/AAAA`,
+  validando mês e ano e vinculando período aos identificadores de planilha/aba.
+- Especificar inspeção, confirmação de criação de abas/cabeçalhos e validação
+  de estrutura, sem sobrescrever conteúdo incompatível.
+- Propor os cabeçalhos e revisar o modelo frente à planilha da escola.
 - Definir contrato entre API e Apps Script, autenticação e identificador
   idempotente, sem ainda ativar sincronização de dados reais.
-- Modelar no SQLite o estado e as tentativas de sincronização.
+- Modelar no SQLite estado e tentativas por aula, versão e destino, distinguindo
+  pendência de preparação de envio confirmado.
+- Definir troca de planilha e reconciliação de aulas editadas para outro mês,
+  sem apagar os dados locais ou marcar o novo destino como já sincronizado.
 - Registrar uma decisão arquitetural sobre onde e como a integração será
   executada.
 
@@ -496,6 +521,8 @@ permissões compreendidos antes de enviar qualquer dado real.
 - Demonstrar que segredos não estão no frontend, Git ou logs.
 - Simular chamadas repetidas e confirmar pelo desenho que não duplicarão aulas.
 - Fazer revisão do mapeamento com uma usuária e com o responsável pelos arquivos.
+- Revisar os cenários de planilha vazia, aba ausente, recusa, cabeçalhos
+  incompatíveis, mudança de mês/ano e troca de destino, conforme a especificação.
 
 **Pré-requisitos**
 
@@ -515,7 +542,12 @@ permissões compreendidos antes de enviar qualquer dado real.
 **Implementar**
 
 - Criar um Apps Script mínimo que receba o contrato validado.
-- Sincronizar uma aula com uma planilha de teste.
+- Inspecionar a planilha configurada e validar período, aba e cabeçalhos antes do envio.
+- Oferecer criação da aba mensal ausente e preenchimento de cabeçalhos em aba
+  completamente vazia, mediante confirmação explícita para aquele destino.
+- Informar incompatibilidades e preservar conteúdo existente; recusa ou falha
+  mantém a aula local e não autoriza escrita no Google.
+- Sincronizar uma aula com a aba correta da planilha de teste.
 - Gravar identificador externo, estado, tentativas e última mensagem de erro.
 - Oferecer ação de nova tentativa sem recriar a aula.
 - Exibir o estado de sincronização no histórico.
@@ -533,6 +565,12 @@ mantém o registro local e pode ser tentada novamente.
 - Forçar indisponibilidade ou configuração inválida e conferir o estado de erro.
 - Corrigir a configuração, repetir e confirmar a transição para sincronizado.
 - Comparar cada coluna da planilha com o contrato.
+- Validar preparação em planilha vazia, recusa de criação e bloqueio por
+  cabeçalhos incompatíveis, sem sobrescrever conteúdo.
+- Testar troca de planilha, mudança de mês/ano e edição após sincronizar, com
+  estado por destino e sem contagem indevida entre abas.
+- Revalidar o destino após mudanças e proteger criação/envio contra repetição
+  e chamadas concorrentes.
 
 **Pré-requisitos**
 

@@ -187,26 +187,37 @@ somente o planejamento, sem concluir tarefas de implementação.
 ## Etapa 10 — Preparação da integração Google
 
 - [ ] Confirmar autorização, responsáveis, propriedade dos arquivos e ambiente Google de teste.
-- [ ] Mapear campos para Google Sheets e criar uma planilha descartável de teste.
+- [x] Registrar o comportamento inicial acordado: planilha configurável, abas mensais, confirmação e validação de cabeçalhos (`docs/integracao-google-mensal.md`); somente documentação.
+- [ ] Mapear campos/cabeçalhos propostos e preparar uma planilha vazia descartável de teste.
+- [ ] Definir e persistir a configuração editável de planilha no SQLite, sem endereço fixo no código.
+- [ ] Definir roteamento pela data da aula, padrão `Registros aulas - MM/AAAA` e vínculo confiável entre período e identificadores de destino.
+- [ ] Especificar inspeção e confirmação para criar aba ausente ou cabeçalhos em aba vazia; preservar conteúdo incompatível.
+- [ ] Definir a troca de destino e seus efeitos sobre o estado de sincronização, sem envio automático.
 - [ ] Definir onde o Apps Script será executado e documentar a decisão arquitetural.
 - [ ] Definir contrato, autenticação, escopos mínimos e armazenamento de segredos no servidor.
 - [ ] Definir identificador idempotente, versão do registro, timeouts e política de retentativas.
-- [ ] Modelar estado, tentativas, data da última tentativa e erro no SQLite.
-- [ ] Definir como edições/cancelamentos voltam a ficar pendentes e como tratar alterações manuais no Google.
+- [ ] Modelar estado por aula/versão/destino, tentativas, última tentativa e erro no SQLite, distinguindo pendência de preparação de envio confirmado.
+- [ ] Definir como edições/cancelamentos voltam a ficar pendentes, incluindo mudança de mês e tratamento de alterações manuais/renomeação de abas no Google.
 - [ ] Revisar mapeamento com usuária e responsável pelos arquivos; verificar ausência de segredos no frontend, Git e logs.
-- [ ] Revisar os cenários de repetição e concorrência para evitar duplicação.
+- [ ] Revisar repetição, concorrência, planilha vazia, cabeçalhos incompatíveis, recusa, mudança de mês/ano e troca de destino.
 - [ ] **Etapa 10 concluída:** contrato e ambiente de teste preparados, sem sincronização de dados reais.
 
 ## Etapa 11 — Sincronização com Sheets
 
 - [ ] Implementar o Apps Script mínimo conforme o contrato e validar autenticação.
-- [ ] Sincronizar uma aula com a planilha de teste sem condicionar o cadastro local ao Google.
+- [ ] Inspecionar a planilha configurada e conferir a aba correspondente ao mês/ano da aula.
+- [ ] Solicitar confirmação para criar abas mensais ausentes ou cabeçalhos em abas completamente vazias.
+- [ ] Informar cabeçalhos incompatíveis e bloquear envio, preservando conteúdo existente; recusa não impede cadastro local.
+- [ ] Sincronizar uma aula com a aba mensal correta da planilha de teste sem condicionar o cadastro local ao Google.
 - [ ] Persistir identificador externo, estado, tentativas, última tentativa e mensagem de erro.
 - [ ] Implementar nova tentativa sobre a mesma aula e exibir estado no histórico.
 - [ ] Implementar atualização de uma aula já sincronizada conforme a política definida.
 - [ ] Validar repetição, chamadas concorrentes e perda de resposta após gravação, sem criar duplicatas.
 - [ ] Forçar falha, conferir preservação local, corrigir a configuração e confirmar recuperação.
 - [ ] Conferir colunas, valores e comportamento de correções/cancelamentos na planilha.
+- [ ] Testar planilha vazia, criação aceita/recusada, incompatibilidade e falta de acesso.
+- [ ] Testar troca de destino, mudança de mês/ano e revalidação após alterações de configuração/estrutura.
+- [ ] Validar reconciliação de aula editada para outro mês e estado independente por destino.
 - [ ] **Etapa 11 concluída:** sincronização com Sheets recuperável e sem duplicações nos cenários testados.
 
 ## Etapa 12 — Relatório de aulas em PDF
@@ -277,5 +288,6 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 | 8 — Histórico e carga horária | 17/10/2026 | Migração v2, catálogo único por nome normalizado, filtros inclusivos, paginação de 20, totais globais e contrato HTTP v2; testes Go, vet e build aprovados; frontend check sem erros/avisos e build; Chrome validou cadastro, duplicidade, filtros, atualização, 3h15, 21 registros em duas páginas, falha e recuperação de conexão; captura 375px sem rolagem horizontal | Conclusão técnica do MVP e marco C; regras institucionais e etapa 0 seguem pendentes; roteiro em `docs/historico-aulas.md` |
 | 8 — Validação pelo desenvolvedor | 18/10/2026 | Desenvolvedor informou testes de busca aprovados e envio das alterações para origin | Etapa 8 confirmada no uso local |
 | 9 — Correção, regressões e backup | 18/10/2026 | Migração v3, PUT de edição, PATCH de situação, conflito 409 por versão e trilha transacional; testes Go, vet e builds aprovados; frontend check sem erros/avisos, formatação e build aprovados; Chrome validou edição, recálculo, conflito, cancelamento/reativação, retorno da última página, 375px e falha/recuperação; backup restaurado em outro arquivo com integridade e igualdade dos 21 registros | Conclusão técnica do MVP e marco D; contrato `docs/api-v3.md`, roteiro `docs/correcao-backup.md` e teste reproduzível `scripts/test-etapa9.cjs`; regras institucionais ainda pendentes |
+| 10 — Comportamento inicial documentado | 18/10/2026 | Acordo do desenvolvedor registrado em `docs/integracao-google-mensal.md`; roadmap, checklist, requisitos e README alinhados | Sem código ou acesso ao Google; contrato técnico, cabeçalhos e aprovação institucional pendentes; etapa 10 permanece aberta |
 
-**Próxima ação:** discutir a etapa 10 (preparação segura da integração Google), incluindo ambiente de teste, mapeamento e autenticação, sem ativar sincronização. Validar as hipóteses com Maria Luzia após a demonstração; a etapa 0 continua pendente.
+**Próxima ação:** detalhar o contrato da etapa 10 a partir de `docs/integracao-google-mensal.md`: configuração do destino, validação de período/cabeçalhos, autenticação e modelo de estados. A criação de abas e a escrita no Google serão implementadas na etapa 11. Comparar o modelo com a planilha da escola e revisar com Maria Luzia; a etapa 0 continua pendente.

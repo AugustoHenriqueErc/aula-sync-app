@@ -22,7 +22,11 @@ registros, com controle de versão e trilha de alterações no SQLite.
 O objetivo é construir um MVP local com dados fictícios para apresentar a Maria
 Luzia e ajustar as hipóteses após o primeiro contato. Consulte os
 [requisitos](docs/requisitos.md) e o [checklist](CHECKLIST_IMPLEMENTACAO.md).
-A integração Google será feita depois do funcionamento local.
+A integração Google ainda não está implementada. O comportamento inicial acordado
+prevê planilha configurável, inicialmente vazia, com abas mensais determinadas
+pela data da aula. A criação de abas/cabeçalhos dependerá de confirmação, e
+estruturas incompatíveis bloquearão o envio sem alterar o conteúdo existente.
+Veja o [plano da integração mensal](docs/integracao-google-mensal.md).
 
 ## Ferramentas
 

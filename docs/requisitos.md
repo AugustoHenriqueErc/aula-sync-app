@@ -32,8 +32,9 @@ O primeiro fluxo local previsto é preencher os dados de uma aula, salvar, consu
 o histórico e conferir a carga horária. O SQLite será a fonte principal dos dados.
 A integração com os arquivos Google será desenvolvida depois do funcionamento local.
 
-Este documento descreve o comportamento esperado; a aplicação ainda não oferece
-esse fluxo. A implementação seguirá uma etapa do checklist por vez.
+O fluxo local já foi implementado até a etapa 9, conforme o checklist. As regras
+institucionais continuam pendentes de aprovação. A integração Google ainda não
+foi implementada; o trabalho continua uma etapa por vez.
 
 ## Critérios de aceitação propostos
 
@@ -50,6 +51,25 @@ esperados dependem das decisões pendentes.
 | CA06 | Nenhuma aula corresponde ao filtro | Mensagem de ausência de registros e total zero |
 | CA07 | Serviço Google indisponível | Cadastro e consulta locais continuam funcionando sem depender do Google |
 
+## Integração mensal — acordo inicial do MVP
+
+Em 18/10/2026, o desenvolvedor confirmou o comportamento descrito em
+[integração Google mensal](integracao-google-mensal.md). A aplicação deve aceitar
+uma planilha vazia configurada pelo usuário e preparar as abas quando necessário.
+O modelo de cabeçalhos será proposto e depois comparado com o padrão da escola;
+não está aprovado por Maria Luzia. Os critérios abaixo são planejados, não entregues.
+
+| ID | Cenário | Resultado esperado |
+| --- | --- | --- |
+| CG01 | Usuário informa ou altera o link da planilha | Configuração persistida localmente, sem modificar código e sem envio automático |
+| CG02 | Aula com data de outubro de 2026 | Destino corresponde a 10/2026, inicialmente `Registros aulas - 10/2026`; rejeitar outro período |
+| CG03 | Aba mensal não existe | Pedir confirmação para criá-la com os cabeçalhos esperados |
+| CG04 | Usuário recusa a preparação | Aula preservada no SQLite; não criar aba nem enviar ao Google |
+| CG05 | Aba correspondente completamente vazia | Oferecer cabeçalhos mediante confirmação |
+| CG06 | Aba contém dados e cabeçalhos ausentes/incompatíveis | Informar diferenças e bloquear envio, preservando o conteúdo |
+| CG07 | Planilha de destino é trocada | Conferir os meses a enviar e não herdar estado de sincronização do destino anterior |
+| CG08 | Falha de acesso ao Google | Informar falha, sem tratá-la como ausência de aba; cadastro local permanece disponível |
+
 ## Decisões pendentes
 
 | Tema | O que confirmar | Fonte esperada |
@@ -63,7 +83,7 @@ esperados dependem das decisões pendentes.
 | Acesso | Quem cadastra, consulta e confere cada informação | Revisão com a responsável pelo processo |
 | Correspondência com a planilha | Se cada coluna pode ser preenchida a partir dos dados registrados | Amostra anonimizada do caderno e da linha correspondente |
 
-Nenhuma dessas decisões está confirmada. Não adotar automaticamente uma duração
+Nenhuma dessas decisões institucionais está confirmada pela professora. Não adotar automaticamente uma duração
 de hora-aula, arredondamento ou política de intervalos.
 
 ## Exemplos para validar na conversa
