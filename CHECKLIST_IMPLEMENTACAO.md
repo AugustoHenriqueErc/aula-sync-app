@@ -199,7 +199,7 @@ somente o planejamento, sem concluir tarefas de implementação.
 - [x] Modelar estado por aula/versão/destino, tentativas, última tentativa e erro no SQLite, distinguindo pendência de preparação de envio confirmado.
 - [x] Definir como edições/cancelamentos voltam a ficar pendentes, incluindo mudança de mês e tratamento de alterações manuais/renomeação de abas no Google.
 - [ ] Revisar mapeamento com usuária e responsável pelos arquivos; verificar ausência de segredos no frontend, Git e logs.
-- [ ] Revisar repetição, concorrência, planilha vazia, cabeçalhos incompatíveis, recusa, mudança de mês/ano e troca de destino.
+- [x] Revisar tecnicamente repetição, concorrência, planilha vazia, cabeçalhos incompatíveis, recusa, mudança de mês/ano e troca de destino: simulação de mesa em `docs/google-validacao-etapa10.md`; execução remota e testes do adaptador permanecem na etapa 11.
 - [ ] **Etapa 10 concluída:** contrato e ambiente de teste preparados, sem sincronização de dados reais.
 
 ## Etapa 11 — Sincronização com Sheets

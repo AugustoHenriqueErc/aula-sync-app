@@ -398,6 +398,10 @@ O [contrato e roteiro da etapa 10](docs/google-etapa10.md) descreve endpoints,
 modelo de estados, cabeçalhos propostos e as pendências de autorização do Apps
 Script. A etapa 10 permanece aberta até a validação do ambiente e do contrato.
 
+A [revisão de cenários e validação da conta](docs/google-validacao-etapa10.md)
+detalha os resultados esperados, o roteiro de conferência das permissões e as
+evidências necessárias para encerrar a preparação.
+
 Para testar o fluxo local e a configuração no navegador:
 
 ```bash

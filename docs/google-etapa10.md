@@ -4,6 +4,14 @@ Status: preparação local implementada; execução no Google pertence à etapa 
 A autorização e a implantação do Apps Script ainda precisam ser validadas na
 conta de teste. A revisão institucional com Maria Luzia continua pendente.
 
+A [revisão técnica dos cenários e o roteiro de validação da conta](google-validacao-etapa10.md)
+registram o que já foi analisado e as evidências externas ainda necessárias.
+
+Atualização de requisitos: o desenvolvedor confirmou conta pessoal, ausência de
+projeto Apps Script e revisão dos cabeçalhos ainda pendente. Solicitou também
+entrada com Google. A proposta de autenticação abaixo permanece em revisão até
+definir se as planilhas serão de cada pessoa ou de uma conta central.
+
 ## O que está disponível
 
 A seção **Integração com Google Sheets** permite salvar o link da planilha no
@@ -216,6 +224,10 @@ Não adaptar silenciosamente o modelo institucional: apresentar diferenças.
   conteúdo confirma o resultado já obtido; divergência não é sucesso.
 - O adaptador deverá serializar preparação e escritas concorrentes. Confirmar o
   resultado após perda de resposta antes de repetir uma operação.
+- Para detectar alterações manuais, a etapa 11 deverá guardar uma referência
+  do conteúdo da última escrita confirmada e compará-la antes de atualizar.
+  Também deverá persistir a versão do modelo usada no vínculo mensal; essas
+  referências ainda não estão representadas nas tabelas atuais.
 - Timeout proposto: 10 segundos no backend. Interromper a espera não prova que
   a escrita parou no Google. Primeiro corte com nova tentativa manual, sem loop
   automático; inspecionar novamente antes de reenviar.
