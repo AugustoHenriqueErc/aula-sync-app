@@ -4,6 +4,36 @@
   import Historico from './lib/Historico.svelte'
   import GoogleConfig from './lib/GoogleConfig.svelte'
   import { isTurma, jsonRequest, type Turma, type Aula } from './lib/api'
+  const abas = [
+    { id: 'cadastro', titulo: 'Registrar aula' },
+    { id: 'historico', titulo: 'Histórico' },
+    { id: 'google', titulo: 'Integração Google' },
+  ] as const
+  type Aba = (typeof abas)[number]['id']
+  let abaAtiva = $state<Aba>('cadastro')
+  function navegarAbas(event: KeyboardEvent, indice: number) {
+    if (salvando) return
+    let proxima: number
+    switch (event.key) {
+      case 'ArrowRight':
+        proxima = (indice + 1) % abas.length
+        break
+      case 'ArrowLeft':
+        proxima = (indice + abas.length - 1) % abas.length
+        break
+      case 'Home':
+        proxima = 0
+        break
+      case 'End':
+        proxima = abas.length - 1
+        break
+      default:
+        return
+    }
+    event.preventDefault()
+    abaAtiva = abas[proxima].id
+    document.getElementById(`aba-${abaAtiva}`)?.focus()
+  }
   let salvando = $state(false)
   let avisoEdicao = $state('')
   let editando = $state<Aula | null>(null)
@@ -11,6 +41,7 @@
     if (salvando) return
     avisoEdicao = ''
     editando = aula
+    abaAtiva = 'cadastro'
     await tick()
     document
       .getElementById('form-title')
@@ -138,53 +169,151 @@
 
 <main>
   <p class="eyebrow">Aula Sync App</p>
-  <h1>Registrar aula</h1>
-  <p>Registre o conteúdo e os horários da aula em um só lugar.</p>
+  <h1>Suas aulas</h1>
+  <p>Registre aulas, consulte o histórico e configure sua planilha.</p>
 
-  {#if turmasCarregando}<p role="status">
-      Carregando turmas e estudantes…
-    </p>{/if}
-  {#if turmasErro}<p class="error" role="alert">{turmasErro}</p>
-  {/if}
-  <button onclick={carregarTurmas} disabled={turmasCarregando}
-    >Atualizar turmas</button
+  <div class="abas" role="tablist" aria-label="Áreas da aplicação">
+    {#each abas as aba, indice}
+      <button
+        type="button"
+        role="tab"
+        id={`aba-${aba.id}`}
+        aria-controls={`painel-${aba.id}`}
+        aria-selected={abaAtiva === aba.id}
+        tabindex={abaAtiva === aba.id ? 0 : -1}
+        disabled={salvando}
+        onclick={() => (abaAtiva = aba.id)}
+        onkeydown={(event) => navegarAbas(event, indice)}
+        >{aba.titulo}{aba.id === 'cadastro' && editando
+          ? ' (edição)'
+          : ''}</button
+      >
+    {/each}
+  </div>
+
+  <div
+    id="painel-cadastro"
+    role="tabpanel"
+    aria-labelledby="aba-cadastro"
+    hidden={abaAtiva !== 'cadastro'}
+    tabindex="0"
   >
-  <p role="status">{avisoEdicao}</p>
-  <AulaForm
-    {apiUrl}
-    {turmas}
-    {turmasCarregando}
-    {turmaCriada}
-    onSaved={salvo}
-    onBusy={(value) => (salvando = value)}
-    {editando}
-    onCancel={() => {
-      editando = null
-      revisao++
-    }}
-  />
-  <Historico {apiUrl} {turmas} {revisao} onEdit={editar} bloqueado={salvando} />
-
-  <GoogleConfig {apiUrl} />
-
-  <section aria-labelledby="connection-title">
-    <h2 id="connection-title">Conexão com o backend</h2>
-    <div class="status" role="status" aria-live="polite" aria-atomic="true">
-      {#if connection.status === 'loading'}
-        <p>Verificando conexão…</p>
-      {:else if connection.status === 'success'}
-        <p class="success">Backend conectado.</p>
-        <p>A API respondeu e está disponível.</p>
-      {:else}
-        <p class="error">Falha na conexão.</p>
-        <p>{connection.message}</p>
-      {/if}
-    </div>
-    <button
-      onclick={checkConnection}
-      disabled={connection.status === 'loading'}
+    {#if turmasCarregando}<p role="status">
+        Carregando turmas e estudantes…
+      </p>{/if}
+    {#if turmasErro}<p class="error" role="alert">{turmasErro}</p>
+    {/if}
+    <button onclick={carregarTurmas} disabled={turmasCarregando}
+      >Atualizar turmas</button
     >
-      {connection.status === 'loading' ? 'Verificando…' : 'Verificar novamente'}
-    </button>
-  </section>
+    <p role="status">{avisoEdicao}</p>
+    <AulaForm
+      {apiUrl}
+      {turmas}
+      {turmasCarregando}
+      {turmaCriada}
+      onSaved={salvo}
+      onBusy={(value) => (salvando = value)}
+      {editando}
+      onCancel={() => {
+        editando = null
+        revisao++
+      }}
+    />
+  </div>
+  <div
+    id="painel-historico"
+    role="tabpanel"
+    aria-labelledby="aba-historico"
+    hidden={abaAtiva !== 'historico'}
+    tabindex="0"
+  >
+    <Historico
+      {apiUrl}
+      {turmas}
+      {revisao}
+      onEdit={editar}
+      bloqueado={salvando}
+    />
+  </div>
+  <div
+    id="painel-google"
+    role="tabpanel"
+    aria-labelledby="aba-google"
+    hidden={abaAtiva !== 'google'}
+    tabindex="0"
+  >
+    <GoogleConfig {apiUrl} />
+  </div>
+
+  <details class="diagnostico">
+    <summary
+      >Conexão com o backend{connection.status === 'error'
+        ? ' — indisponível'
+        : ''}</summary
+    >
+    <section aria-labelledby="connection-title">
+      <h2 id="connection-title">Conexão com o backend</h2>
+      <div class="status" role="status" aria-live="polite" aria-atomic="true">
+        {#if connection.status === 'loading'}
+          <p>Verificando conexão…</p>
+        {:else if connection.status === 'success'}
+          <p class="success">Backend conectado.</p>
+          <p>A API respondeu e está disponível.</p>
+        {:else}
+          <p class="error">Falha na conexão.</p>
+          <p>{connection.message}</p>
+        {/if}
+      </div>
+      <button
+        onclick={checkConnection}
+        disabled={connection.status === 'loading'}
+      >
+        {connection.status === 'loading'
+          ? 'Verificando…'
+          : 'Verificar novamente'}
+      </button>
+    </section>
+  </details>
 </main>
+
+<style>
+  .abas {
+    display: flex;
+    gap: 8px;
+    margin: 24px 0;
+    padding: 4px;
+    border: 1px solid #d5dce5;
+    border-radius: 10px;
+    background: #e9eef6;
+  }
+  .abas button {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 8px;
+    font-size: 0.9rem;
+    color: #233047;
+    background: transparent;
+  }
+  .abas button:hover:not(:disabled) {
+    background: #dce5f4;
+  }
+  .abas button[aria-selected='true'] {
+    color: #fff;
+    background: #254fc4;
+    box-shadow: 0 2px 4px #23304726;
+  }
+  .abas button:disabled {
+    opacity: 0.65;
+  }
+  [role='tabpanel']:focus-visible {
+    outline: 3px solid #254fc4;
+    outline-offset: 4px;
+  }
+  .diagnostico {
+    margin-top: 32px;
+  }
+  .diagnostico summary {
+    color: #475569;
+  }
+</style>

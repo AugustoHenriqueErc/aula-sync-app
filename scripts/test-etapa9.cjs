@@ -141,10 +141,12 @@ async function run() {
   }
   async function click(label) {
     await evaluate(
-      `(()=>{const e=[...document.querySelectorAll('button')].find(e=>e.textContent.trim()===${JSON.stringify(label)});if(!e||e.disabled)throw Error('Botão indisponível: '+${JSON.stringify(label)});e.click()})()`,
+      `(()=>{const e=[...document.querySelectorAll('button')].find(e=>e.textContent.trim()===${JSON.stringify(label)});if(!e||e.disabled||!e.checkVisibility())throw Error('Botão indisponível: '+${JSON.stringify(label)});e.click()})()`,
     );
   }
   async function total(value) {
+    await waitFor("!document.querySelector('#aba-historico').disabled");
+    await click("Histórico");
     await waitFor(
       `document.body.innerText.includes(${JSON.stringify("Carga horária: " + value)}) && !document.body.innerText.includes('Carregando histórico…')`,
     );
@@ -174,7 +176,24 @@ async function run() {
     console.log("PASS: tela de login, bloqueio da API, callback inválido, limpeza da URL e viewport móvel. Nenhuma chamada ao Google.");
     return;
   }
+  await waitFor(`document.querySelector('#aba-cadastro')?.getAttribute('aria-selected')==='true'`);
+  assert.equal(await evaluate("document.querySelectorAll('[role=tabpanel]:not([hidden])').length"), 1);
+  await set("#conteudo", "Rascunho preservado entre abas");
+  await click("Histórico");
   await waitFor(`document.body.innerText.includes('Nenhuma aula encontrada')`);
+  await evaluate("document.querySelector('#aba-historico').focus()");
+  await cdp("Input.dispatchKeyEvent", {type:"keyDown", key:"ArrowRight", code:"ArrowRight", windowsVirtualKeyCode:39});
+  assert.equal(await evaluate("document.activeElement.id"), "aba-google");
+  assert.equal(await evaluate("document.querySelector('#painel-google').hidden"), false);
+  await waitFor("!document.querySelector('#google-url').matches(':disabled')");
+  await set("#google-url", "https://docs.google.com/spreadsheets/d/rascunho/edit");
+  await click("Registrar aula");
+  assert.equal(await evaluate("document.querySelector('#conteudo').value"), "Rascunho preservado entre abas");
+  await click("Integração Google");
+  assert.equal(await evaluate("document.querySelector('#google-url').value"), "https://docs.google.com/spreadsheets/d/rascunho/edit");
+  await evaluate("document.querySelector('#aba-google').focus()");
+  await cdp("Input.dispatchKeyEvent", {type:"keyDown", key:"Home", code:"Home", windowsVirtualKeyCode:36});
+  assert.equal(await evaluate("document.activeElement.id"), "aba-cadastro");
   await evaluate(`document.querySelector('details').open=true`);
   await set("#novo-nome", "Augusto");
   await click("Criar e selecionar");
@@ -187,7 +206,7 @@ async function run() {
   await total("1h00");
   await click("Editar");
   await waitFor(
-    `document.querySelector('#form-title').textContent==='Editar aula'`,
+    `document.querySelector('#form-title').textContent==='Editar aula' && !document.querySelector('#painel-cadastro').hidden`,
   );
   await set("#fim", "10:00");
   await click("Salvar alterações");
@@ -229,12 +248,16 @@ async function run() {
     "Alterado em outra aba",
   );
   await click("Fechar edição");
+  await click("Histórico");
   await waitFor(
     `document.querySelector('.aulas')?.textContent.includes('Alterado em outra aba')`,
   );
   await click("Cancelar aula");
   await total("0h00");
   await set("#situacao", "canceladas");
+  await click("Registrar aula");
+  await click("Histórico");
+  assert.equal(await evaluate("document.querySelector('#situacao').value"), "canceladas");
   await click("Filtrar");
   await waitFor(
     `document.querySelector('.aulas')?.textContent.includes('Cancelada')`,
@@ -319,6 +342,7 @@ async function run() {
     `document.querySelector('.aulas')?.textContent.includes('Preservar durante falha')`,
   );
   if (process.argv.includes("--google")) {
+    await click("Integração Google");
     const link =
       process.env.GOOGLE_TEST_SHEET_URL ||
       "https://docs.google.com/spreadsheets/d/teste-planilha-A/edit?usp=sharing";
@@ -343,6 +367,7 @@ async function run() {
     await waitFor(
       `!window.__googleAntesReload && document.querySelector('#google-url')?.value===${JSON.stringify(canonica.toString())} && !document.querySelector('#google-url').matches(':disabled')`,
     );
+    await click("Integração Google");
     await request("PUT", "/integracoes/google/configuracao", {
       url: "https://docs.google.com/spreadsheets/d/teste-planilha-B/edit",
       versao: 1,
@@ -394,8 +419,11 @@ async function run() {
       "PASS: configuração Google local, link normalizado, persistência, conflito, troca de destino, validação e prévia mensal. Nenhuma chamada ao Google.",
     );
   }
+  await evaluate("window.scrollTo(0,0)");
+  const tabsShot = await cdp("Page.captureScreenshot", { format: "png" });
+  fs.writeFileSync(path.join(dir, "abas.png"), Buffer.from(tabsShot.data, "base64"));
   console.log(
-    "PASS: cadastro, edição, recálculo, validação, conflito, cancelamento, reativação, paginação, celular, foco e recuperação.",
+    "PASS: abas, teclado, preservação de rascunhos/filtros, cadastro, edição, recálculo, validação, conflito, cancelamento, reativação, paginação, celular, foco e recuperação.",
   );
   console.log(`Artefatos temporários: ${dir}`);
 }

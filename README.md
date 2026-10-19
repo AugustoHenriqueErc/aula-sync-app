@@ -30,6 +30,20 @@ pela data da aula. A criação de abas/cabeçalhos dependerá de confirmação, 
 estruturas incompatíveis bloquearão o envio sem alterar o conteúdo existente.
 Veja o [plano da integração mensal](docs/integracao-google-mensal.md).
 
+## Navegação por abas
+
+A interface separa **Registrar aula**, **Histórico** e **Integração Google**.
+Trocar de aba preserva o formulário, os filtros e o link digitado enquanto a
+aplicação permanece aberta. Editar pelo histórico abre a aba de cadastro e leva
+o foco à data da aula. A conta conectada permanece no topo; o diagnóstico da
+conexão fica recolhido abaixo do painel ativo.
+
+Para testar, alterne entre as abas com um formulário parcialmente preenchido.
+Use Tab para chegar à aba selecionada e setas esquerda/direita, Home e End para
+navegar. Confira também editar/salvar pelo histórico e o layout em celular.
+A regressão automatizada pode ser executada da raiz com
+`node scripts/test-etapa9.cjs --google` (Chrome necessário).
+
 ## Ferramentas
 
 Ambiente validado em Linux, com instalação em uma cópia limpa do projeto:
