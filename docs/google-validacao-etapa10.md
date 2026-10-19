@@ -7,6 +7,9 @@ execução remota nem encerra a etapa 10.
 ## Informações confirmadas pelo desenvolvedor
 
 - O ambiente de teste usará uma conta Google pessoal.
+- Em 19/10/2026, o desenvolvedor informou ter concluído a configuração no Google
+  Auth e corrigido os campos das URIs. O próximo passo é informar Client ID e
+  Client secret no terminal do backend; login e leitura reais não confirmados.
 - Apps Script foi descartado: o backend Go acessará diretamente a API Sheets.
 - O login Google determina a mesma conta usada para autorizar leituras e escritas.
 - O usuário informa o link de uma planilha própria ou compartilhada com permissão
@@ -96,7 +99,7 @@ inclusive conta com somente leitura ao tentar gravar, deve preservar aulas locai
 | Verificação | Situação |
 | --- | --- |
 | Tipo da conta de teste | Conta pessoal confirmada; execução em nome do usuário logado |
-| Projeto Google Cloud, Sheets API e cliente OAuth Web | Configuração pendente de comprovação |
+| Projeto Google Cloud, Sheets API e cliente OAuth Web | Configuração no Google Auth informada pelo desenvolvedor; URIs corrigidas. Habilitação da API, credenciais no ambiente e funcionamento real ainda precisam ser conferidos |
 | Login, sessão e vínculo com credenciais da mesma conta | Implementado em memória; testes automatizados aprovados; teste real pendente |
 | Planilha própria ou compartilhada com permissão de edição | Pendente de conferência |
 | Escopos e consentimento real | Pendentes de validação |

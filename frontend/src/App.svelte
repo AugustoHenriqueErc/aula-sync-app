@@ -168,7 +168,10 @@
 </script>
 
 <main>
-  <p class="eyebrow">Aula Sync App</p>
+  <p class="eyebrow app-brand">
+    <img src="/aula-sync-icon.png" alt="" width="48" height="48" />
+    <span>Aula Sync App</span>
+  </p>
   <h1>Suas aulas</h1>
   <p>Registre aulas, consulte o histórico e configure sua planilha.</p>
 

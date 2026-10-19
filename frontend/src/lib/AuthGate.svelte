@@ -109,6 +109,7 @@
       </p>{/if}
     <button onclick={sair}>Sair / trocar conta</button>
   {:else}
+    <img src="/aula-sync-icon.png" alt="" width="64" height="64" />
     <h1>Entrar no Aula Sync</h1>
     <p>
       Use a conta Google que tem permissão de edição na planilha de destino.

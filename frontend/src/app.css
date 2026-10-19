@@ -215,3 +215,12 @@ details button {
   margin-top: 16px;
   overflow-wrap: anywhere;
 }
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.app-brand img {
+  flex-shrink: 0;
+}

@@ -5,6 +5,57 @@ Implementado: login OpenID Connect + OAuth 2.0 no backend Go, sessão vinculada
 de abas e inspeção de cabeçalhos continuam na etapa 11. Validação com uma conta
 Google real ainda pendente; testes automatizados não comprovam consentimento real.
 
+## Ponto de retomada — 19/10/2026
+
+O desenvolvedor informou que concluiu a configuração no Google Auth, incluindo
+as URIs. Ainda não foi confirmado o preenchimento das credenciais no terminal,
+a inicialização com OAuth nem um login/leitura bem-sucedido com a conta real.
+Paramos na identificação dos valores solicitados por `Client ID:` e
+`Client secret:`. A etapa 10 permanece aberta.
+
+### Próxima ação: informar as credenciais no terminal
+
+Em **Google Auth Platform → Clientes**, abrir o cliente do tipo **Aplicativo da
+Web** criado para o projeto:
+
+- `Client ID:` recebe o **ID do cliente**, normalmente terminado em
+  `.apps.googleusercontent.com`.
+- `Client secret:` recebe a **Chave secreta do cliente / Segredo do cliente**.
+- Colar cada valor e pressionar Enter. O comando `read -s` não mostra caracteres
+  ao digitar o segredo. Esses valores não são o e-mail nem a senha do Google.
+- Não copiar credenciais para a documentação, conversa, Git ou frontend.
+
+Usar os comandos da seção **Configurar o teste real** abaixo. Se o terminal
+anterior foi fechado, executar novamente os comandos: as variáveis exportadas
+valem para aquela sessão do terminal. O backend não carrega `.env` automaticamente.
+
+URIs acordadas para desenvolvimento (campos diferentes no Google Auth):
+
+| Campo | Valor |
+| --- | --- |
+| Origens JavaScript autorizadas | `http://localhost:5173` |
+| URIs de redirecionamento autorizados | `http://localhost:5173/api/auth/google/callback` |
+
+O campo de origem não aceita caminhos nem barra final. O callback pertence ao
+campo de redirecionamento. `APP_URL` e `GOOGLE_REDIRECT_URI` devem usar esses
+mesmos valores; acessar o frontend por `localhost`, sem alternar com `127.0.0.1`.
+
+### Sequência para continuar
+
+1. Informar/exportar as credenciais e URLs; reiniciar o backend nesse terminal.
+2. Iniciar o frontend em `localhost:5173`, conforme os comandos abaixo.
+3. Entrar com a conta Google de teste, autorizar Sheets e conferir a conta exibida.
+4. Na aba **Integração Google**, salvar o link da planilha descartável e clicar
+   **Verificar leitura com minha conta**. Esperado: título da planilha e leitura
+   confirmada, sem criar abas ou enviar aulas. Leitura não comprova escrita.
+5. Executar os demais cenários da seção **Como testar**: falta de acesso,
+   troca de conta, recusa, expiração/reinício e revogação. Registrar resultados
+   sem credenciais em [google-validacao-etapa10.md](google-validacao-etapa10.md).
+6. Conferir as pendências do ambiente (API habilitada, usuário de teste,
+   consentimento e permissão de edição) e revisar os cabeçalhos com a responsável.
+7. Somente após encerrar a etapa 10, iniciar a etapa 11: inspeção completa,
+   preparação de abas mediante confirmação e sincronização com Sheets.
+
 ## Como funciona
 
 O navegador inicia o login por POST e segue para o Google. O backend verifica
