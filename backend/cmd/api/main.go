@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"app-sync-backend/internal/auth"
 	"app-sync-backend/internal/httpapi"
 	"app-sync-backend/internal/storage"
 
@@ -37,7 +38,11 @@ func executar() error {
 	}
 	defer banco.Close()
 
-	app := httpapi.New(banco)
+	config, err := auth.ConfigFromEnv(os.Getenv)
+	if err != nil {
+		return err
+	}
+	app := httpapi.NewWithAuth(banco, auth.New(config))
 	encerrado := make(chan error, 1)
 	app.Hooks().OnPostShutdown(func(err error) error {
 		encerrado <- err

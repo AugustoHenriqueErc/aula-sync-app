@@ -71,6 +71,8 @@ export async function jsonRequest(
     ? AbortSignal.any([options.signal, AbortSignal.timeout(10000)])
     : AbortSignal.timeout(10000)
   const response = await fetch(url, { ...options, signal, cache: 'no-store' })
+  if (response.status === 401)
+    window.dispatchEvent(new Event('aula-auth-required'))
   const data: unknown = await response.json()
   if (!response.ok)
     throw new Error(

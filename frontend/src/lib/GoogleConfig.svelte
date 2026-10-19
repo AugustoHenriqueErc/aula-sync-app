@@ -49,16 +49,19 @@
   let salvando = $state(false)
   let erro = $state('')
   let aviso = $state('')
+  let verificando = $state(false)
+  let acesso = $state('')
   let controller: AbortController | undefined
 
   async function carregar() {
-    if (carregando || salvando) return
+    if (carregando || salvando || verificando) return
     controller?.abort()
     const request = new AbortController()
     controller = request
     carregando = true
     erro = ''
     aviso = ''
+    acesso = ''
     try {
       const data = await jsonRequest(
         `${apiUrl}/integracoes/google/planejamento`,
@@ -88,12 +91,13 @@
   }
   async function salvar(event: SubmitEvent) {
     event.preventDefault()
-    if (!config || salvando || carregando) return
+    if (!config || salvando || carregando || verificando) return
     const request = new AbortController()
     controller = request
     salvando = true
     erro = ''
     aviso = ''
+    acesso = ''
     try {
       const data = await jsonRequest(
         `${apiUrl}/integracoes/google/configuracao`,
@@ -123,6 +127,34 @@
       if (!request.signal.aborted) salvando = false
     }
   }
+  async function verificarAcesso() {
+    if (!config?.destino || verificando) return
+    verificando = true
+    acesso = ''
+    erro = ''
+    try {
+      const data = await jsonRequest(`${apiUrl}/integracoes/google/acesso`)
+      if (
+        !objeto(data) ||
+        typeof data.titulo !== 'string' ||
+        data.versao !== config.versao ||
+        data.planilha_id !== config.destino.planilha_id ||
+        data.leitura_confirmada !== true ||
+        data.escrita_verificada !== false
+      )
+        throw new Error(
+          'O destino mudou ou a resposta é inválida. Verifique novamente.',
+        )
+      acesso = `Leitura confirmada: ${data.titulo}. A permissão de escrita e os cabeçalhos ainda não foram verificados.`
+    } catch (error) {
+      erro =
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível consultar a planilha.'
+    } finally {
+      verificando = false
+    }
+  }
   onMount(() => {
     void carregar()
     return () => controller?.abort()
@@ -136,7 +168,7 @@
     não estão disponíveis.
   </p>
   <form onsubmit={salvar}>
-    <fieldset disabled={carregando || salvando || !config}>
+    <fieldset disabled={carregando || salvando || verificando || !config}>
       <label for="google-url">Link da planilha de destino</label>
       <input
         id="google-url"
@@ -148,8 +180,8 @@
         aria-describedby="google-help"
       />
       <p class="hint" id="google-help">
-        O link será salvo neste aplicativo. Isso não confirma existência, acesso
-        ou cabeçalhos na planilha.
+        Informe uma planilha própria ou compartilhada com permissão de edição
+        para a conta conectada. Salvar o link não valida permissões.
       </p>
       <div class="actions">
         <button type="submit"
@@ -163,13 +195,20 @@
     {#if aviso}<p class="success">{aviso}</p>{/if}
     {#if erro}<p class="error">{erro}</p>{/if}
   </div>
-  <button disabled={carregando || salvando} onclick={carregar}
+  <button disabled={carregando || salvando || verificando} onclick={carregar}
     >Recarregar configuração e prévia</button
   >
   <p class="hint">
     Recarregar substitui o link digitado pela configuração salva e atualiza os
     meses abaixo.
   </p>
+  <button
+    disabled={!config?.destino || verificando || carregando || salvando}
+    onclick={verificarAcesso}
+  >
+    {verificando ? 'Verificando acesso…' : 'Verificar leitura com minha conta'}
+  </button>
+  {#if acesso}<p role="status">{acesso}</p>{/if}
   {#if config}
     {#if config.destino}<p class="google-destino">
         Destino atual: <a

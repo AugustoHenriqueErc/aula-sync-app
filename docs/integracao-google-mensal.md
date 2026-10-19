@@ -50,7 +50,8 @@ antes de pedir confirmação. O link identifica o arquivo; não substitui a auto
 OAuth da conta Google usada no login. O backend acessará diretamente a API
 Sheets. A planilha pode ser própria ou compartilhada, com permissão de edição
 para essa conta. Trocar de conta exige nova validação do destino e invalida
-confirmações anteriores. Decisão atualizada em 19/10/2026; login ainda pendente.
+confirmações anteriores. Login implementado em memória; validação real pendente
+([roteiro](login-google.md)).
 
 ## Troca de planilha
 

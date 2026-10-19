@@ -22,8 +22,9 @@ registros, com controle de versão e trilha de alterações no SQLite.
 O objetivo é construir um MVP local com dados fictícios para apresentar a Maria
 Luzia e ajustar as hipóteses após o primeiro contato. Consulte os
 [requisitos](docs/requisitos.md) e o [checklist](CHECKLIST_IMPLEMENTACAO.md).
-A configuração local da integração Google está disponível na etapa 10;
-consulta remota, criação de abas e sincronização ainda não estão implementadas. O comportamento inicial acordado
+A etapa 10 oferece configuração local, login Google e leitura de teste dos
+metadados da planilha. A validação com conta real está pendente; criação de abas
+e sincronização ainda não estão implementadas. O comportamento inicial acordado
 prevê planilha configurável, inicialmente vazia, com abas mensais determinadas
 pela data da aula. A criação de abas/cabeçalhos dependerá de confirmação, e
 estruturas incompatíveis bloquearão o envio sem alterar o conteúdo existente.
@@ -398,7 +399,10 @@ O [contrato e roteiro da etapa 10](docs/google-etapa10.md) descreve endpoints,
 modelo de estados, cabeçalhos propostos e o fluxo de login Google com OAuth.
 O backend acessará diretamente a API Sheets usando a conta do usuário logado.
 Informe uma planilha própria ou compartilhada com permissão de edição nessa
-conta. Login e autorização ainda não estão implementados; Apps Script foi descartado. A etapa 10 permanece aberta até a validação do ambiente e do contrato.
+conta. Login e autorização estão implementados, com sessões e tokens somente em
+memória. Consulte [configuração e testes do login Google](docs/login-google.md).
+Apps Script foi descartado. A etapa 10 permanece aberta até a validação real
+do ambiente e do contrato.
 
 A [revisão de cenários e validação da conta](docs/google-validacao-etapa10.md)
 detalha os resultados esperados, o roteiro de conferência das permissões e as

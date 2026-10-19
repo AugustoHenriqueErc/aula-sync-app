@@ -1,8 +1,9 @@
 # Etapa 10 — Configuração local e contrato de integração
 
-Status: preparação local implementada; execução no Google pertence à etapa 11.
-O login Google e a autorização OAuth ainda precisam ser implementados e validados na
-conta de teste. A revisão institucional com Maria Luzia continua pendente.
+Status: preparação local, login e leitura de teste implementados; escritas no
+Google pertencem à etapa 11.
+Login Google, OAuth e leitura de metadados implementados; validação com conta
+real pendente. Roteiro em [login-google.md](login-google.md). A revisão institucional com Maria Luzia continua pendente.
 
 A [revisão técnica dos cenários e o roteiro de validação da conta](google-validacao-etapa10.md)
 registram o que já foi analisado e as evidências externas ainda necessárias.
@@ -11,7 +12,7 @@ Decisão confirmada pelo desenvolvedor em 19/10/2026: integração direta do bac
 Go com a API do Google Sheets, usando OAuth da mesma conta Google utilizada no
 login. Apps Script e o segredo compartilhado da proposta anterior foram descartados.
 O usuário informa uma planilha própria ou compartilhada na qual tenha permissão
-de edição. Login, consentimento OAuth e validação remota ainda não estão implementados.
+de edição. Login e consentimento estão implementados; ensaio remoto real pendente.
 
 ## O que está disponível
 
@@ -136,24 +137,27 @@ central ou segredo compartilhado com um Web App.
    ou expiração sem renovação possível exige reconexão antes de acessar o Google.
 
 A configuração atual é um singleton local. Ela não comprova suporte a múltiplos
-usuários: o vínculo entre sessão, conta e credenciais ainda deverá ser implementado.
+usuários: o vínculo entre sessão, conta e credenciais foi implementado em memória,
+mas aulas e destino ainda são compartilhados na instalação.
 O destino deve ser revalidado para cada conta, sem herdar autorização do último
 usuário. Isso não define compartilhamento dos registros locais entre usuários;
 as regras de acesso aos dados locais deverão ser revisadas antes do piloto.
 
 ### Autenticação e configuração do ambiente
 
-Implementar na etapa 10 o login e o consentimento com Authorization Code no
+Implementado na etapa 10 o login e o consentimento com Authorization Code no
 backend, proteção `state` contra CSRF, validação do ID token (assinatura, emissor,
 audiência, validade e `nonce`) e sessão com cookie HttpOnly, SameSite adequado e
 Secure em produção. O backend mantém tokens e segredo OAuth fora do frontend,
 URLs da aplicação, logs e arquivos versionados. PKCE complementa a proteção do fluxo.
 
 Configurar projeto Google Cloud com Sheets API habilitada, tela de consentimento,
-usuários de teste e cliente OAuth Web com URI de retorno exata. Os nomes propostos
-são `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` e `GOOGLE_REDIRECT_URI`; ainda não
-são configurações implementadas. Definir armazenamento protegido de credenciais,
-renovação quando necessária e remoção na desconexão antes de persistir tokens.
+usuários de teste e cliente OAuth Web com URI de retorno exata. As variáveis implementadas
+são `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` e `APP_URL`.
+Sessões e access tokens permanecem apenas em memória por até uma hora, limitados
+pela validade dos tokens. Não há renovação nem refresh token: expiração e reinício
+exigem novo login. Logout elimina a sessão e seu token; não revoga consentimento
+no Google. Configuração e testes em [login-google.md](login-google.md).
 
 Escopos previstos: `openid email profile` para identidade e
 `https://www.googleapis.com/auth/spreadsheets` para planilhas informadas por link.
@@ -299,11 +303,12 @@ não acessa a planilha. Requisitos e funcionamento do Chrome estão no roteiro d
 ## Pendências para encerrar a etapa 10
 
 - Confirmar conta responsável, propriedade e permissão de escrita da planilha.
-- Implementar e validar login Google, consentimento OAuth e vínculo da sessão à conta executora.
+- Validar login Google, consentimento OAuth e vínculo da sessão à conta executora com uma conta real.
 - Revisar o modelo proposto com a usuária/responsável e ajustar antes do envio.
 - Comprovar escopos e configuração de segredos no ambiente autorizado.
 
 A planilha de teste foi fornecida pelo desenvolvedor. Uma leitura pelo conector
 confirmou uma única aba inicial e ausência de valores no intervalo A1:Z5; não
 foi feita inspeção da grade inteira nem escrita no arquivo. Isso não atesta que
-o aplicativo tenha autorização OAuth ou que a verificação remota esteja implementada.
+o aplicativo tenha autorização OAuth; a nova leitura de teste ainda precisa
+ser executada com a conta real.

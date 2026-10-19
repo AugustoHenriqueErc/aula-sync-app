@@ -56,6 +56,10 @@ async function run() {
   const api = start(bin, [], {
     env: {
       ...process.env,
+      GOOGLE_CLIENT_ID: process.argv.includes("--auth") ? "test-client" : "",
+      GOOGLE_CLIENT_SECRET: process.argv.includes("--auth") ? "test-secret" : "",
+      GOOGLE_REDIRECT_URI: process.argv.includes("--auth") ? `http://127.0.0.1:${vitePort}/api/auth/google/callback` : "",
+      APP_URL: process.argv.includes("--auth") ? `http://127.0.0.1:${vitePort}` : "",
       PORT: String(apiPort),
       DATABASE_PATH: path.join(dir, "teste.db"),
     },
@@ -156,6 +160,20 @@ async function run() {
   }
   await cdp("Page.enable");
   await cdp("Page.navigate", { url: `http://127.0.0.1:${vitePort}` });
+  if (process.argv.includes("--auth")) {
+    await waitFor(`document.body.innerText.includes('Entrar com Google')`);
+    assert.equal(await evaluate("document.querySelector('#form-title')"), null);
+    assert.equal(await evaluate("fetch('/api/aulas').then(r=>r.status)"), 401);
+    assert.equal(await evaluate("document.querySelector('form').method"), "post");
+    assert.equal(await evaluate("new URL(document.querySelector('form').action).pathname"), "/api/auth/google/login");
+    await cdp("Page.navigate", { url: `http://127.0.0.1:${vitePort}/api/auth/google/callback?state=invalid&code=invalid` });
+    await waitFor(`document.body.innerText.includes('Não foi possível concluir o login')`);
+    assert.equal(await evaluate("location.search"), "");
+    await cdp("Emulation.setDeviceMetricsOverride", { width:375, height:812, deviceScaleFactor:1, mobile:true });
+    assert(await evaluate("document.documentElement.scrollWidth <= window.innerWidth"));
+    console.log("PASS: tela de login, bloqueio da API, callback inválido, limpeza da URL e viewport móvel. Nenhuma chamada ao Google.");
+    return;
+  }
   await waitFor(`document.body.innerText.includes('Nenhuma aula encontrada')`);
   await evaluate(`document.querySelector('details').open=true`);
   await set("#novo-nome", "Augusto");
@@ -287,6 +305,10 @@ async function run() {
   start(bin, [], {
     env: {
       ...process.env,
+      GOOGLE_CLIENT_ID: process.argv.includes("--auth") ? "test-client" : "",
+      GOOGLE_CLIENT_SECRET: process.argv.includes("--auth") ? "test-secret" : "",
+      GOOGLE_REDIRECT_URI: process.argv.includes("--auth") ? `http://127.0.0.1:${vitePort}/api/auth/google/callback` : "",
+      APP_URL: process.argv.includes("--auth") ? `http://127.0.0.1:${vitePort}` : "",
       PORT: String(apiPort),
       DATABASE_PATH: path.join(dir, "teste.db"),
     },

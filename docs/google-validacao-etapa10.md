@@ -17,7 +17,8 @@ Decisão confirmada em 19/10/2026. O login usa OpenID Connect para identidade e
 OAuth 2.0 para autorização. Credenciais e sessão devem pertencer à mesma conta;
 o link não concede acesso. O contrato detalhado está em
 [google-etapa10.md](google-etapa10.md#login-autorização-e-conta-executora).
-Essa decisão está documentada, mas login e chamadas diretas ainda não implementados.
+Login e leitura direta de metadados implementados; testes automatizados cobrem
+o fluxo com provedor simulado. Ensaio real segue pendente. Veja [login-google.md](login-google.md).
 
 Mudanças de cabeçalhos antes do primeiro envio exigem atualizar o contrato e os
 testes correspondentes. Depois de existirem dados remotos, exigem versionamento
@@ -96,12 +97,12 @@ inclusive conta com somente leitura ao tentar gravar, deve preservar aulas locai
 | --- | --- |
 | Tipo da conta de teste | Conta pessoal confirmada; execução em nome do usuário logado |
 | Projeto Google Cloud, Sheets API e cliente OAuth Web | Configuração pendente de comprovação |
-| Login, sessão e vínculo com credenciais da mesma conta | Implementação e testes pendentes |
+| Login, sessão e vínculo com credenciais da mesma conta | Implementado em memória; testes automatizados aprovados; teste real pendente |
 | Planilha própria ou compartilhada com permissão de edição | Pendente de conferência |
 | Escopos e consentimento real | Pendentes de validação |
-| Proteção de tokens e segredo OAuth | Pendente de implementação e validação |
-| Callback inválido, recusa e sessão ausente rejeitados | Pendentes de testes |
-| Troca de conta, logout e revogação | Pendentes de testes |
+| Proteção de tokens e segredo OAuth | Tokens em memória e segredo no ambiente do backend; conferência do ambiente real pendente |
+| Callback inválido, recusa e sessão ausente rejeitados | Testes automatizados aprovados; teste real pendente |
+| Troca de conta, logout e revogação | Testes automatizados aprovados; teste real pendente |
 | Leitura via Sheets com autorização do aplicativo | Pendente de ensaio remoto |
 | Cabeçalhos aprovados pela responsável | Pendente de revisão |
 

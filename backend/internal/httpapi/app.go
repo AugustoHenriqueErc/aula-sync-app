@@ -5,13 +5,16 @@ import (
 	"log/slog"
 
 	"app-sync-backend/internal/aula"
+	"app-sync-backend/internal/auth"
 	"app-sync-backend/internal/storage"
 
 	"github.com/gofiber/fiber/v3"
 )
 
 // New configura a API sem abrir uma porta, permitindo testes HTTP em memória.
-func New(banco *storage.Banco) *fiber.App {
+func New(banco *storage.Banco) *fiber.App { return NewWithAuth(banco, nil) }
+
+func NewWithAuth(banco *storage.Banco, login *auth.Google) *fiber.App {
 	app := fiber.New(fiber.Config{ErrorHandler: handleError, BodyLimit: 64 * 1024})
 	app.Get("/", func(c fiber.Ctx) error {
 		return c.SendString("Olá Este é o Backend Mínimo de aula-sync-app!")
@@ -19,9 +22,10 @@ func New(banco *storage.Banco) *fiber.App {
 	app.Get("/health", func(c fiber.Ctx) error {
 		return c.JSON(fiber.Map{"status": "ok"})
 	})
+	login.Register(app)
 	registrarRotasAulas(app, banco)
 	registrarRotasTurmas(app, banco)
-	registrarRotasGoogle(app, banco)
+	registrarRotasGoogle(app, banco, login)
 	return app
 }
 

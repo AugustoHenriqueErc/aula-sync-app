@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"app-sync-backend/internal/auth"
 	destino "app-sync-backend/internal/google"
 	"app-sync-backend/internal/storage"
 	"errors"
@@ -24,7 +25,28 @@ func respostaConfigGoogle(c storage.ConfigGoogle) configGoogleResponse {
 	}
 	return r
 }
-func registrarRotasGoogle(app *fiber.App, banco *storage.Banco) {
+func registrarRotasGoogle(app *fiber.App, banco *storage.Banco, login *auth.Google) {
+	app.Get("/integracoes/google/acesso", func(c fiber.Ctx) error {
+		config, err := banco.ConfiguracaoGoogle(c.Context())
+		if err != nil {
+			return err
+		}
+		if config.Destino == nil {
+			return fiber.NewError(422, "Salve uma planilha de destino primeiro")
+		}
+		title, err := login.ReadSheet(c, config.Destino.PlanilhaID)
+		if err != nil {
+			return err
+		}
+		atual, err := banco.ConfiguracaoGoogle(c.Context())
+		if err != nil {
+			return err
+		}
+		if atual.Versao != config.Versao {
+			return fiber.NewError(409, "Destino alterado durante a consulta; verifique novamente")
+		}
+		return c.JSON(fiber.Map{"titulo": title, "planilha_id": config.Destino.PlanilhaID, "versao": config.Versao, "leitura_confirmada": true, "escrita_verificada": false})
+	})
 	app.Get("/integracoes/google/configuracao", func(c fiber.Ctx) error {
 		config, err := banco.ConfiguracaoGoogle(c.Context())
 		if err != nil {
