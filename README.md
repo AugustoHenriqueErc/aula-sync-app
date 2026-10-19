@@ -395,8 +395,10 @@ banco para a versão 4 e mantém os dados existentes. O endereço da planilha de
 teste não está fixado no código nem nos exemplos versionados.
 
 O [contrato e roteiro da etapa 10](docs/google-etapa10.md) descreve endpoints,
-modelo de estados, cabeçalhos propostos e as pendências de autorização do Apps
-Script. A etapa 10 permanece aberta até a validação do ambiente e do contrato.
+modelo de estados, cabeçalhos propostos e o fluxo de login Google com OAuth.
+O backend acessará diretamente a API Sheets usando a conta do usuário logado.
+Informe uma planilha própria ou compartilhada com permissão de edição nessa
+conta. Login e autorização ainda não estão implementados; Apps Script foi descartado. A etapa 10 permanece aberta até a validação do ambiente e do contrato.
 
 A [revisão de cenários e validação da conta](docs/google-validacao-etapa10.md)
 detalha os resultados esperados, o roteiro de conferência das permissões e as

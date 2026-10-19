@@ -74,15 +74,16 @@ Cada diretório deve surgir apenas quando a etapa correspondente for iniciada.
   sincronização. Não deve conter a regra oficial de carga horária.
 - **API Go:** valida entradas, executa casos de uso e aplica as regras do domínio.
 - **SQLite:** fonte principal dos dados da aplicação e do estado de sincronização.
-- **Google Apps Script:** adaptador de integração com os arquivos Google. Não é a
-  fonte principal nem deve ser necessário para registrar uma aula.
+- **Google Sheets API:** integração direta pelo backend Go, autorizada via OAuth
+  pela mesma conta do login. SQLite continua como fonte principal; salvar aulas
+  localmente não depende da disponibilidade do Google.
 
 ### Fluxo futuro de sincronização
 
 ```text
 Navegador -> API Go -> SQLite
                  |
-                 +-> solicitação de sincronização -> Apps Script -> Google
+                 +-> OAuth da conta do usuário -> Google Sheets API
 ```
 
 A sincronização deve guardar, no mínimo, estado (`pendente`, `sincronizado` ou
@@ -139,7 +140,8 @@ arredondamento, intervalos, fusos horários e formato exigido pela instituição
    base didática.
 7. **Datas e horas exigem regra explícita.** Persistir datas em formato não
    ambíguo e definir o fuso da instituição antes de integrar com o Google.
-8. **Autenticação é adiada, não ignorada.** O protótipo local vem primeiro, mas
+8. **Login Google na etapa 10.** O protótipo local vem primeiro; login e OAuth
+   da conta executora antecedem a sincronização. A etapa 13 revisa produção, mas
    nenhuma publicação com dados reais deve ocorrer sem controle de acesso,
    segredos protegidos e revisão de privacidade.
 9. **O PDF usa os dados locais.** A exportação consulta o SQLite por meio do
@@ -485,8 +487,8 @@ os cálculos do histórico.
 
 **Estudar**
 
-- Google Apps Script, permissões e escopos OAuth.
-- Web Apps do Apps Script e modelos de autenticação possíveis.
+- API Google Sheets, permissões e escopos OAuth.
+- Login Google com OpenID Connect, Authorization Code e sessões no backend.
 - Gestão de segredos, princípio do menor privilégio e proteção de dados.
 - Idempotência, timeouts, retentativas e limites de serviço.
 
@@ -501,7 +503,9 @@ os cálculos do histórico.
 - Especificar inspeção, confirmação de criação de abas/cabeçalhos e validação
   de estrutura, sem sobrescrever conteúdo incompatível.
 - Propor os cabeçalhos e revisar o modelo frente à planilha da escola.
-- Definir contrato entre API e Apps Script, autenticação e identificador
+- Implementar e validar login Google e consentimento OAuth da mesma conta,
+  incluindo sessão, proteção das credenciais, troca de conta e leitura de teste.
+- Definir contrato do cliente Sheets no backend, autenticação e identificador
   idempotente, sem ainda ativar sincronização de dados reais.
 - Modelar no SQLite estado e tentativas por aula, versão e destino, distinguindo
   pendência de preparação de envio confirmado.
@@ -533,7 +537,7 @@ permissões compreendidos antes de enviar qualquer dado real.
 
 **Estudar**
 
-- APIs de planilha no Apps Script.
+- API Google Sheets acessada diretamente pelo backend Go.
 - Requisições autenticadas entre serviços.
 - Identificadores externos, idempotência e tratamento de falhas parciais.
 - Filas conceituais e processamento assíncrono, ainda que a primeira solução seja
@@ -541,7 +545,8 @@ permissões compreendidos antes de enviar qualquer dado real.
 
 **Implementar**
 
-- Criar um Apps Script mínimo que receba o contrato validado.
+- Implementar o cliente Sheets no backend conforme o contrato, usando OAuth
+  da conta da sessão e planilha própria ou compartilhada com permissão de edição.
 - Inspecionar a planilha configurada e validar período, aba e cabeçalhos antes do envio.
 - Oferecer criação da aba mensal ausente e preenchimento de cabeçalhos em aba
   completamente vazia, mediante confirmação explícita para aquele destino.
@@ -575,7 +580,7 @@ mantém o registro local e pode ser tentada novamente.
 **Pré-requisitos**
 
 - Etapa 10.
-- Conhecimento básico de JavaScript e segurança de requisições.
+- Conhecimento de APIs HTTP em Go e segurança de requisições OAuth.
 
 ### Etapa 12 — Relatório de aulas em PDF
 
@@ -632,7 +637,7 @@ filtros do histórico, independentemente do estado da sincronização Google.
 
 **Implementar**
 
-- Definir e implementar autenticação apropriada antes de dados reais.
+- Revisar e reforçar o login Google da etapa 10 para produção antes de dados reais.
 - Restringir acesso e ações por usuário conforme requisitos confirmados.
 - Criar configuração de produção e processo de migração/backup.
 - Publicar um ambiente piloto com poucas usuárias.

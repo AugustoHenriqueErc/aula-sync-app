@@ -193,8 +193,9 @@ somente o planejamento, sem concluir tarefas de implementação.
 - [x] Definir roteamento pela data da aula, padrão `Registros aulas - MM/AAAA` e vínculo confiável entre período e identificadores de destino.
 - [x] Especificar inspeção e confirmação para criar aba ausente ou cabeçalhos em aba vazia; preservar conteúdo incompatível.
 - [x] Definir a troca de destino e seus efeitos sobre o estado de sincronização, sem envio automático.
-- [x] Documentar proposta de Apps Script independente, executado pela conta de teste, em `docs/google-etapa10.md`; disponibilidade da implantação ainda precisa ser confirmada.
-- [ ] Validar no ambiente o contrato/autenticação, escopos e armazenamento de segredos propostos em `docs/google-etapa10.md`. Nenhum segredo ou Web App configurado neste incremento.
+- [x] Documentar decisão de API Sheets direta pelo backend com OAuth da conta do login; Apps Script descartado em 19/10/2026 (`docs/google-etapa10.md`).
+- [ ] Implementar login Google, sessão e OAuth vinculados à mesma conta, com proteção de credenciais e tratamento de troca de conta/logout.
+- [ ] Configurar cliente OAuth e validar consentimento, escopos e leitura de teste pela API Sheets; nenhuma gravação nesta etapa.
 - [x] Definir identificador idempotente, versão do registro, timeouts e política de retentativas.
 - [x] Modelar estado por aula/versão/destino, tentativas, última tentativa e erro no SQLite, distinguindo pendência de preparação de envio confirmado.
 - [x] Definir como edições/cancelamentos voltam a ficar pendentes, incluindo mudança de mês e tratamento de alterações manuais/renomeação de abas no Google.
@@ -204,7 +205,7 @@ somente o planejamento, sem concluir tarefas de implementação.
 
 ## Etapa 11 — Sincronização com Sheets
 
-- [ ] Implementar o Apps Script mínimo conforme o contrato e validar autenticação.
+- [ ] Implementar cliente Sheets direto no backend com OAuth da conta da sessão e validar permissão de escrita na planilha de teste.
 - [ ] Inspecionar a planilha configurada e conferir a aba correspondente ao mês/ano da aula.
 - [ ] Solicitar confirmação para criar abas mensais ausentes ou cabeçalhos em abas completamente vazias.
 - [ ] Informar cabeçalhos incompatíveis e bloquear envio, preservando conteúdo existente; recusa não impede cadastro local.
@@ -239,7 +240,7 @@ consultas e regras locais das etapas 8 e 9, sem dependência técnica do Google.
 ## Etapa 13 — Autenticação, publicação e piloto
 
 - [ ] Confirmar identidade, permissões por usuária e acesso aos registros antes do piloto.
-- [ ] Implementar autenticação e autorização no backend.
+- [ ] Revisar o login Google da etapa 10 e reforçar autorização no backend para produção.
 - [ ] Definir as proteções de sessão, cookies, CSRF e CORS aplicáveis à solução escolhida.
 - [ ] Configurar produção, HTTPS, segredos e armazenamento persistente do SQLite.
 - [ ] Documentar e validar migrações, backup, restauração e recuperação de implantação.
@@ -290,4 +291,4 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 | 9 — Correção, regressões e backup | 18/10/2026 | Migração v3, PUT de edição, PATCH de situação, conflito 409 por versão e trilha transacional; testes Go, vet e builds aprovados; frontend check sem erros/avisos, formatação e build aprovados; Chrome validou edição, recálculo, conflito, cancelamento/reativação, retorno da última página, 375px e falha/recuperação; backup restaurado em outro arquivo com integridade e igualdade dos 21 registros | Conclusão técnica do MVP e marco D; contrato `docs/api-v3.md`, roteiro `docs/correcao-backup.md` e teste reproduzível `scripts/test-etapa9.cjs`; regras institucionais ainda pendentes |
 | 10 — Comportamento inicial documentado | 18/10/2026 | Acordo do desenvolvedor registrado em `docs/integracao-google-mensal.md`; roadmap, checklist, requisitos e README alinhados | Sem código ou acesso ao Google; contrato técnico, cabeçalhos e aprovação institucional pendentes; etapa 10 permanece aberta |
 
-**Próxima ação:** validar a conta responsável, a autorização e a implantação do Apps Script para o contrato proposto em `docs/google-etapa10.md`; revisar os cabeçalhos com a responsável. Configuração e prévia locais já estão implementadas. A etapa 10 permanece aberta; criação de abas e envio pertencem à etapa 11.
+**Próxima ação:** implementar login Google e OAuth da mesma conta, configurar o cliente OAuth e validar leitura pela API Sheets conforme o contrato em `docs/google-etapa10.md`; revisar os cabeçalhos com a responsável. Configuração e prévia locais já estão implementadas. A etapa 10 permanece aberta; criação de abas e envio pertencem à etapa 11.

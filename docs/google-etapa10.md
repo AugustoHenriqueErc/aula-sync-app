@@ -1,16 +1,17 @@
 # Etapa 10 — Configuração local e contrato de integração
 
 Status: preparação local implementada; execução no Google pertence à etapa 11.
-A autorização e a implantação do Apps Script ainda precisam ser validadas na
+O login Google e a autorização OAuth ainda precisam ser implementados e validados na
 conta de teste. A revisão institucional com Maria Luzia continua pendente.
 
 A [revisão técnica dos cenários e o roteiro de validação da conta](google-validacao-etapa10.md)
 registram o que já foi analisado e as evidências externas ainda necessárias.
 
-Atualização de requisitos: o desenvolvedor confirmou conta pessoal, ausência de
-projeto Apps Script e revisão dos cabeçalhos ainda pendente. Solicitou também
-entrada com Google. A proposta de autenticação abaixo permanece em revisão até
-definir se as planilhas serão de cada pessoa ou de uma conta central.
+Decisão confirmada pelo desenvolvedor em 19/10/2026: integração direta do backend
+Go com a API do Google Sheets, usando OAuth da mesma conta Google utilizada no
+login. Apps Script e o segredo compartilhado da proposta anterior foram descartados.
+O usuário informa uma planilha própria ou compartilhada na qual tenha permissão
+de edição. Login, consentimento OAuth e validação remota ainda não estão implementados.
 
 ## O que está disponível
 
@@ -113,40 +114,63 @@ registros externos. Uma cópia usada como instalação independente deverá ganh
 outra identidade antes de sincronizar; não executar duas cópias divergentes como
 se fossem instalações diferentes com a mesma identidade.
 
-## Contrato proposto para o adaptador Apps Script
+## Contrato para integração direta com Google Sheets
 
-O backend Go será o único cliente do adaptador. O navegador conversa somente
-com a API local. Proposta: projeto Apps Script independente da planilha,
-publicado como Web App e executado pela conta responsável pelo ambiente de teste.
-Isso permite trocar o identificador de planilha sem trocar o código do script.
-A execução como proprietário utiliza as permissões dessa conta, conforme a
-[documentação de Web Apps](https://developers.google.com/apps-script/guides/web).
+O backend Go acessará a API do Google Sheets diretamente em nome do usuário
+logado. O navegador conversa com a API local e participa do redirecionamento
+para login/consentimento do Google. Não haverá Apps Script, conta executora
+central ou segredo compartilhado com um Web App.
 
-O script usará o identificador para abrir a planilha. `openById` exige o escopo
-`https://www.googleapis.com/auth/spreadsheets`; não limitar indevidamente a
-`spreadsheets.currentonly` em um adaptador independente com destino configurável.
-Não são necessários escopos de Gmail, Docs ou Drive para esse desenho inicial.
-Fonte: [SpreadsheetApp.openById](https://developers.google.com/apps-script/reference/spreadsheet/spreadsheet-app#openById(String)).
+### Login, autorização e conta executora
+
+1. O usuário entra com Google. OpenID Connect identifica a conta; OAuth 2.0
+   autoriza o acesso à API. São responsabilidades distintas no mesmo fluxo.
+2. O backend valida a identidade e vincula a sessão e as credenciais à mesma
+   conta, identificada pelo `sub` validado, sem confiar em e-mail enviado pelo frontend.
+3. O usuário cola o link de uma planilha própria ou compartilhada. Ser proprietário
+   não é necessário; ter somente leitura não autoriza escrita.
+4. Inspeção, preparação e envio usam exclusivamente a autorização da conta da
+   sessão. O link identifica o destino, mas não concede permissão.
+5. Troca de conta invalida confirmações anteriores e exige revalidar o destino.
+   Nunca reutilizar credenciais de outra conta. Logout encerra a sessão; revogação
+   ou expiração sem renovação possível exige reconexão antes de acessar o Google.
+
+A configuração atual é um singleton local. Ela não comprova suporte a múltiplos
+usuários: o vínculo entre sessão, conta e credenciais ainda deverá ser implementado.
+O destino deve ser revalidado para cada conta, sem herdar autorização do último
+usuário. Isso não define compartilhamento dos registros locais entre usuários;
+as regras de acesso aos dados locais deverão ser revisadas antes do piloto.
 
 ### Autenticação e configuração do ambiente
 
-Proposta de MVP a validar na conta de teste: Web App acessível ao backend sem
-sessão de navegador, com segredo aleatório compartilhado enviado no corpo JSON
-sobre HTTPS e verificado antes de qualquer acesso à planilha. O backend manterá
-o segredo no ambiente do servidor, e o script nas propriedades do projeto.
-Não é o link da planilha nem a URL do Web App que autoriza a chamada.
+Implementar na etapa 10 o login e o consentimento com Authorization Code no
+backend, proteção `state` contra CSRF, validação do ID token (assinatura, emissor,
+audiência, validade e `nonce`) e sessão com cookie HttpOnly, SameSite adequado e
+Secure em produção. O backend mantém tokens e segredo OAuth fora do frontend,
+URLs da aplicação, logs e arquivos versionados. PKCE complementa a proteção do fluxo.
 
-Os nomes previstos são `GOOGLE_APPS_SCRIPT_URL` e `GOOGLE_APPS_SCRIPT_SECRET` no
-backend, e `API_SECRET` nas Script Properties. Ainda não são lidos pelo código
-atual. Não colocar segredo em variáveis VITE_, URLs, logs, exemplos versionados
-ou respostas da API. Gerar um segredo de pelo menos 32 bytes aleatórios no
-ambiente autorizado quando o adaptador for implantado. O serviço de propriedades
-é descrito em [Properties Service](https://developers.google.com/apps-script/guides/properties).
+Configurar projeto Google Cloud com Sheets API habilitada, tela de consentimento,
+usuários de teste e cliente OAuth Web com URI de retorno exata. Os nomes propostos
+são `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` e `GOOGLE_REDIRECT_URI`; ainda não
+são configurações implementadas. Definir armazenamento protegido de credenciais,
+renovação quando necessária e remoção na desconexão antes de persistir tokens.
 
-A viabilidade dessa publicação depende da conta e da política institucional.
-Não foi validada apenas porque o conector conseguiu ler a planilha. Se o ambiente
-exigir autenticação Google de cada chamada, revisar o mecanismo antes de iniciar
-o adaptador; não tornar a planilha pública para contornar essa restrição.
+Escopos previstos: `openid email profile` para identidade e
+`https://www.googleapis.com/auth/spreadsheets` para planilhas informadas por link.
+O escopo de Sheets é amplo e não fica limitado ao link salvo: o backend deve
+restringir operações ao destino confirmado. `drive.file` é uma alternativa mais
+restrita, mas colar um link não concede por si só acesso ao arquivo nesse escopo;
+exigiria um fluxo de seleção/autorização de arquivo a ser avaliado separadamente.
+Não solicitar acesso a Gmail ou Docs. Consentimento OAuth e permissão de edição
+no arquivo são verificações distintas; leitura bem-sucedida não comprova escrita.
+
+A etapa 10 valida login, vínculo da conta e autorização com leitura de teste,
+sem criar abas ou enviar aulas. A etapa 11 implementa inspeção completa, preparação
+e sincronização. A etapa 13 revisa controles de acesso e segurança para produção.
+
+Referências: [OAuth para aplicações web](https://developers.google.com/identity/protocols/oauth2/web-server),
+[OpenID Connect](https://developers.google.com/identity/openid-connect/openid-connect) e
+[escopos da API Sheets](https://developers.google.com/workspace/sheets/api/scopes).
 
 ### Operações previstas (ainda não disponíveis)
 
@@ -156,11 +180,12 @@ o adaptador; não tornar a planilha pública para contornar essa restrição.
 | preparar | Mesmo destino e período, ação confirmada e referência da inspeção | Aba pronta, somente após conferir que a inspeção ainda é válida |
 | sincronizar | Identidade da instalação, aula e versão, destino/período, dados | Registro inserido/atualizado ou conflito, com identidade e versão confirmadas |
 
-Envelope conceitual de requisição: `contrato`, `request_id`, `segredo`, `operacao`,
-`planilha_id`, `periodo` e `payload`. O corpo de resposta não contém o segredo:
-`contrato`, `request_id`, `ok`, `resultado` ou `erro {codigo,mensagem}`.
-O backend deve conferir o envelope além do status HTTP, pois uma página HTML de
-login ou um corpo inesperado não representa sucesso.
+As operações acima são contratos internos do backend, não endpoints de Apps
+Script nem envelopes enviados ao Google. O cliente Sheets usa os endpoints e
+corpos oficiais da API com access token da conta da sessão no cabeçalho
+`Authorization: Bearer`. O ID token identifica o usuário; não substitui o access
+token nas chamadas ao Sheets. O backend traduz respostas e erros da API para os
+resultados de domínio e nunca expõe credenciais nas respostas ao frontend.
 
 Códigos de domínio previstos: `SEM_ACESSO`, `ABA_AUSENTE`, `ABA_VAZIA`,
 `ESTRUTURA_INCOMPATIVEL`, `CONFIRMACAO_DESATUALIZADA`, `VERSAO_ANTIGA` e
@@ -173,7 +198,7 @@ Códigos de domínio previstos: `SEM_ACESSO`, `ABA_AUSENTE`, `ABA_VAZIA`,
    encontrar, retorna ausência; não cria nada durante a inspeção.
 3. Depois da criação ou de encontrar uma aba compatível, vincula `sheet_id`,
    período e versão do modelo. O ID é estável em relação à posição da aba;
-   consulte [Sheet.getSheetId](https://developers.google.com/apps-script/reference/spreadsheet/sheet#getSheetId()).
+   consulte [SheetProperties.sheetId](https://developers.google.com/workspace/sheets/api/reference/rest/v4/spreadsheets/sheets#SheetProperties).
 4. Em cada escrita, comparar ID vinculado, nome esperado e cabeçalhos, e conferir
    que a data de cada aula pertence ao período. Renomeação divergente, exclusão
    ou outra aba ocupando o nome causam conflito, não redirecionamento silencioso.
@@ -274,11 +299,11 @@ não acessa a planilha. Requisitos e funcionamento do Chrome estão no roteiro d
 ## Pendências para encerrar a etapa 10
 
 - Confirmar conta responsável, propriedade e permissão de escrita da planilha.
-- Validar a opção de implantação/autenticação do Apps Script nessa conta.
+- Implementar e validar login Google, consentimento OAuth e vínculo da sessão à conta executora.
 - Revisar o modelo proposto com a usuária/responsável e ajustar antes do envio.
 - Comprovar escopos e configuração de segredos no ambiente autorizado.
 
 A planilha de teste foi fornecida pelo desenvolvedor. Uma leitura pelo conector
 confirmou uma única aba inicial e ausência de valores no intervalo A1:Z5; não
 foi feita inspeção da grade inteira nem escrita no arquivo. Isso não atesta que
-o Apps Script já esteja autorizado ou que a verificação remota esteja implementada.
+o aplicativo tenha autorização OAuth ou que a verificação remota esteja implementada.

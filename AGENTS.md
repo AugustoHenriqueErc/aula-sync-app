@@ -18,7 +18,7 @@ O aula-sync-app também é um projeto de estudo.
 - Frontend: Svelte, Vite e TypeScript.
 - Backend: Go com Fiber.
 - Banco de dados: SQLite.
-- Integração futura: Google Apps Script.
+- Integração futura: API do Google Sheets diretamente pelo backend, com OAuth da conta do usuário.
 - Tailwind CSS é opcional.
 
 ## Arquitetura

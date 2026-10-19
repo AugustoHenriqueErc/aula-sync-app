@@ -47,7 +47,10 @@ A simples configuração do link não autoriza criar abas, preencher cabeçalhos
 sincronizar aulas. Cada confirmação deve identificar claramente a planilha e os
 meses envolvidos. Em um envio com vários meses, apresentar os destinos ausentes
 antes de pedir confirmação. O link identifica o arquivo; não substitui a autorização
-de acesso do Apps Script.
+OAuth da conta Google usada no login. O backend acessará diretamente a API
+Sheets. A planilha pode ser própria ou compartilhada, com permissão de edição
+para essa conta. Trocar de conta exige nova validação do destino e invalida
+confirmações anteriores. Decisão atualizada em 19/10/2026; login ainda pendente.
 
 ## Troca de planilha
 
@@ -87,7 +90,7 @@ renomeação de abas e correções/cancelamentos após sincronizar.
 - Especificar período, nomes mensais e vínculo com identificadores de destino.
 - Propor o esquema de colunas e as regras de compatibilidade de cabeçalhos.
 - Definir os contratos de inspeção, confirmação de preparação e sincronização.
-- Definir autenticação e permissões: o link não é uma credencial.
+- Implementar e validar login Google e autorização OAuth da mesma conta; o link não é uma credencial.
 - Modelar estado por destino/versão, troca de planilha e edição que muda o mês.
 - Preparar uma planilha vazia de teste com dados fictícios e revisar os cenários.
 
@@ -127,7 +130,7 @@ Registrar este acordo não conclui a etapa 10 nem antecipa código da etapa 11.
   planilha padrão da escola e revisar com Maria Luzia.
 - Critério preciso de compatibilidade (incluindo colunas extras e fórmulas).
 - Estratégia de identificação confiável do período e reação a abas renomeadas.
-- Autenticação, permissões e local de execução do Apps Script.
+- Configuração do cliente OAuth, proteção de credenciais e validação de permissões na API Sheets.
 - Política de alterações manuais e reconciliação de mudança de mês/destino.
 
 Não foram escolhidos valores finais para essas decisões apenas por registrar
