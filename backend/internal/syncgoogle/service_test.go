@@ -18,6 +18,7 @@ import (
 type fakeSheets struct {
 	book                              g.Spreadsheet
 	writes                            int
+	reads                             int
 	failRead, failWrite, loseResponse bool
 	failAt                            int
 }
@@ -25,6 +26,7 @@ type fakeSheets struct {
 func (f *fakeSheets) client() g.Client { return g.Client{Request: f.request} }
 func (f *fakeSheets) request(method, path string, body, result any) error {
 	if method == "GET" {
+		f.reads++
 		if f.failRead {
 			return errors.New("leitura indisponível")
 		}
@@ -114,8 +116,13 @@ func makeSheet(id int64, title string) g.Sheet {
 	return sh
 }
 func setRows(sh *g.Sheet, rows []g.Row) {
+	for len(rows) > 0 && len(g.Trim(rows[len(rows)-1]).Values) == 0 {
+		rows = rows[:len(rows)-1]
+	}
 	raw, _ := json.Marshal(map[string]any{"properties": sh.Properties, "data": []any{map[string]any{"rowData": rows}}})
-	_ = json.Unmarshal(raw, sh)
+	var updated g.Sheet
+	_ = json.Unmarshal(raw, &updated)
+	*sh = updated
 }
 func setup(t *testing.T) (*Service, *fakeSheets, storage.Registro, storage.ConfigGoogle) {
 	t.Helper()

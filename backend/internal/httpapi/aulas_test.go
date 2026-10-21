@@ -54,6 +54,12 @@ func requisicao(t *testing.T, app *fiber.App, metodo, caminho, corpo, contentTyp
 	if resp.StatusCode != status {
 		t.Fatalf("%s %s: status %d, esperado %d; corpo %s", metodo, caminho, resp.StatusCode, status, body)
 	}
+	if status == http.StatusNoContent {
+		if len(body) != 0 {
+			t.Fatalf("204 deve ter corpo vazio: %s", body)
+		}
+		return body, resp.Header
+	}
 	tipo, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
 	if err != nil || tipo != "application/json" {
 		t.Fatalf("resposta não é JSON: %s", resp.Header.Get("Content-Type"))

@@ -156,7 +156,7 @@ func TestMigracao4ReverteFalhaEPreservaDados(t *testing.T) {
 	}
 }
 
-func TestMigracaoCincoPreservaConfiguracaoEIdentidade(t *testing.T) {
+func TestMigracoesCincoESeisPreservamConfiguracaoEIdentidade(t *testing.T) {
 	ctx := context.Background()
 	path := filepath.Join(t.TempDir(), "quatro.db")
 	// Constrói uma instalação real de versão 4, antes da nova migração.
@@ -194,7 +194,7 @@ func TestMigracaoCincoPreservaConfiguracaoEIdentidade(t *testing.T) {
 		t.Fatal(id, err)
 	}
 	var v int
-	if err = b.db.QueryRow("PRAGMA user_version").Scan(&v); err != nil || v != 5 {
+	if err = b.db.QueryRow("PRAGMA user_version").Scan(&v); err != nil || v != 6 {
 		t.Fatal(v, err)
 	}
 }

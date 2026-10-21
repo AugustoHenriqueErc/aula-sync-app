@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { untrack, onDestroy } from 'svelte'
+  import { untrack, onDestroy, tick } from 'svelte'
   import {
     jsonRequest,
     sincronizarAula,
@@ -28,12 +28,15 @@
   let inicial = $state('')
   let final = $state('')
   let turma = $state('')
-  let situacao = $state('ativas')
+  let situacao = $state('todas')
   let alterando = $state(false)
   let aviso = $state('')
   let sincronizando = $state(false)
   let lote = $state(false)
-  const ocupado = $derived(alterando || sincronizando || lote || bloqueado)
+  let excluindo = $state(false)
+  const ocupado = $derived(
+    alterando || sincronizando || lote || excluindo || bloqueado,
+  )
   function mensagemErro(error: unknown) {
     return error instanceof Error && error.name === 'Error'
       ? error.message
@@ -120,14 +123,18 @@
       }
       for (const aula of aulas) {
         aviso = `${acao === 'enviar' ? 'Enviando' : 'Cancelando'} ${concluidas + 1} de ${quantidade}…`
-        if (acao === 'enviar')
-          await sincronizarAula(
+        if (acao === 'enviar') {
+          const envio = await sincronizarAula(
             apiUrl,
             aula,
             aula.google!.config_versao,
             controller.signal,
           )
-        else {
+          if (envio === 'adiado') {
+            aviso = `${concluidas} de ${quantidade} aula(s) concluída(s). Preparação recusada; as demais continuam pendentes.`
+            return
+          }
+        } else {
           const data = await jsonRequest(
             `${apiUrl}/aulas/${aula.id}/situacao`,
             {
@@ -158,6 +165,15 @@
   }
   async function sincronizar(aula: Aula) {
     if (ocupado || !aula.google) return
+    if (aula.google.exclusao_pendente) {
+      aviso =
+        'Esta aula tem uma exclusão aguardando confirmação. Use Excluir registro para concluir.'
+      return
+    }
+    if (aula.google.estado === 'sincronizado') {
+      aviso = 'Esta aula já está na planilha. Nenhum novo registro foi enviado.'
+      return
+    }
     if (
       !window.confirm(
         'Enviar esta aula para a planilha configurada? O envio também atualiza correções e cancelamentos anteriores nesse destino.',
@@ -168,8 +184,19 @@
     onBusy(true)
     aviso = ''
     try {
-      await sincronizarAula(apiUrl, aula, aula.google.config_versao)
-      aviso = 'Aula sincronizada com a planilha configurada.'
+      const envio = await sincronizarAula(
+        apiUrl,
+        aula,
+        aula.google.config_versao,
+      )
+      aviso =
+        envio === 'adiado'
+          ? 'Aula preservada. Envio pendente; nenhuma aba foi preparada.'
+          : envio === 'ja_sincronizada'
+            ? 'Esta aula já está na planilha. Nenhum novo registro foi enviado.'
+            : aula.cancelada
+              ? 'Cancelamento sincronizado.'
+              : 'Aula sincronizada com a planilha configurada.'
     } catch (error) {
       aviso =
         error instanceof Error && error.name === 'Error'
@@ -225,12 +252,63 @@
       }
     }
   }
+  let dialogoExclusao: HTMLDialogElement
+  let aulaExcluir = $state<Aula | null>(null)
+  let removerGoogle = $state(false)
+  let erroExclusao = $state('')
+  async function abrirExclusao(aula: Aula) {
+    if (ocupado) return
+    aulaExcluir = aula
+    removerGoogle = aula.google?.exclusao_google ?? false
+    erroExclusao = ''
+    await tick()
+    dialogoExclusao.showModal()
+    dialogoExclusao.querySelector('button')?.focus()
+  }
+  async function excluir(event: SubmitEvent) {
+    event.preventDefault()
+    if (!aulaExcluir || ocupado) return
+    excluindo = true
+    onBusy(true)
+    erroExclusao = ''
+    const request = new AbortController()
+    alteracaoRequest = request
+    try {
+      const resposta = await jsonRequest(`${apiUrl}/aulas/${aulaExcluir.id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          versao: aulaExcluir.versao,
+          config_versao: aulaExcluir.google?.config_versao ?? 0,
+          remover_google: removerGoogle,
+        }),
+        signal: request.signal,
+      })
+      if (resposta !== null)
+        throw new Error(
+          'Não foi possível confirmar a exclusão. Confira o histórico.',
+        )
+      aviso = removerGoogle
+        ? 'Aula excluída definitivamente do aplicativo e da planilha configurada.'
+        : 'Aula excluída definitivamente do aplicativo. Os registros no Google foram preservados.'
+      dialogoExclusao.close()
+      aulaExcluir = null
+    } catch (error) {
+      if (!request.signal.aborted) erroExclusao = mensagemErro(error)
+    } finally {
+      if (!request.signal.aborted) {
+        excluindo = false
+        onBusy(false)
+        tentativa++
+      }
+    }
+  }
   onDestroy(() => alteracaoRequest?.abort())
   let aplicados = $state({
     inicial: '',
     final: '',
     turma: '',
-    situacao: 'ativas',
+    situacao: 'todas',
   })
   let pagina = $state(1)
   let tentativa = $state(0)
@@ -252,10 +330,10 @@
     inicial = ''
     final = ''
     turma = ''
-    situacao = 'ativas'
+    situacao = 'todas'
     erroFiltro = ''
     pagina = 1
-    aplicados = { inicial: '', final: '', turma: '', situacao: 'ativas' }
+    aplicados = { inicial: '', final: '', turma: '', situacao: 'todas' }
   }
   function parametros(p: number) {
     const params = new URLSearchParams({ pagina: String(p) })
@@ -397,8 +475,12 @@
         {#each resultado.aulas as aula (aula.id)}
           <li
             class="aula-card"
-            class:envio-pendente={aula.google?.estado !== 'sincronizado'}
-            class:sincronizado={aula.google?.estado === 'sincronizado'}
+            data-aula-id={aula.id}
+            class:envio-pendente={!aula.cancelada &&
+              aula.google?.estado !== 'sincronizado'}
+            class:sincronizado={!aula.cancelada &&
+              aula.google?.estado === 'sincronizado'}
+            class:cancelada={aula.cancelada}
           >
             <h3>{dataLocal(aula.data)} · {aula.turma}</h3>
             <p>{aula.inicio}–{aula.fim} · {duracao(aula.duracao_minutos)}</p>
@@ -410,10 +492,18 @@
                 )}
               </p>{/if}
             <p class="envio-status">
-              {aula.google?.estado === 'sincronizado'
-                ? 'Sincronizado'
-                : 'Envio pendente'}
+              {aula.cancelada
+                ? aula.google?.estado === 'sincronizado'
+                  ? 'Cancelamento sincronizado'
+                  : 'Cancelamento pendente de sincronização'
+                : aula.google?.estado === 'sincronizado'
+                  ? 'Sincronizado'
+                  : 'Envio pendente'}
             </p>
+            {#if aula.google?.exclusao_pendente}<p class="error">
+                Exclusão aguardando confirmação. Use Excluir registro para
+                concluir com as mesmas opções.
+              </p>{/if}
             {#if aula.google?.erro}<p class="error">{aula.google.erro}</p>{/if}
             {#if aula.google?.estado === 'sem_destino'}<p class="hint">
                 Configure a planilha na aba Integração Google.
@@ -421,7 +511,8 @@
             {#if aula.google?.estado === 'aguardando_preparacao'}<p
                 class="hint"
               >
-                Prepare a aba mensal na Integração Google antes de enviar.
+                Ao sincronizar, você poderá confirmar a preparação da aba mensal
+                aqui.
               </p>{/if}
             <div class="actions">
               {#if aula.google && aula.google.estado !== 'sem_destino'}
@@ -440,6 +531,11 @@
               <button disabled={ocupado} onclick={() => mudarSituacao(aula)}
                 >{aula.cancelada ? 'Reativar aula' : 'Cancelar aula'}</button
               >
+              {#if aula.cancelada}<button
+                  class="button-danger"
+                  disabled={ocupado}
+                  onclick={() => abrirExclusao(aula)}>Excluir registro</button
+                >{/if}
             </div>
           </li>
         {/each}
@@ -462,3 +558,49 @@
     </nav>
   {/if}
 </section>
+
+<dialog
+  bind:this={dialogoExclusao}
+  aria-labelledby="excluir-title"
+  oncancel={(event) => {
+    if (excluindo) event.preventDefault()
+  }}
+>
+  <h2 id="excluir-title">Excluir registro definitivamente?</h2>
+  {#if aulaExcluir}
+    <p>{dataLocal(aulaExcluir.data)} · {aulaExcluir.turma}</p>
+    <p>
+      A aula desaparecerá do histórico e não poderá ser recuperada. Você poderá
+      cadastrá-la novamente.
+    </p>
+    <form onsubmit={excluir}>
+      <fieldset disabled={excluindo}>
+        {#if aulaExcluir.google?.destino_id}
+          <label class="checkbox-label"
+            ><input
+              type="checkbox"
+              disabled={!!aulaExcluir.google?.exclusao_pendente}
+              bind:checked={removerGoogle}
+            />Excluir também o registro da planilha configurada</label
+          >
+          <p class="hint">
+            Inclui as representações desta aula em meses anteriores dessa
+            planilha. Outros destinos são preservados. Sincronize o cancelamento
+            antes de excluir uma aula já enviada.
+          </p>
+        {:else}<p>
+            Sem planilha configurada: a exclusão será somente no aplicativo.
+          </p>{/if}
+        {#if erroExclusao}<p class="error" role="alert">{erroExclusao}</p>{/if}
+        <div class="actions">
+          <button type="button" onclick={() => dialogoExclusao.close()}
+            >Voltar</button
+          >
+          <button class="button-danger" type="submit"
+            >{excluindo ? 'Excluindo…' : 'Excluir definitivamente'}</button
+          >
+        </div>
+      </fieldset>
+    </form>
+  {/if}
+</dialog>

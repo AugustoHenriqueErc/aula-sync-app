@@ -41,17 +41,17 @@ func (b *Banco) Inserir(ctx context.Context, a aula.Aula) (Registro, error) {
 	if err = tx.QueryRowContext(ctx, "SELECT id FROM turmas WHERE nome_normalizado = ?", normalizarNome(a.Turma)).Scan(&turmaID); err != nil {
 		return Registro{}, err
 	}
+	var id int64
+	if err = tx.QueryRowContext(ctx, `UPDATE aula_sequencia SET ultimo=max(ultimo,coalesce((SELECT max(id) FROM aulas),0))+1 WHERE id=1 RETURNING ultimo`).Scan(&id); err != nil {
+		return Registro{}, err
+	}
 	atualizada := time.Now().UTC().Format(time.RFC3339Nano)
-	result, err := tx.ExecContext(ctx, `INSERT INTO aulas
-  (data, inicio, fim, turma, conteudo, observacoes, intervalo_minutos, duracao_minutos, turma_id, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		a.Data, a.Inicio, a.Fim, a.Turma, a.Conteudo, a.Observacoes, a.IntervaloMinutos, duracao, turmaID, atualizada)
+	_, err = tx.ExecContext(ctx, `INSERT INTO aulas
+  (id, data, inicio, fim, turma, conteudo, observacoes, intervalo_minutos, duracao_minutos, turma_id, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		id, a.Data, a.Inicio, a.Fim, a.Turma, a.Conteudo, a.Observacoes, a.IntervaloMinutos, duracao, turmaID, atualizada)
 	if err != nil {
 		return Registro{}, fmt.Errorf("inserir aula: %w", err)
-	}
-	id, err := result.LastInsertId()
-	if err != nil {
-		return Registro{}, fmt.Errorf("obter ID da aula: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
 		return Registro{}, err

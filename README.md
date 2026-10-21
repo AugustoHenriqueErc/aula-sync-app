@@ -406,7 +406,7 @@ após salvar o destino.
 A data da aula determina a aba esperada, como `Registros aulas - 10/2026`.
 
 Salvar o link não valida permissões nem cria abas ou envia aulas. A API migra o
-banco para a versão 5 e mantém os dados existentes. O endereço da planilha de
+banco para a versão 6 e mantém os dados existentes. O endereço da planilha de
 teste não está fixado no código nem nos exemplos versionados.
 
 O [contrato e roteiro da etapa 10](docs/google-etapa10.md) descreve endpoints,
@@ -448,4 +448,9 @@ validação de escrita na planilha real deve ser feita pelo aplicativo.
 As [melhorias de experiência do frontend](docs/melhorias-frontend.md) incluem
 perfil com foto, convite à sincronização após cadastro, cores no histórico e
 ações em lote sobre todas as páginas dos filtros aplicados. O documento registra
-também o pedido futuro de verificar a leitura ao salvar o destino.
+também os ajustes posteriores de cancelamento e exclusão.
+
+Os [ajustes finais da integração](docs/ajustes-integracao-etapa11.md) acrescentam
+aviso de aula já sincronizada, cancelamento em vermelho, exclusão definitiva com
+opção de remover no Google, preparação de abas pelo histórico e leitura ao salvar
+o destino. A detecção de dois cadastros iguais permanece uma pendência futura.

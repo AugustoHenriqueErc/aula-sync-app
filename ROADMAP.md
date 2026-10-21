@@ -535,6 +535,12 @@ permissões compreendidos antes de enviar qualquer dado real.
 
 ### Etapa 11 — Primeiro corte: sincronização com Google Sheets
 
+**Ajuste aprovado em 21/10/2026:** incluir aviso de reenvio já confirmado,
+cancelamento em vermelho, exclusão definitiva de canceladas com opção de remoção
+na planilha configurada, verificação ao salvar destino e preparação pelo histórico.
+Ver [contrato atualizado](docs/ajustes-integracao-etapa11.md). Detectar dois
+cadastros iguais fica para evolução futura, conforme decisão do desenvolvedor.
+
 **Estudar**
 
 - API Google Sheets acessada diretamente pelo backend Go.

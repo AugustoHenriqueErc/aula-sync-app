@@ -30,7 +30,7 @@ func NewWithAuth(banco *storage.Banco, login *auth.Google) *fiber.App {
 }
 
 func handleError(c fiber.Ctx, err error) error {
-	if errors.Is(err, storage.ErrConflito) || errors.Is(err, storage.ErrCancelada) {
+	if errors.Is(err, storage.ErrConflito) || errors.Is(err, storage.ErrCancelada) || errors.Is(err, storage.ErrExclusaoPendente) {
 		return c.Status(409).JSON(fiber.Map{"error": err.Error()})
 	}
 	if errors.Is(err, storage.ErrTurmaDuplicada) {

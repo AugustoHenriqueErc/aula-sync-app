@@ -71,4 +71,31 @@ func registrarSincronizacaoGoogle(app *fiber.App, banco *storage.Banco, login *a
 		}
 		return c.JSON(result)
 	})
+	app.Delete("/aulas/:id", func(c fiber.Ctx) error {
+		id, err := idDaAula(c)
+		if err != nil {
+			return err
+		}
+		in, err := lerJSON[struct {
+			Versao        *int64 `json:"versao"`
+			ConfigVersao  *int64 `json:"config_versao"`
+			RemoverGoogle *bool  `json:"remover_google"`
+		}](c)
+		if err != nil {
+			return err
+		}
+		if in.Versao == nil || *in.Versao < 1 || in.ConfigVersao == nil || *in.ConfigVersao < 0 || in.RemoverGoogle == nil {
+			return fiber.NewError(400, "Informe as versões e a opção de exclusão no Google")
+		}
+		if *in.RemoverGoogle {
+			if _, err := login.SheetsSession(c); err != nil {
+				return err
+			}
+		}
+		if err = service.Delete(c.Context(), client(c), *in.ConfigVersao, id, *in.Versao, *in.RemoverGoogle); err != nil {
+			return err
+		}
+		return c.SendStatus(204)
+	})
+
 }

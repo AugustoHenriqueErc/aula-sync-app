@@ -85,8 +85,13 @@
         abaAtiva = 'google'
         return
       }
-      await sincronizarAula(apiUrl, aula, Number(config.versao))
-      avisoEdicao = 'Aula salva e sincronizada com o Google.'
+      const envio = await sincronizarAula(apiUrl, aula, Number(config.versao))
+      avisoEdicao =
+        envio === 'adiado'
+          ? 'Aula salva. Envio pendente; você pode sincronizar pelo histórico.'
+          : envio === 'ja_sincronizada'
+            ? 'Esta aula já está na planilha. Nenhum novo registro foi enviado.'
+            : 'Aula salva e sincronizada com o Google.'
     } catch (error) {
       avisoEdicao = `Aula salva. ${error instanceof Error && error.name === 'Error' ? error.message : 'Não foi possível confirmar a sincronização. Tente novamente pelo histórico.'}`
     } finally {

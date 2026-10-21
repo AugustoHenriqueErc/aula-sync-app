@@ -27,6 +27,9 @@ var quartaMigracao string
 //go:embed migrations/005_google_sync.sql
 var quintaMigracao string
 
+//go:embed migrations/006_exclusao.sql
+var sextaMigracao string
+
 // GoogleMu serializa configuração, correções e operações remotas neste processo.
 type Banco struct {
 	db       *sql.DB
@@ -90,10 +93,10 @@ func (b *Banco) migrar(ctx context.Context) error {
 		if _, err := tx.ExecContext(ctx, "PRAGMA user_version = 1"); err != nil {
 			return fmt.Errorf("registrar migração 001: %w", err)
 		}
-	case 1, 2, 3, 4, 5:
+	case 1, 2, 3, 4, 5, 6:
 		// A migração já foi aplicada. Não recriar nem apagar tabelas.
 	default:
-		return fmt.Errorf("versão de banco não suportada: %d (máxima: 5)", versao)
+		return fmt.Errorf("versão de banco não suportada: %d (máxima: 6)", versao)
 	}
 	if versao < 2 {
 		if err := migrarTurmas(ctx, tx); err != nil {
@@ -113,6 +116,11 @@ func (b *Banco) migrar(ctx context.Context) error {
 	if versao < 5 {
 		if _, err := tx.ExecContext(ctx, quintaMigracao); err != nil {
 			return fmt.Errorf("aplicar migração 005: %w", err)
+		}
+	}
+	if versao < 6 {
+		if _, err := tx.ExecContext(ctx, sextaMigracao); err != nil {
+			return fmt.Errorf("aplicar migração 006: %w", err)
 		}
 	}
 	if err := tx.Commit(); err != nil {

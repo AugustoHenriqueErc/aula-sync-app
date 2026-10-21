@@ -49,6 +49,11 @@ func (b *Banco) ConfiguracaoGoogle(ctx context.Context) (ConfigGoogle, error) {
 func (b *Banco) ConfigurarGoogle(ctx context.Context, link string, versao int64) (ConfigGoogle, error) {
 	b.GoogleMu.Lock()
 	defer b.GoogleMu.Unlock()
+	if pending, err := b.AlgumaExclusaoGoogle(ctx); err != nil {
+		return ConfigGoogle{}, err
+	} else if pending {
+		return ConfigGoogle{}, ErrExclusaoPendente
+	}
 	id, err := destino.PlanilhaID(link)
 	if err != nil {
 		return ConfigGoogle{}, err

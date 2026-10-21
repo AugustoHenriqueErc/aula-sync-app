@@ -161,3 +161,8 @@ func Version(r Row) int64 {
 	return i
 }
 func Key(install string, id int64) string { return install + ":" + strconv.FormatInt(id, 10) }
+
+// ClearRecord apaga os valores da aula sem deslocar outras linhas.
+func ClearRecord(id int64, index int) any {
+	return Update(id, index, Row{Values: make([]Cell, len(Cabecalhos))})
+}

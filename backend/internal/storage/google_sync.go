@@ -77,18 +77,31 @@ func (b *Banco) FalhaEnvioGoogle(ctx context.Context, destino, aula int64, perio
 }
 
 type EstadoGoogle struct {
-	Estado          string `json:"estado"`
-	DestinoID       int64  `json:"destino_id"`
-	ConfigVersao    int64  `json:"config_versao"`
-	Periodo         string `json:"periodo"`
-	Tentativas      int    `json:"tentativas"`
-	UltimaTentativa string `json:"ultima_tentativa,omitempty"`
-	Erro            string `json:"erro,omitempty"`
+	ExclusaoPendente bool   `json:"exclusao_pendente,omitempty"`
+	ExclusaoGoogle   bool   `json:"exclusao_google,omitempty"`
+	JaSincronizada   bool   `json:"ja_sincronizada,omitempty"`
+	Mensagem         string `json:"mensagem,omitempty"`
+	Estado           string `json:"estado"`
+	DestinoID        int64  `json:"destino_id"`
+	ConfigVersao     int64  `json:"config_versao"`
+	Periodo          string `json:"periodo"`
+	Tentativas       int    `json:"tentativas"`
+	UltimaTentativa  string `json:"ultima_tentativa,omitempty"`
+	Erro             string `json:"erro,omitempty"`
 }
 
 func (b *Banco) EstadoGoogle(ctx context.Context, r Registro) (EstadoGoogle, error) {
 	c, err := b.ConfiguracaoGoogle(ctx)
 	e := EstadoGoogle{Estado: "sem_destino", ConfigVersao: c.Versao, Periodo: r.Aula.Data[:7]}
+	exclusao, exclusaoErr := b.Exclusao(ctx, r.ID)
+	if exclusaoErr != nil {
+		return e, exclusaoErr
+	}
+	if exclusao != nil {
+		e.ExclusaoPendente = true
+		e.ExclusaoGoogle = exclusao.RemoverGoogle
+	}
+
 	if err != nil || c.Destino == nil {
 		return e, err
 	}
@@ -134,5 +147,16 @@ func (b *Banco) OutroEnvioPendenteGoogle(ctx context.Context, destino, aula int6
 // Uma tentativa corresponde a uma ação explícita, inclusive quando a leitura falha.
 func (b *Banco) RegistrarTentativaGoogle(ctx context.Context, destino, aula int64, periodo string) error {
 	_, err := b.db.ExecContext(ctx, `INSERT INTO google_sincronizacoes(aula_id,destino_id,periodo,estado,tentativas,ultima_tentativa) VALUES(?,?,?,'pendente',1,?) ON CONFLICT(aula_id,destino_id,periodo) DO UPDATE SET estado='pendente',tentativas=tentativas+1,ultima_tentativa=excluded.ultima_tentativa,erro=NULL`, aula, destino, periodo, time.Now().UTC().Format(time.RFC3339Nano))
+	return err
+}
+
+// A linha reservada não volta a ser usada mesmo após exclusão ou resposta perdida.
+func (b *Banco) ReservarLinhaGoogle(ctx context.Context, destino int64, p string, usadas int) (int, error) {
+	var index int
+	err := b.db.QueryRowContext(ctx, `UPDATE google_abas SET proxima_linha=max(proxima_linha,?,1)+1 WHERE destino_id=? AND periodo=? RETURNING proxima_linha-1`, usadas, destino, p).Scan(&index)
+	return index, err
+}
+func (b *Banco) GarantirLinhaGoogle(ctx context.Context, destino int64, p string, usadas int) error {
+	_, err := b.db.ExecContext(ctx, `UPDATE google_abas SET proxima_linha=max(proxima_linha,?,1) WHERE destino_id=? AND periodo=?`, usadas, destino, p)
 	return err
 }

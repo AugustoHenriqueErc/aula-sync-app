@@ -1,5 +1,11 @@
 # Etapa 11 — Preparação e sincronização com Google Sheets
 
+Atualização de 21/10/2026: o comportamento atual de reenvio, cancelamento,
+exclusão definitiva, preparação pelo histórico e leitura ao salvar destino está
+em [ajustes finais da etapa 11](ajustes-integracao-etapa11.md). Essas decisões
+substituem as restrições anteriores de somente cancelar/preservar registros.
+
+
 Implementação disponível, com testes automatizados e de interface aprovados em
 20/10/2026. O primeiro envio real foi confirmado pelo desenvolvedor; a validação dos demais
 cenários remotos continua pendente.

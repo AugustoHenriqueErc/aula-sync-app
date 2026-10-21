@@ -13,7 +13,7 @@ pelo botão **Sincronizar com Google**. Mantêm o escopo do fluxo de aulas e She
 - Depois de cadastrar uma aula, um popup oferece sincronizá-la. Recusar mantém
   o cadastro local. Aceitar consulta o destino atual e tenta o envio. Falha no
   Google não muda o sucesso do cadastro nem provoca um segundo cadastro.
-- Histórico com fundo laranja e **Envio pendente** ou fundo verde e **Sincronizado**.
+- Histórico de aulas ativas com fundo laranja e **Envio pendente** ou fundo verde e **Sincronizado**; canceladas em vermelho.
   Pendência inclui primeira tentativa, erro, correção e cancelamento ainda não
   enviados. Erros e orientação para preparar o mês continuam disponíveis.
 - **Enviar todas as pendentes** e **Cancelar todas as aulas** respeitam os filtros
@@ -30,13 +30,17 @@ pelo botão **Sincronizar com Google**. Mantêm o escopo do fluxo de aulas e She
   por mês** e o texto de prévia solicitado. As ações de inspeção/preparação dos
   meses continuam disponíveis.
 
-## Melhoria futura solicitada
+## Atualização aprovada em 21/10/2026
 
-Ao clicar em **Salvar destino**, executar a verificação hoje feita por
-**Verificar leitura com minha conta**, apresentar seu resultado e remover o botão
-separado de leitura. Esta alteração será feita posteriormente, conforme pedido
-do desenvolvedor. O salvamento atual continua persistindo o destino localmente;
-o botão de verificação de leitura permanece disponível.
+A verificação de leitura ao salvar o destino foi implementada, e o botão separado
+foi removido. O histórico agora abre em **Todas**, mantém canceladas em vermelho
+e oferece exclusão definitiva. A preparação pode ser confirmada pelo histórico.
+Detalhes e roteiro em [ajustes da etapa 11](ajustes-integracao-etapa11.md).
+
+### Pendência futura
+
+Detectar dois cadastros diferentes de aulas com dados iguais. O aviso atual de
+duplicidade refere-se ao reenvio da mesma aula já sincronizada, conforme aprovado.
 
 ## Como conferir
 
@@ -54,8 +58,7 @@ o botão de verificação de leitura permanece disponível.
 6. Cancele as ativas do filtro: confira total local e registros preservados. Use
    **Canceladas** ou **Todas** para sincronizar os cancelamentos depois.
 7. Cadastre uma aula de outro mês; abra **Integração Google**. O mês deve aparecer
-   automaticamente. Salve o link e confira que a leitura ainda exige seu botão
-   específico. Navegue entre abas com um link em rascunho e confira sua preservação.
+   automaticamente. Salve o link e confira a leitura automática. Navegue entre abas com um link em rascunho e confira sua preservação.
 
 Verificação automatizada aprovada:
 

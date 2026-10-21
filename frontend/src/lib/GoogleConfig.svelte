@@ -123,7 +123,6 @@
     const request = new AbortController()
     controller = request
     carregando = true
-    acesso = ''
     inspecoes = {}
     try {
       const data = await jsonRequest(
@@ -139,6 +138,7 @@
       )
         throw new Error('Resposta inesperada ao carregar a configuração.')
       if (request.signal.aborted) return
+      if (config?.versao !== data.configuracao.versao) acesso = ''
       config = data.configuracao
       meses = data.meses
       link =
@@ -185,8 +185,8 @@
       sucesso = true
       onChange()
       link = config.destino?.url ?? ''
-      aviso =
-        'Destino salvo localmente. Nenhuma aba foi criada e nenhum registro foi enviado.'
+      aviso = 'Destino salvo localmente. Verificando acesso à planilha…'
+      await verificarAcesso()
     } catch (error) {
       if (!request.signal.aborted)
         erro =
@@ -218,12 +218,15 @@
         throw new Error(
           'O destino mudou ou a resposta é inválida. Verifique novamente.',
         )
-      acesso = `Leitura confirmada: ${data.titulo}. A permissão de escrita e os cabeçalhos ainda não foram verificados.`
+      acesso = `Leitura confirmada: ${data.titulo}. A escrita será conferida na preparação ou no envio.`
+      aviso = 'Destino salvo e acesso de leitura confirmado.'
     } catch (error) {
+      aviso =
+        'Destino salvo, mas não foi possível confirmar o acesso à planilha.'
       erro =
-        error instanceof Error
+        error instanceof Error && error.name === 'Error'
           ? error.message
-          : 'Não foi possível consultar a planilha.'
+          : 'Confira a conexão e tente salvar novamente para verificar o acesso.'
     } finally {
       verificando = false
     }
@@ -258,7 +261,7 @@
       />
       <p class="hint" id="google-help">
         Informe uma planilha própria ou compartilhada com permissão de edição
-        para a conta conectada. Salvar o link não valida permissões.
+        para a conta conectada. Ao salvar, verificamos o acesso de leitura.
       </p>
       <div class="actions">
         <button type="submit"
@@ -272,12 +275,6 @@
     {#if aviso}<p class="success">{aviso}</p>{/if}
     {#if erro}<p class="error">{erro}</p>{/if}
   </div>
-  <button
-    disabled={!config?.destino || verificando || carregando || salvando}
-    onclick={verificarAcesso}
-  >
-    {verificando ? 'Verificando acesso…' : 'Verificar leitura com minha conta'}
-  </button>
   {#if acesso}<p role="status">{acesso}</p>{/if}
   {#if config}
     {#if config.destino}<p class="google-destino">

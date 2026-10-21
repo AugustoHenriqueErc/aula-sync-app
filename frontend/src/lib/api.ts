@@ -6,6 +6,8 @@ export type Aula = {
     config_versao: number
     periodo: string
     tentativas: number
+    exclusao_pendente?: boolean
+    exclusao_google?: boolean
     ultima_tentativa?: string
     erro?: string
   }
@@ -53,6 +55,10 @@ export function isAula(a: unknown): a is Aula {
         inteiro(a.google.config_versao) &&
         inteiro(a.google.tentativas) &&
         typeof a.google.periodo === 'string' &&
+        (a.google.exclusao_pendente === undefined ||
+          typeof a.google.exclusao_pendente === 'boolean') &&
+        (a.google.exclusao_google === undefined ||
+          typeof a.google.exclusao_google === 'boolean') &&
         (a.google.erro === undefined || typeof a.google.erro === 'string') &&
         (a.google.ultima_tentativa === undefined ||
           typeof a.google.ultima_tentativa === 'string'))) &&
@@ -98,6 +104,7 @@ export async function jsonRequest(
   const response = await fetch(url, { ...options, signal, cache: 'no-store' })
   if (response.status === 401)
     window.dispatchEvent(new Event('aula-auth-required'))
+  if (response.ok && response.status === 204) return null
   const data: unknown = await response.json()
   if (!response.ok)
     throw new Error(
@@ -108,13 +115,72 @@ export async function jsonRequest(
   return data
 }
 
-// O envio usa a versão do destino vista pelo usuário e a versão da aula salva.
+export type ResultadoEnvio = 'sincronizado' | 'ja_sincronizada' | 'adiado'
 export async function sincronizarAula(
   apiUrl: string,
   aula: Aula,
   configVersao: number,
   signal?: AbortSignal,
-): Promise<void> {
+): Promise<ResultadoEnvio> {
+  if (aula.google?.estado === 'sincronizado') return 'ja_sincronizada'
+  const periodo = aula.data.slice(0, 7)
+  const inspecao = await jsonRequest(
+    `${apiUrl}/integracoes/google/inspecionar`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config_versao: configVersao, periodo }),
+      signal,
+    },
+  )
+  if (
+    !object(inspecao) ||
+    inspecao.periodo !== periodo ||
+    inspecao.config_versao !== configVersao ||
+    typeof inspecao.estado !== 'string' ||
+    typeof inspecao.mensagem !== 'string'
+  )
+    throw new Error('Não foi possível conferir a aba da aula. Tente novamente.')
+  if (inspecao.estado === 'ausente' || inspecao.estado === 'vazia') {
+    if (
+      typeof inspecao.confirmacao !== 'string' ||
+      typeof inspecao.aba !== 'string' ||
+      typeof inspecao.planilha_id !== 'string' ||
+      !/^[A-Za-z0-9_-]+$/.test(inspecao.planilha_id)
+    )
+      throw new Error('Confirmação de preparação inválida. Tente novamente.')
+    const pergunta =
+      inspecao.estado === 'ausente'
+        ? `A aba ${inspecao.aba} não existe. Deseja criá-la com os cabeçalhos e enviar esta aula?`
+        : `A aba ${inspecao.aba} está vazia. Deseja criar os cabeçalhos e enviar esta aula?`
+    if (
+      !window.confirm(
+        `${pergunta}\nPlanilha: https://docs.google.com/spreadsheets/d/${inspecao.planilha_id}/edit`,
+      )
+    )
+      return 'adiado'
+    const preparada = await jsonRequest(
+      `${apiUrl}/integracoes/google/preparar`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          config_versao: configVersao,
+          periodo,
+          confirmacao: inspecao.confirmacao,
+        }),
+        signal,
+      },
+    )
+    if (
+      !object(preparada) ||
+      preparada.estado !== 'pronta' ||
+      preparada.periodo !== periodo ||
+      preparada.config_versao !== configVersao ||
+      preparada.planilha_id !== inspecao.planilha_id
+    )
+      throw new Error('A preparação não foi confirmada. Tente novamente.')
+  } else if (inspecao.estado !== 'pronta') throw new Error(inspecao.mensagem)
   const data = await jsonRequest(`${apiUrl}/aulas/${aula.id}/sincronizar`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -125,4 +191,5 @@ export async function sincronizarAula(
     throw new Error(
       'Envio não confirmado. Confira o histórico antes de tentar novamente.',
     )
+  return data.ja_sincronizada === true ? 'ja_sincronizada' : 'sincronizado'
 }

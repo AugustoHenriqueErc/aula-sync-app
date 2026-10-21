@@ -309,4 +309,20 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 - [x] Envio de pendentes e cancelamento em lote, com filtros, paginação, confirmação e resultado parcial.
 - [x] Atualização automática da integração, com remoção dos controles/textos solicitados.
 - [x] Testes de navegador `--ux` e `--profile`, checks/build/formatação e testes da foto na sessão aprovados.
-- [ ] Melhoria futura: verificar leitura ao salvar destino e retirar o botão separado. Solicitada para depois, registrada em `docs/melhorias-frontend.md`.
+- [x] Verificar leitura ao salvar destino e retirar o botão separado, autorizado em 21/10/2026.
+
+## Ajustes finais da etapa 11 — aprovados em 21/10/2026
+
+Contrato e roteiro: `docs/ajustes-integracao-etapa11.md`.
+
+- [x] Avisar e bloquear reenvio da mesma aula/versão já sincronizada.
+- [x] Manter canceladas visíveis em vermelho no filtro inicial Todas, com estado do cancelamento.
+- [x] Permitir exclusão definitiva de aulas canceladas, removendo seus dados e snapshots locais.
+- [x] Perguntar se os dados também devem ser removidos da planilha configurada.
+- [x] Recuperar exclusão remota sem confirmação, preservando a aula local até concluir.
+- [x] Impedir reutilização de IDs e posições remotas após exclusão (migração 006).
+- [x] Oferecer criação de aba/cabeçalhos pelo histórico, cadastro e lote com confirmação.
+- [x] Verificar leitura ao salvar destino, preservando configuração em caso de falha remota.
+- [x] Validar migração v5 → v6, exclusão, resposta perdida e limpeza tardia com testes Go; interface com Chrome usando respostas Google simuladas.
+- [ ] Validar esses novos fluxos na planilha real de teste pelo aplicativo.
+- [ ] Futuro: detectar dois cadastros distintos com dados iguais. Solicitação explicitamente adiada pelo desenvolvedor.

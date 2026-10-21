@@ -25,6 +25,11 @@ type Alteracao struct {
 func (b *Banco) Alterar(ctx context.Context, id int64, entrada Alteracao) (Registro, error) {
 	b.GoogleMu.Lock()
 	defer b.GoogleMu.Unlock()
+	if pending, err := b.ExclusaoGooglePendente(ctx, id); err != nil {
+		return Registro{}, err
+	} else if pending {
+		return Registro{}, ErrExclusaoPendente
+	}
 	tx, err := b.db.BeginTx(ctx, nil)
 	if err != nil {
 		return Registro{}, err

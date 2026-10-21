@@ -318,7 +318,12 @@ func (s *Service) write(ctx context.Context, client g.Client, c storage.ConfigGo
 		if e.Confirmado != "" {
 			return conflict("A linha enviada anteriormente foi removida ou sua chave foi alterada. Restaure-a antes de enviar")
 		}
-		index = len(sh.Rows())
+		if e.Proposto == "" {
+			index, err = s.Banco.ReservarLinhaGoogle(ctx, c.Destino.ID, p, len(sh.Rows()))
+			if err != nil {
+				return err
+			}
+		}
 		if e.Proposto != "" {
 			index = e.Linha
 			rows := sh.Rows()
@@ -382,6 +387,25 @@ func (s *Service) Sync(ctx context.Context, client g.Client, configVersion, id, 
 	}
 	if r.Versao != version {
 		return result, storage.ErrConflito
+	}
+	if pending, readErr := s.Banco.AlgumaExclusaoGoogle(ctx); readErr != nil {
+		return result, readErr
+	} else if pending {
+		return result, storage.ErrExclusaoPendente
+	}
+	if pending, readErr := s.Banco.ExclusaoGooglePendente(ctx, id); readErr != nil {
+		return result, readErr
+	} else if pending {
+		return result, storage.ErrExclusaoPendente
+	}
+	estado, readErr := s.Banco.EstadoGoogle(ctx, r)
+	if readErr != nil {
+		return result, readErr
+	}
+	if estado.Estado == "sincronizado" {
+		estado.JaSincronizada = true
+		estado.Mensagem = "Esta aula já está na planilha. Nenhum novo registro foi enviado."
+		return estado, nil
 	}
 	if pending, readErr := s.Banco.OutroEnvioPendenteGoogle(ctx, c.Destino.ID, id); readErr != nil {
 		return result, readErr
