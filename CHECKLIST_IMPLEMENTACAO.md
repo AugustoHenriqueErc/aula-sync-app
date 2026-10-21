@@ -194,8 +194,8 @@ somente o planejamento, sem concluir tarefas de implementação.
 - [x] Especificar inspeção e confirmação para criar aba ausente ou cabeçalhos em aba vazia; preservar conteúdo incompatível.
 - [x] Definir a troca de destino e seus efeitos sobre o estado de sincronização, sem envio automático.
 - [x] Documentar decisão de API Sheets direta pelo backend com OAuth da conta do login; Apps Script descartado em 19/10/2026 (`docs/google-etapa10.md`).
-- [x] Implementar login Google, sessão e OAuth vinculados à mesma conta, com proteção de credenciais e troca de conta/logout; tokens somente em memória, testes automatizados e roteiro em `docs/login-google.md`. Validação real pendente.
-- [ ] Validar cliente OAuth, consentimento, escopos e leitura de teste pela API Sheets; configuração no Google Auth informada como concluída em 19/10/2026, mas credenciais no terminal e ensaio real ainda não confirmados. Nenhuma gravação nesta etapa.
+- [x] Implementar login Google, sessão e OAuth vinculados à mesma conta, com proteção de credenciais e troca de conta/logout; tokens somente em memória, testes automatizados e roteiro em `docs/login-google.md`. Login e leitura reais confirmados pelo desenvolvedor em 20/10/2026; demais cenários remotos pendentes.
+- [x] Validar cliente OAuth, consentimento e leitura de teste pela API Sheets: desenvolvedor confirmou a conta exibida e “Leitura confirmada: test-aula-sync-app” em 20/10/2026. Escrita não comprovada por essa leitura.
 - [x] Definir identificador idempotente, versão do registro, timeouts e política de retentativas.
 - [x] Modelar estado por aula/versão/destino, tentativas, última tentativa e erro no SQLite, distinguindo pendência de preparação de envio confirmado.
 - [x] Definir como edições/cancelamentos voltam a ficar pendentes, incluindo mudança de mês e tratamento de alterações manuais/renomeação de abas no Google.
@@ -205,21 +205,27 @@ somente o planejamento, sem concluir tarefas de implementação.
 
 ## Etapa 11 — Sincronização com Sheets
 
-- [ ] Implementar cliente Sheets direto no backend com OAuth da conta da sessão e validar permissão de escrita na planilha de teste.
-- [ ] Inspecionar a planilha configurada e conferir a aba correspondente ao mês/ano da aula.
-- [ ] Solicitar confirmação para criar abas mensais ausentes ou cabeçalhos em abas completamente vazias.
-- [ ] Informar cabeçalhos incompatíveis e bloquear envio, preservando conteúdo existente; recusa não impede cadastro local.
-- [ ] Sincronizar uma aula com a aba mensal correta da planilha de teste sem condicionar o cadastro local ao Google.
-- [ ] Persistir identificador externo, estado, tentativas, última tentativa e mensagem de erro.
-- [ ] Implementar nova tentativa sobre a mesma aula e exibir estado no histórico.
-- [ ] Implementar atualização de uma aula já sincronizada conforme a política definida.
-- [ ] Validar repetição, chamadas concorrentes e perda de resposta após gravação, sem criar duplicatas.
-- [ ] Forçar falha, conferir preservação local, corrigir a configuração e confirmar recuperação.
-- [ ] Conferir colunas, valores e comportamento de correções/cancelamentos na planilha.
-- [ ] Testar planilha vazia, criação aceita/recusada, incompatibilidade e falta de acesso.
-- [ ] Testar troca de destino, mudança de mês/ano e revalidação após alterações de configuração/estrutura.
-- [ ] Validar reconciliação de aula editada para outro mês e estado independente por destino.
-- [ ] **Etapa 11 concluída:** sincronização com Sheets recuperável e sem duplicações nos cenários testados.
+Implementação autorizada pelo desenvolvedor após confirmar login/leitura real.
+Validação automatizada usa simuladores; ensaio de escrita real e revisão dos
+cabeçalhos pela responsável continuam pendentes. Roteiro: `docs/google-etapa11.md`.
+
+- [x] Implementar cliente Sheets direto no backend com OAuth da conta da sessão.
+- [x] Inspecionar a planilha e a aba mensal inteira, incluindo fórmulas.
+- [x] Solicitar confirmação para criar abas ausentes ou cabeçalhos em abas vazias.
+- [x] Bloquear cabeçalhos incompatíveis e preservar conteúdo existente.
+- [x] Implementar envio por aula sem condicionar cadastro local ao Google.
+- [x] Persistir chave externa, vínculo da aba, versão, estado, tentativas, última tentativa e erro.
+- [x] Exibir estado no histórico e oferecer nova tentativa.
+- [x] Atualizar aulas enviadas e refletir cancelamentos sem excluir linhas.
+- [x] Validar repetição, concorrência e perda de resposta com simulador Sheets.
+- [x] Validar falha, preservação local e recuperação com simulador Sheets.
+- [x] Testar preparação, recusa, incompatibilidade, falta de acesso e alterações manuais.
+- [x] Testar troca de destino, mudança de mês/ano e revalidação de abas.
+- [x] Validar reconciliação de mês e estado independente por destino.
+- [x] Testar controles de inspeção/preparação e nova tentativa no Chrome com respostas simuladas.
+- [ ] Validar permissão de escrita real e sincronizar uma aula fictícia na planilha de teste.
+- [ ] Conferir colunas, repetição, correções/cancelamentos e recuperação na planilha real.
+- [ ] **Etapa 11 concluída:** implementação testada e ensaio remoto confirmado.
 
 ## Etapa 12 — Relatório de aulas em PDF
 
@@ -290,5 +296,7 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 | 8 — Validação pelo desenvolvedor | 18/10/2026 | Desenvolvedor informou testes de busca aprovados e envio das alterações para origin | Etapa 8 confirmada no uso local |
 | 9 — Correção, regressões e backup | 18/10/2026 | Migração v3, PUT de edição, PATCH de situação, conflito 409 por versão e trilha transacional; testes Go, vet e builds aprovados; frontend check sem erros/avisos, formatação e build aprovados; Chrome validou edição, recálculo, conflito, cancelamento/reativação, retorno da última página, 375px e falha/recuperação; backup restaurado em outro arquivo com integridade e igualdade dos 21 registros | Conclusão técnica do MVP e marco D; contrato `docs/api-v3.md`, roteiro `docs/correcao-backup.md` e teste reproduzível `scripts/test-etapa9.cjs`; regras institucionais ainda pendentes |
 | 10 — Comportamento inicial documentado | 18/10/2026 | Acordo do desenvolvedor registrado em `docs/integracao-google-mensal.md`; roadmap, checklist, requisitos e README alinhados | Sem código ou acesso ao Google; contrato técnico, cabeçalhos e aprovação institucional pendentes; etapa 10 permanece aberta |
+| 10 — Login e leitura reais | 20/10/2026 | Desenvolvedor confirmou conta exibida e leitura de `test-aula-sync-app` pelo aplicativo | Login e leitura confirmados; escrita e revisão institucional separadas |
+| 11 — Implementação e testes locais | 20/10/2026 | Migração v5; inspeção, confirmação e envio por aula; testes Go com detector de corridas; frontend check/build/formatação; Chrome `--sync` com fixtures | Implementação validada com simuladores; escrita real pendente. Roteiro em `docs/google-etapa11.md` |
 
-**Próxima ação:** retomar em `docs/login-google.md`, seção **Ponto de retomada — 19/10/2026**. O desenvolvedor informou a configuração no Google Auth concluída; paramos na identificação de Client ID e Client secret para preencher no terminal do backend. Exportar credenciais/URLs, iniciar backend e frontend, testar login e leitura real pela API Sheets e registrar evidências. Depois, concluir os cenários de acesso e a revisão dos cabeçalhos com a responsável. A etapa 10 permanece aberta; criação de abas e envio pertencem à etapa 11.
+**Próxima ação:** reiniciar a API com OAuth, entrar novamente e seguir `docs/google-etapa11.md` para preparar a aba mensal e enviar uma aula fictícia. Registrar o resultado real antes de encerrar a etapa 11. Melhorias adicionais do frontend serão definidas depois pelo desenvolvedor.

@@ -1,5 +1,11 @@
 # Etapa 10 — Configuração local e contrato de integração
 
+Atualização em 20/10/2026: login/leitura reais confirmados pelo desenvolvedor.
+As operações de inspeção, preparação e envio descritas como futuras neste registro
+da etapa 10 foram implementadas na etapa 11. Consulte o [estado atual e roteiro](google-etapa11.md).
+A revisão institucional continua pendente.
+
+
 Status: preparação local, login e leitura de teste implementados; escritas no
 Google pertencem à etapa 11.
 Login Google, OAuth e leitura de metadados implementados; validação com conta

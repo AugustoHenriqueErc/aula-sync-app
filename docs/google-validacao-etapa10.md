@@ -1,5 +1,12 @@
 # Etapa 10 — Revisão do contrato e validação do ambiente
 
+Atualização em 20/10/2026: o desenvolvedor confirmou login e leitura de
+`test-aula-sync-app` pelo próprio aplicativo. Esse relato supera as pendências
+históricas de primeiro login/leitura registradas abaixo; não confirma escrita,
+troca de conta, revogação ou revisão institucional. Implementação da etapa 11 e
+roteiro de escrita em [google-etapa11.md](google-etapa11.md).
+
+
 Status: revisão técnica do desenho realizada; validação da conta Google e
 revisão dos cabeçalhos pela responsável pendentes. Este documento não comprova
 execução remota nem encerra a etapa 10.

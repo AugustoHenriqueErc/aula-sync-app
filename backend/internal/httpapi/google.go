@@ -26,6 +26,7 @@ func respostaConfigGoogle(c storage.ConfigGoogle) configGoogleResponse {
 	return r
 }
 func registrarRotasGoogle(app *fiber.App, banco *storage.Banco, login *auth.Google) {
+	registrarSincronizacaoGoogle(app, banco, login)
 	app.Get("/integracoes/google/acesso", func(c fiber.Ctx) error {
 		config, err := banco.ConfiguracaoGoogle(c.Context())
 		if err != nil {

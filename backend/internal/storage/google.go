@@ -47,6 +47,8 @@ func (b *Banco) ConfiguracaoGoogle(ctx context.Context) (ConfigGoogle, error) {
 
 // A troca preserva os destinos anteriores e não cria vínculos de abas ou envios.
 func (b *Banco) ConfigurarGoogle(ctx context.Context, link string, versao int64) (ConfigGoogle, error) {
+	b.GoogleMu.Lock()
+	defer b.GoogleMu.Unlock()
 	id, err := destino.PlanilhaID(link)
 	if err != nil {
 		return ConfigGoogle{}, err

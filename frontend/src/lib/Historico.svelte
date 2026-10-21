@@ -28,6 +28,54 @@
   let situacao = $state('ativas')
   let alterando = $state(false)
   let aviso = $state('')
+  let sincronizando = $state(false)
+  const estadosGoogle: Record<string, string> = {
+    sem_destino: 'Configure uma planilha na aba Integração Google',
+    aguardando_preparacao:
+      'Inspecione e prepare a aba mensal na Integração Google',
+    pendente: 'Envio pendente',
+    sincronizado: 'Último envio confirmado',
+    erro: 'Falha no envio',
+  }
+  async function sincronizar(aula: Aula) {
+    if (sincronizando || !aula.google) return
+    if (
+      !window.confirm(
+        'Enviar esta aula para a planilha configurada? O envio também atualiza correções e cancelamentos anteriores nesse destino.',
+      )
+    )
+      return
+    sincronizando = true
+    aviso = ''
+    try {
+      const data = await jsonRequest(`${apiUrl}/aulas/${aula.id}/sincronizar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          versao: aula.versao,
+          config_versao: aula.google.config_versao,
+        }),
+      })
+      if (
+        typeof data !== 'object' ||
+        data === null ||
+        !('estado' in data) ||
+        data.estado !== 'sincronizado'
+      )
+        throw new Error(
+          'Envio não confirmado. Atualize o histórico antes de tentar novamente.',
+        )
+      aviso = 'Aula sincronizada com a planilha configurada.'
+    } catch (error) {
+      aviso =
+        error instanceof Error && error.name === 'Error'
+          ? error.message
+          : 'Envio não confirmado. Tente novamente para conferir o resultado.'
+    } finally {
+      sincronizando = false
+      tentativa++
+    }
+  }
   let alteracaoRequest: AbortController | undefined
   async function mudarSituacao(aula: Aula) {
     if (alterando) return
@@ -230,13 +278,37 @@
                   'pt-BR',
                 )}
               </p>{/if}
+            {#if aula.google}
+              <p>
+                Google Sheets: {estadosGoogle[aula.google.estado] ??
+                  'Estado desconhecido'}
+              </p>
+              {#if aula.google.erro}<p class="error">{aula.google.erro}</p>{/if}
+              {#if aula.google.ultima_tentativa}<p class="hint">
+                  Última tentativa: {new Date(
+                    aula.google.ultima_tentativa,
+                  ).toLocaleString('pt-BR')}
+                </p>{/if}
+            {/if}
             <div class="actions">
+              {#if aula.google && aula.google.estado !== 'sem_destino'}
+                <button
+                  disabled={sincronizando || alterando || bloqueado}
+                  onclick={() => sincronizar(aula)}
+                >
+                  {sincronizando
+                    ? 'Enviando…'
+                    : aula.google.estado === 'erro'
+                      ? 'Tentar envio novamente'
+                      : 'Sincronizar com Google'}
+                </button>
+              {/if}
               {#if !aula.cancelada}<button
-                  disabled={alterando || bloqueado}
+                  disabled={alterando || bloqueado || sincronizando}
                   onclick={() => onEdit(aula)}>Editar</button
                 >{/if}
               <button
-                disabled={alterando || bloqueado}
+                disabled={alterando || bloqueado || sincronizando}
                 onclick={() => mudarSituacao(aula)}
                 >{aula.cancelada ? 'Reativar aula' : 'Cancelar aula'}</button
               >

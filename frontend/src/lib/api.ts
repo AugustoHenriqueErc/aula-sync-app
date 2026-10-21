@@ -1,5 +1,14 @@
 export type Turma = { id: number; nome: string }
 export type Aula = {
+  google?: {
+    estado: string
+    destino_id: number
+    config_versao: number
+    periodo: string
+    tentativas: number
+    ultima_tentativa?: string
+    erro?: string
+  }
   id: number
   turma_id: number
   data: string
@@ -31,6 +40,22 @@ export function isTurma(v: unknown): v is Turma {
 export function isAula(a: unknown): a is Aula {
   return (
     object(a) &&
+    (a.google === undefined ||
+      (object(a.google) &&
+        [
+          'sem_destino',
+          'aguardando_preparacao',
+          'pendente',
+          'sincronizado',
+          'erro',
+        ].includes(String(a.google.estado)) &&
+        inteiro(a.google.destino_id) &&
+        inteiro(a.google.config_versao) &&
+        inteiro(a.google.tentativas) &&
+        typeof a.google.periodo === 'string' &&
+        (a.google.erro === undefined || typeof a.google.erro === 'string') &&
+        (a.google.ultima_tentativa === undefined ||
+          typeof a.google.ultima_tentativa === 'string'))) &&
     inteiro(a.id, 1) &&
     inteiro(a.turma_id, 1) &&
     inteiro(a.versao, 1) &&

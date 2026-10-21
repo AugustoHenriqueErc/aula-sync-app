@@ -2,7 +2,8 @@
 
 Status: comportamento inicial do MVP acordado com o desenvolvedor em 18/10/2026.
 Configuração persistida e prévia local implementadas na etapa 10.
-Inspeção remota, preparação de abas e envio seguem para a etapa 11.
+Inspeção remota, preparação de abas e envio implementados na etapa 11;
+[roteiro e limites](google-etapa11.md). Escrita real ainda pendente de validação.
 Detalhamento técnico em [google-etapa10.md](google-etapa10.md). O modelo da escola e os
 cabeçalhos serão revisados com Maria Luzia. Não representa aprovação institucional.
 
@@ -50,7 +51,7 @@ antes de pedir confirmação. O link identifica o arquivo; não substitui a auto
 OAuth da conta Google usada no login. O backend acessará diretamente a API
 Sheets. A planilha pode ser própria ou compartilhada, com permissão de edição
 para essa conta. Trocar de conta exige nova validação do destino e invalida
-confirmações anteriores. Login implementado em memória; validação real pendente
+confirmações anteriores. Login implementado em memória; login e leitura reais confirmados em 20/10/2026
 ([roteiro](login-google.md)).
 
 ## Troca de planilha

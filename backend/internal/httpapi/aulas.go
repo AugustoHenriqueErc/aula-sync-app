@@ -24,19 +24,20 @@ type criarAulaRequest struct {
 }
 
 type aulaResponse struct {
-	Versao           int64  `json:"versao"`
-	Cancelada        bool   `json:"cancelada"`
-	UpdatedAt        string `json:"updated_at"`
-	TurmaID          int64  `json:"turma_id"`
-	ID               int64  `json:"id"`
-	Data             string `json:"data"`
-	Inicio           string `json:"inicio"`
-	Fim              string `json:"fim"`
-	Turma            string `json:"turma"`
-	Conteudo         string `json:"conteudo"`
-	Observacoes      string `json:"observacoes"`
-	IntervaloMinutos int    `json:"intervalo_minutos"`
-	DuracaoMinutos   int    `json:"duracao_minutos"`
+	Google           *storage.EstadoGoogle `json:"google,omitempty"`
+	Versao           int64                 `json:"versao"`
+	Cancelada        bool                  `json:"cancelada"`
+	UpdatedAt        string                `json:"updated_at"`
+	TurmaID          int64                 `json:"turma_id"`
+	ID               int64                 `json:"id"`
+	Data             string                `json:"data"`
+	Inicio           string                `json:"inicio"`
+	Fim              string                `json:"fim"`
+	Turma            string                `json:"turma"`
+	Conteudo         string                `json:"conteudo"`
+	Observacoes      string                `json:"observacoes"`
+	IntervaloMinutos int                   `json:"intervalo_minutos"`
+	DuracaoMinutos   int                   `json:"duracao_minutos"`
 }
 
 func respostaAula(r storage.Registro) aulaResponse {
@@ -85,7 +86,13 @@ func registrarRotasAulas(app *fiber.App, banco *storage.Banco) {
 		}
 		resposta := historicoResponse{Aulas: make([]aulaResponse, 0, len(historico.Aulas)), Pagina: filtro.Pagina, PorPagina: 20, TotalRegistros: historico.TotalRegistros, DuracaoTotalMinutos: historico.DuracaoTotalMinutos}
 		for _, r := range historico.Aulas {
-			resposta.Aulas = append(resposta.Aulas, respostaAula(r))
+			item := respostaAula(r)
+			estado, err := banco.EstadoGoogle(c.Context(), r)
+			if err != nil {
+				return err
+			}
+			item.Google = &estado
+			resposta.Aulas = append(resposta.Aulas, item)
 		}
 		return c.JSON(resposta)
 	})

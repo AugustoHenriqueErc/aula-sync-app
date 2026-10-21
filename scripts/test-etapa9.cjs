@@ -341,7 +341,7 @@ async function run() {
   await waitFor(
     `document.querySelector('.aulas')?.textContent.includes('Preservar durante falha')`,
   );
-  if (process.argv.includes("--google")) {
+  if (process.argv.includes("--google") || process.argv.includes("--sync")) {
     await click("Integração Google");
     const link =
       process.env.GOOGLE_TEST_SHEET_URL ||
@@ -418,6 +418,61 @@ async function run() {
     console.log(
       "PASS: configuração Google local, link normalizado, persistência, conflito, troca de destino, validação e prévia mensal. Nenhuma chamada ao Google.",
     );
+  }
+  if (process.argv.includes("--sync")) {
+    // Fixtures só no navegador: validam controles e contratos sem credenciais reais.
+    // O backend/adaptador é exercitado separadamente nos testes Go.
+    const destino = await request("GET", "/integracoes/google/configuracao");
+    await evaluate(`(() => {
+      const original = window.fetch.bind(window);
+      const config = ${JSON.stringify(destino)};
+      window.__syncFixture = { prepared: false, synced: false, attempts: 0, requests: [] };
+      window.fetch = async (input, options = {}) => {
+        const url = String(input);
+        const f = window.__syncFixture;
+        const json = (body, status = 200) => new Response(JSON.stringify(body), {status, headers:{'Content-Type':'application/json'}});
+        if (url.endsWith('/integracoes/google/inspecionar') || url.endsWith('/integracoes/google/preparar')) {
+          const body = JSON.parse(options.body); f.requests.push({url, body});
+          if (url.endsWith('/preparar')) {
+            if (body.confirmacao !== 'fixture-token') throw Error('Confirmação ausente');
+            f.prepared = true;
+          }
+          return json({periodo: body.periodo, aba:'Registros aulas - ' + body.periodo.slice(5) + '/' + body.periodo.slice(0,4), config_versao:config.versao, planilha_id:config.destino.planilha_id, estado:f.prepared?'pronta':'ausente', mensagem:f.prepared?'Cabeçalhos compatíveis.':'Confirme a criação da aba mensal.', ...(f.prepared?{}:{confirmacao:'fixture-token'})});
+        }
+        if (url.endsWith('/sincronizar')) {
+          f.requests.push({url, body:JSON.parse(options.body)}); f.attempts++;
+          if (f.attempts === 1) return json({error:'Falha simulada no Google; tente novamente.'},409);
+          f.synced = true; return json({estado:'sincronizado'});
+        }
+        const res = await original(input,options);
+        if (url.includes('/aulas?')) {
+          const body=await res.json();
+          for (const aula of body.aulas) aula.google={estado:f.synced?'sincronizado':f.attempts?'erro':f.prepared?'pendente':'aguardando_preparacao',destino_id:config.destino.id,config_versao:config.versao,periodo:aula.data.slice(0,7),tentativas:f.attempts};
+          return json(body,res.status);
+        }
+        return res;
+      };
+    })()`);
+    await click("Inspecionar aba mensal");
+    await waitFor(`document.body.innerText.includes('Confirme a criação da aba mensal.')`);
+    await click("Agora não");
+    assert.equal(await evaluate("window.__syncFixture.prepared"),false);
+    await click("Inspecionar aba mensal");
+    await waitFor(`document.body.innerText.includes('Confirmar preparação de Registros aulas - 10/2027')`);
+    await click("Confirmar preparação de Registros aulas - 10/2027");
+    await waitFor(`document.body.innerText.includes('Cabeçalhos compatíveis.')`);
+    await click("Histórico");
+    await waitFor(`document.body.innerText.includes('Envio pendente')`);
+    await click("Sincronizar com Google");
+    await waitFor(`document.body.innerText.includes('Falha simulada no Google') && document.body.innerText.includes('Tentar envio novamente')`);
+    await click("Tentar envio novamente");
+    await waitFor(`document.body.innerText.includes('Último envio confirmado')`);
+    const requests = await evaluate("window.__syncFixture.requests");
+    assert.equal(requests.length,5);
+    assert(requests.every(r=>r.body.config_versao===destino.versao));
+    assert.equal(requests[3].body.versao,requests[4].body.versao);
+    assert(await evaluate("document.documentElement.scrollWidth <= window.innerWidth"));
+    console.log("PASS: interface de inspeção, recusa, confirmação vinculada ao destino, atualização do histórico, erro e nova tentativa; respostas Sheets simuladas no navegador.");
   }
   await evaluate("window.scrollTo(0,0)");
   const tabsShot = await cdp("Page.captureScreenshot", { format: "png" });

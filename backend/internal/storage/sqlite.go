@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"sync"
 
 	_ "modernc.org/sqlite"
 )
@@ -23,7 +24,14 @@ var terceiraMigracao string
 //go:embed migrations/004_google_config.sql
 var quartaMigracao string
 
-type Banco struct{ db *sql.DB }
+//go:embed migrations/005_google_sync.sql
+var quintaMigracao string
+
+// GoogleMu serializa configuração, correções e operações remotas neste processo.
+type Banco struct {
+	db       *sql.DB
+	GoogleMu sync.Mutex
+}
 
 // Abrir cria ou abre um arquivo local e aplica as migrações pendentes.
 // Um caminho vazio usa aulas.db no diretório de execução. A pasta deve existir.
@@ -82,10 +90,10 @@ func (b *Banco) migrar(ctx context.Context) error {
 		if _, err := tx.ExecContext(ctx, "PRAGMA user_version = 1"); err != nil {
 			return fmt.Errorf("registrar migração 001: %w", err)
 		}
-	case 1, 2, 3, 4:
+	case 1, 2, 3, 4, 5:
 		// A migração já foi aplicada. Não recriar nem apagar tabelas.
 	default:
-		return fmt.Errorf("versão de banco não suportada: %d (máxima: 4)", versao)
+		return fmt.Errorf("versão de banco não suportada: %d (máxima: 5)", versao)
 	}
 	if versao < 2 {
 		if err := migrarTurmas(ctx, tx); err != nil {
@@ -100,6 +108,11 @@ func (b *Banco) migrar(ctx context.Context) error {
 	if versao < 4 {
 		if _, err := tx.ExecContext(ctx, quartaMigracao); err != nil {
 			return fmt.Errorf("aplicar migração 004: %w", err)
+		}
+	}
+	if versao < 5 {
+		if _, err := tx.ExecContext(ctx, quintaMigracao); err != nil {
+			return fmt.Errorf("aplicar migração 005: %w", err)
 		}
 	}
 	if err := tx.Commit(); err != nil {

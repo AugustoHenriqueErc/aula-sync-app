@@ -155,3 +155,46 @@ func TestMigracao4ReverteFalhaEPreservaDados(t *testing.T) {
 		t.Fatal("backup perdeu configuração", err)
 	}
 }
+
+func TestMigracaoCincoPreservaConfiguracaoEIdentidade(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "quatro.db")
+	// Constrói uma instalação real de versão 4, antes da nova migração.
+	db, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.Exec(primeiraMigracao); err != nil {
+		t.Fatal(err)
+	}
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = migrarTurmas(ctx, tx); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = tx.Exec(terceiraMigracao + quartaMigracao); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = tx.Exec("INSERT INTO google_destinos(id,planilha_id,criado_em) VALUES(1,'test','agora'); UPDATE google_configuracao SET destino_id=1,versao=7,instalacao_id='identidade-preservada'"); err != nil {
+		t.Fatal(err)
+	}
+	if err = tx.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	db.Close()
+	b := abrirTeste(t, path)
+	c, err := b.ConfiguracaoGoogle(ctx)
+	if err != nil || c.Versao != 7 || c.Destino.PlanilhaID != "test" {
+		t.Fatal(c, err)
+	}
+	id, err := b.InstalacaoGoogle(ctx)
+	if err != nil || id != "identidade-preservada" {
+		t.Fatal(id, err)
+	}
+	var v int
+	if err = b.db.QueryRow("PRAGMA user_version").Scan(&v); err != nil || v != 5 {
+		t.Fatal(v, err)
+	}
+}

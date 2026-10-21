@@ -104,6 +104,10 @@ func TestCadastrarConsultarEConferirSQLite(t *testing.T) {
 	if err := json.Unmarshal(lista, &page); err != nil {
 		t.Fatal(err)
 	}
+	if len(page.Aulas) != 1 || page.Aulas[0].Google == nil || page.Aulas[0].Google.Estado != "sem_destino" {
+		t.Fatalf("estado Google inesperado: %s", lista)
+	}
+	page.Aulas[0].Google = nil
 	encoded, _ := json.Marshal(page.Aulas)
 	if string(encoded) != "["+string(body)+"]" || page.TotalRegistros != 1 || page.DuracaoTotalMinutos != 105 {
 		t.Fatalf("lista difere do cadastro: %s", lista)

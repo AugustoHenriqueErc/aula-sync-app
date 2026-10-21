@@ -2,8 +2,18 @@
 
 Implementado: login OpenID Connect + OAuth 2.0 no backend Go, sessão vinculada
 à mesma conta e leitura de metadados pela API Sheets. Escrita de aulas, criação
-de abas e inspeção de cabeçalhos continuam na etapa 11. Validação com uma conta
-Google real ainda pendente; testes automatizados não comprovam consentimento real.
+de abas e inspeção de cabeçalhos continuam na etapa 11. Login e leitura com conta real confirmados pelo desenvolvedor em 20/10/2026;
+testes automatizados não substituem os demais cenários de consentimento real.
+
+## Atualização — 20/10/2026
+
+O desenvolvedor criou o cliente OAuth web, configurou as credenciais no terminal
+e confirmou a conta exibida no aplicativo e a mensagem **Leitura confirmada:
+test-aula-sync-app**. Login e leitura reais estão confirmados; os demais cenários
+de autorização abaixo continuam como roteiro de validação. Escrita e preparação
+foram implementadas na etapa 11: [como testar](google-etapa11.md).
+
+O ponto de retomada de 19/10 abaixo é histórico e foi superado por esse teste.
 
 ## Ponto de retomada — 19/10/2026
 

@@ -2,7 +2,7 @@
   import { onMount } from 'svelte'
   import { jsonRequest, duracao } from './api'
 
-  let { apiUrl }: { apiUrl: string } = $props()
+  let { apiUrl, onChange }: { apiUrl: string; onChange: () => void } = $props()
   type Config = {
     versao: number
     destino: null | { id: number; planilha_id: string; url: string }
@@ -51,6 +51,65 @@
   let aviso = $state('')
   let verificando = $state(false)
   let acesso = $state('')
+  type Inspecao = {
+    periodo: string
+    aba: string
+    estado: string
+    mensagem: string
+    confirmacao?: string
+    config_versao: number
+    planilha_id: string
+  }
+  let inspecoes = $state<Record<string, Inspecao>>({})
+  async function operarMes(periodo: string, preparar = false) {
+    if (!config?.destino || verificando || carregando || salvando) return
+    const anterior = inspecoes[periodo]
+    if (
+      preparar &&
+      (!anterior?.confirmacao ||
+        !window.confirm(
+          `Preparar a aba ${anterior.aba} na planilha ${config.destino.url}? Serão criados a aba ausente ou os cabeçalhos da aba vazia.`,
+        ))
+    )
+      return
+    verificando = true
+    erro = ''
+    try {
+      const data = await jsonRequest(
+        `${apiUrl}/integracoes/google/${preparar ? 'preparar' : 'inspecionar'}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            periodo,
+            config_versao: config.versao,
+            ...(preparar ? { confirmacao: anterior.confirmacao } : {}),
+          }),
+        },
+      )
+      if (
+        !objeto(data) ||
+        data.periodo !== periodo ||
+        data.config_versao !== config.versao ||
+        data.planilha_id !== config.destino.planilha_id ||
+        typeof data.aba !== 'string' ||
+        typeof data.estado !== 'string' ||
+        typeof data.mensagem !== 'string' ||
+        (data.confirmacao !== undefined && typeof data.confirmacao !== 'string')
+      )
+        throw new Error('Resposta inesperada. Inspecione novamente.')
+      inspecoes[periodo] = data as Inspecao
+      onChange()
+    } catch (error) {
+      delete inspecoes[periodo]
+      erro =
+        error instanceof Error && error.name === 'Error'
+          ? error.message
+          : 'Não foi possível confirmar a operação. Inspecione novamente para conferir o resultado.'
+    } finally {
+      verificando = false
+    }
+  }
   let controller: AbortController | undefined
 
   async function carregar() {
@@ -62,6 +121,7 @@
     erro = ''
     aviso = ''
     acesso = ''
+    inspecoes = {}
     try {
       const data = await jsonRequest(
         `${apiUrl}/integracoes/google/planejamento`,
@@ -98,6 +158,7 @@
     erro = ''
     aviso = ''
     acesso = ''
+    inspecoes = {}
     try {
       const data = await jsonRequest(
         `${apiUrl}/integracoes/google/configuracao`,
@@ -114,6 +175,7 @@
         )
       if (request.signal.aborted) return
       config = data
+      onChange()
       link = config.destino?.url ?? ''
       aviso =
         'Destino salvo localmente. Nenhuma aba foi criada e nenhum registro foi enviado.'
@@ -164,8 +226,9 @@
 <section aria-labelledby="google-title" aria-busy={carregando || salvando}>
   <h2 id="google-title">Integração com Google Sheets</h2>
   <p>
-    Configure a planilha de teste. A criação de abas e o envio ao Google ainda
-    não estão disponíveis.
+    Configure a planilha de teste e inspecione os meses. Após preparar as abas,
+    envie cada aula pelo histórico. O cadastro local continua independente do
+    Google.
   </p>
   <form onsubmit={salvar}>
     <fieldset disabled={carregando || salvando || verificando || !config}>
@@ -233,6 +296,30 @@
               {mes.aulas} aula(s), incluindo {mes.canceladas} cancelada(s) · carga
               horária ativa: {duracao(mes.duracao_ativa_minutos)}
             </p>
+            <button
+              disabled={!config.destino ||
+                verificando ||
+                salvando ||
+                carregando}
+              onclick={() => operarMes(mes.periodo)}
+              >Inspecionar aba mensal</button
+            >
+            {#if inspecoes[mes.periodo]}
+              <p role="status">{inspecoes[mes.periodo].mensagem}</p>
+              {#if inspecoes[mes.periodo].confirmacao}
+                <button
+                  disabled={verificando || salvando || carregando}
+                  onclick={() => operarMes(mes.periodo, true)}
+                  >Confirmar preparação de {mes.aba_esperada}</button
+                >
+                <button
+                  disabled={verificando}
+                  onclick={() => {
+                    delete inspecoes[mes.periodo]
+                  }}>Agora não</button
+                >
+              {/if}
+            {/if}
           </li>{/each}
       </ul>{/if}
   {/if}

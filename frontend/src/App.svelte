@@ -246,7 +246,7 @@
     hidden={abaAtiva !== 'google'}
     tabindex="0"
   >
-    <GoogleConfig {apiUrl} />
+    <GoogleConfig {apiUrl} onChange={() => revisao++} />
   </div>
 
   <details class="diagnostico">
