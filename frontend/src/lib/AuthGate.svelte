@@ -6,7 +6,8 @@
     /\/+$/,
     '',
   )
-  type User = { sub: string; nome: string; email: string }
+  type User = { sub: string; nome: string; email: string; foto?: string }
+  let fotoFalhou = $state(false)
   let usuario = $state<User | null>(null)
   let configurado = $state(true)
   let autorizado = $state(false)
@@ -34,7 +35,9 @@
         (data.usuario !== null &&
           (typeof data.usuario?.sub !== 'string' ||
             typeof data.usuario?.nome !== 'string' ||
-            typeof data.usuario?.email !== 'string'))
+            typeof data.usuario?.email !== 'string' ||
+            (data.usuario.foto !== undefined &&
+              typeof data.usuario.foto !== 'string')))
       )
         throw new Error('Resposta inesperada ao consultar a sessão.')
       if (request.signal.aborted) return
@@ -47,21 +50,6 @@
           'Não foi possível verificar a sessão. Confira o backend e tente novamente.'
     } finally {
       if (!request.signal.aborted) carregando = false
-    }
-  }
-  async function sair() {
-    erro = ''
-    try {
-      const response = await fetch(`${apiUrl}/auth/logout`, {
-        method: 'POST',
-        signal: AbortSignal.timeout(10000),
-      })
-      if (!response.ok) throw new Error()
-      usuario = null
-      autorizado = false
-      aviso = 'Sessão encerrada. Para trocar de conta, entre novamente.'
-    } catch {
-      erro = 'Não foi possível confirmar a saída. Tente novamente.'
     }
   }
   onMount(() => {
@@ -99,15 +87,31 @@
       Modo local de estudo. O login Google ainda não foi configurado.
     </p>
   {:else if usuario}
-    <p>
-      Conta conectada: <strong>{usuario.nome || usuario.email}</strong>
-      ({usuario.email})
-    </p>
+    <div class="perfil">
+      {#if usuario.foto?.startsWith('https://') && !fotoFalhou}
+        <img
+          class="avatar"
+          src={usuario.foto}
+          alt=""
+          width="44"
+          height="44"
+          referrerpolicy="no-referrer"
+          onerror={() => (fotoFalhou = true)}
+        />
+      {:else}
+        <span class="avatar avatar-iniciais" aria-hidden="true"
+          >{(usuario.nome || 'G').trim().slice(0, 1).toUpperCase()}</span
+        >
+      {/if}
+      <strong class="perfil-nome">{usuario.nome || 'Conta Google'}</strong>
+      <form method="POST" action={`${apiUrl}/auth/google/login`}>
+        <button class="trocar-conta" type="submit">Trocar de conta</button>
+      </form>
+    </div>
     {#if !autorizado}<p role="status">
         Acesso ao Sheets não autorizado. Entre novamente para conceder acesso à
         planilha.
       </p>{/if}
-    <button onclick={sair}>Sair / trocar conta</button>
   {:else}
     <img src="/aula-sync-icon.png" alt="" width="64" height="64" />
     <h1>Entrar no Aula Sync</h1>
@@ -131,5 +135,38 @@
     max-width: 672px;
     margin: 32px auto 0;
     overflow-wrap: anywhere;
+  }
+  .perfil {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .avatar {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .avatar-iniciais {
+    display: grid;
+    place-items: center;
+    background: #e0e7ff;
+    color: #254fc4;
+    font-weight: 700;
+  }
+  .perfil-nome {
+    flex: 1;
+    min-width: 100px;
+  }
+  .trocar-conta {
+    background: #eef3ff;
+    color: #254fc4;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+  .trocar-conta:hover {
+    background: #dce5f4;
   }
 </style>

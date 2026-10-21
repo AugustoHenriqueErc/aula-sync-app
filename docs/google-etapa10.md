@@ -32,8 +32,8 @@ são rejeitados. Validar a sintaxe não confirma acesso, existência ou estrutur
 
 A prévia agrupa todas as aulas locais por mês/ano, informa a aba esperada e
 conta as canceladas separadamente. A duração considera somente as ativas.
-Clique **Recarregar configuração e prévia** após cadastrar ou editar aulas para
-atualizar essa visualização. O botão também substitui o link digitado pelo salvo.
+A configuração e os meses são atualizados ao abrir a aba de integração e após
+salvar o destino. O rascunho do link é preservado ao navegar entre abas.
 
 Salvar o mesmo identificador com a versão atual não cria outro destino. Trocar
 para outra planilha preserva os destinos anteriores; voltar a uma já usada

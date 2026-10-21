@@ -1,7 +1,10 @@
 # Etapa 11 — Preparação e sincronização com Google Sheets
 
 Implementação disponível, com testes automatizados e de interface aprovados em
-20/10/2026. A escrita na planilha real ainda precisa ser validada pelo desenvolvedor.
+20/10/2026. O primeiro envio real foi confirmado pelo desenvolvedor; a validação dos demais
+cenários remotos continua pendente.
+O desenvolvedor confirmou posteriormente o envio de uma aula pelo botão
+**Sincronizar com Google**. Os demais cenários remotos permanecem para conferência.
 O login e a leitura de `test-aula-sync-app` foram confirmados pelo desenvolvedor
 nesta conversa. Isso não comprova permissão de escrita nem aprovação dos cabeçalhos
 pela responsável. A implementação da etapa 11 foi autorizada explicitamente;
@@ -15,8 +18,9 @@ as pendências institucionais da etapa 10 continuam registradas separadamente.
 2. Mantenha o frontend em `http://localhost:5173`; entre com Google novamente.
 3. Cadastre uma aula fictícia, por exemplo 18/10/2026, 08:00–10:00, intervalo de
    15 minutos. A duração esperada é 105 minutos.
-4. Em **Integração Google**, salve a planilha de teste e clique em **Recarregar
-   configuração e prévia**. Confira o link em **Abrir planilha configurada**.
+4. Em **Integração Google**, salve a planilha de teste. A configuração e os meses
+   são atualizados automaticamente ao abrir a aba e após salvar. Confira o link
+   em **Abrir planilha configurada**.
 5. No mês correspondente, clique em **Inspecionar aba mensal**. A inspeção lê
    a planilha, mas não grava nela.
 6. Se a aba estiver ausente ou completamente vazia, clique em **Confirmar
@@ -77,7 +81,7 @@ somente porque os testes com simuladores passaram.
   de outra planilha. Voltar a um destino conhecido recupera seu histórico.
 - Cada ação explícita de sincronização conta como tentativa, inclusive falhas
   de leitura. O histórico mostra estado, última tentativa e erro do destino atual.
-  **Último envio confirmado** descreve a última conferência, não monitoramento contínuo.
+  **Sincronizado** descreve a última conferência, sem monitoramento contínuo.
 
 ## Limites deste primeiro corte
 
@@ -158,3 +162,5 @@ controles novos com respostas de sincronização simuladas no navegador.
 Referências consultadas: [requisições em lote](https://developers.google.com/workspace/sheets/api/guides/batch),
 [leitura e escrita de células](https://developers.google.com/workspace/sheets/api/guides/values)
 e [operações de abas](https://developers.google.com/workspace/sheets/api/samples/sheet).
+
+Ajustes de perfil, cadastro e ações em lote: [melhorias do frontend](melhorias-frontend.md).

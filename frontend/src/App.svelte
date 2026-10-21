@@ -3,7 +3,13 @@
   import AulaForm from './lib/AulaForm.svelte'
   import Historico from './lib/Historico.svelte'
   import GoogleConfig from './lib/GoogleConfig.svelte'
-  import { isTurma, jsonRequest, type Turma, type Aula } from './lib/api'
+  import {
+    isTurma,
+    jsonRequest,
+    sincronizarAula,
+    type Turma,
+    type Aula,
+  } from './lib/api'
   const abas = [
     { id: 'cadastro', titulo: 'Registrar aula' },
     { id: 'historico', titulo: 'Histórico' },
@@ -48,12 +54,44 @@
       ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     document.getElementById('data')?.focus({ preventScroll: true })
   }
-  function salvo() {
-    avisoEdicao = editando
-      ? 'Alterações salvas. O histórico foi atualizado.'
-      : ''
+  async function salvo(aula: Aula) {
+    const nova = !editando
+    avisoEdicao = nova
+      ? 'Aula salva.'
+      : 'Alterações salvas. O histórico foi atualizado.'
     editando = null
     revisao++
+    if (
+      !nova ||
+      !window.confirm('Aula salva! Deseja sincronizar com o Google agora?')
+    )
+      return
+    avisoEdicao = 'Aula salva. Sincronizando com o Google…'
+    try {
+      const config = await jsonRequest(
+        `${apiUrl}/integracoes/google/configuracao`,
+      )
+      if (
+        typeof config !== 'object' ||
+        config === null ||
+        !('versao' in config) ||
+        !Number.isSafeInteger(config.versao) ||
+        !('destino' in config)
+      )
+        throw new Error('Não foi possível consultar a planilha de destino.')
+      if (!config.destino) {
+        avisoEdicao =
+          'Aula salva. Configure uma planilha e prepare o mês para sincronizar.'
+        abaAtiva = 'google'
+        return
+      }
+      await sincronizarAula(apiUrl, aula, Number(config.versao))
+      avisoEdicao = 'Aula salva e sincronizada com o Google.'
+    } catch (error) {
+      avisoEdicao = `Aula salva. ${error instanceof Error && error.name === 'Error' ? error.message : 'Não foi possível confirmar a sincronização. Tente novamente pelo histórico.'}`
+    } finally {
+      revisao++
+    }
   }
   let turmas = $state<Turma[]>([])
   let turmasErro = $state('')
@@ -237,6 +275,7 @@
       {revisao}
       onEdit={editar}
       bloqueado={salvando}
+      onBusy={(value) => (salvando = value)}
     />
   </div>
   <div
@@ -246,7 +285,11 @@
     hidden={abaAtiva !== 'google'}
     tabindex="0"
   >
-    <GoogleConfig {apiUrl} onChange={() => revisao++} />
+    <GoogleConfig
+      {apiUrl}
+      ativo={abaAtiva === 'google'}
+      onChange={() => revisao++}
+    />
   </div>
 
   <details class="diagnostico">

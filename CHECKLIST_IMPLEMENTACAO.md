@@ -223,7 +223,7 @@ cabeçalhos pela responsável continuam pendentes. Roteiro: `docs/google-etapa11
 - [x] Testar troca de destino, mudança de mês/ano e revalidação de abas.
 - [x] Validar reconciliação de mês e estado independente por destino.
 - [x] Testar controles de inspeção/preparação e nova tentativa no Chrome com respostas simuladas.
-- [ ] Validar permissão de escrita real e sincronizar uma aula fictícia na planilha de teste.
+- [x] Validar permissão de escrita real e sincronizar uma aula na planilha de teste: desenvolvedor confirmou o envio pelo botão **Sincronizar com Google** nesta conversa.
 - [ ] Conferir colunas, repetição, correções/cancelamentos e recuperação na planilha real.
 - [ ] **Etapa 11 concluída:** implementação testada e ensaio remoto confirmado.
 
@@ -299,4 +299,14 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 | 10 — Login e leitura reais | 20/10/2026 | Desenvolvedor confirmou conta exibida e leitura de `test-aula-sync-app` pelo aplicativo | Login e leitura confirmados; escrita e revisão institucional separadas |
 | 11 — Implementação e testes locais | 20/10/2026 | Migração v5; inspeção, confirmação e envio por aula; testes Go com detector de corridas; frontend check/build/formatação; Chrome `--sync` com fixtures | Implementação validada com simuladores; escrita real pendente. Roteiro em `docs/google-etapa11.md` |
 
-**Próxima ação:** reiniciar a API com OAuth, entrar novamente e seguir `docs/google-etapa11.md` para preparar a aba mensal e enviar uma aula fictícia. Registrar o resultado real antes de encerrar a etapa 11. Melhorias adicionais do frontend serão definidas depois pelo desenvolvedor.
+**Próxima ação:** conferir as melhorias de experiência no aplicativo e continuar os cenários remotos restantes da etapa 11. Roteiro em `docs/melhorias-frontend.md`.
+
+## Ajustes de experiência após o primeiro envio real
+
+- [x] Perfil com foto circular, nome e **Trocar de conta**.
+- [x] Convite à sincronização depois do cadastro, preservando o sucesso local em caso de falha.
+- [x] Histórico laranja/verde com **Envio pendente** e **Sincronizado**.
+- [x] Envio de pendentes e cancelamento em lote, com filtros, paginação, confirmação e resultado parcial.
+- [x] Atualização automática da integração, com remoção dos controles/textos solicitados.
+- [x] Testes de navegador `--ux` e `--profile`, checks/build/formatação e testes da foto na sessão aprovados.
+- [ ] Melhoria futura: verificar leitura ao salvar destino e retirar o botão separado. Solicitada para depois, registrada em `docs/melhorias-frontend.md`.

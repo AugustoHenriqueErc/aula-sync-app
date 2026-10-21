@@ -107,3 +107,22 @@ export async function jsonRequest(
     )
   return data
 }
+
+// O envio usa a versão do destino vista pelo usuário e a versão da aula salva.
+export async function sincronizarAula(
+  apiUrl: string,
+  aula: Aula,
+  configVersao: number,
+  signal?: AbortSignal,
+): Promise<void> {
+  const data = await jsonRequest(`${apiUrl}/aulas/${aula.id}/sincronizar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ versao: aula.versao, config_versao: configVersao }),
+    signal,
+  })
+  if (!object(data) || data.estado !== 'sincronizado')
+    throw new Error(
+      'Envio não confirmado. Confira o histórico antes de tentar novamente.',
+    )
+}

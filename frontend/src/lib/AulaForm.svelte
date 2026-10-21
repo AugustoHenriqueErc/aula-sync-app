@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy, tick, untrack } from 'svelte'
 
-  import { isTurma, jsonRequest, type Turma, type Aula } from './api'
+  import { isTurma, isAula, jsonRequest, type Turma, type Aula } from './api'
   let {
     apiUrl,
     turmas,
@@ -16,7 +16,7 @@
     turmas: Turma[]
     turmasCarregando: boolean
     turmaCriada: (t: Turma) => void
-    onSaved: () => void
+    onSaved: (aula: Aula) => Promise<void>
     editando?: Aula | null
     onCancel: () => void
     onBusy: (value: boolean) => void
@@ -257,17 +257,7 @@
         }
         return
       }
-      if (
-        response.status !== (editando ? 200 : 201) ||
-        typeof data !== 'object' ||
-        data === null ||
-        !('id' in data) ||
-        !Number.isSafeInteger(data.id) ||
-        Number(data.id) <= 0 ||
-        !('duracao_minutos' in data) ||
-        !Number.isSafeInteger(data.duracao_minutos) ||
-        Number(data.duracao_minutos) <= 0
-      ) {
+      if (response.status !== (editando ? 200 : 201) || !isAula(data)) {
         submission = {
           status: 'error',
           message:
@@ -277,7 +267,8 @@
       }
       submission = { status: 'success', duration: Number(data.duracao_minutos) }
       values = emptyForm()
-      onSaved()
+      window.clearTimeout(timeout)
+      await onSaved(data)
     } catch {
       if (controller.signal.aborted && !timedOut) return
       submission = {

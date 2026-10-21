@@ -51,6 +51,7 @@ func ConfigFromEnv(get func(string) string) (Config, error) {
 }
 
 type User struct {
+	Picture string `json:"foto,omitempty"`
 	Subject string `json:"sub"`
 	Name    string `json:"nome"`
 	Email   string `json:"email"`
@@ -222,6 +223,7 @@ func (g *Google) callback(c fiber.Ctx) error {
 	}
 	var claims struct {
 		Name            string `json:"name"`
+		Picture         string `json:"picture"`
 		Email           string `json:"email"`
 		Verified        bool   `json:"email_verified"`
 		AuthorizedParty string `json:"azp"`
@@ -254,7 +256,7 @@ func (g *Google) callback(c fiber.Ctx) error {
 		return fail("limite_sessoes")
 	}
 	delete(g.sessions, c.Cookies(sessionCookie))
-	g.sessions[sid] = session{User{id.Subject, claims.Name, claims.Email}, token.AccessToken, sheets, expires}
+	g.sessions[sid] = session{User{Subject: id.Subject, Name: claims.Name, Email: claims.Email, Picture: claims.Picture}, token.AccessToken, sheets, expires}
 	g.mu.Unlock()
 	g.cookie(c, sessionCookie, sid, int(time.Until(expires).Seconds()))
 	return c.Redirect().Status(303).To(g.config.AppURL + "/")

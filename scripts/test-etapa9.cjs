@@ -98,6 +98,8 @@ async function run() {
     ws.onerror = reject;
   });
   let id = 0;
+  let acceptDialogs = true;
+  const dialogs = [];
   const pending = new Map();
   function cdp(method, params = {}) {
     return new Promise((resolve, reject) => {
@@ -108,8 +110,15 @@ async function run() {
   }
   ws.onmessage = (event) => {
     const value = JSON.parse(event.data);
-    if (value.method === "Page.javascriptDialogOpening")
-      void cdp("Page.handleJavaScriptDialog", { accept: true });
+    if (value.method === "Page.javascriptDialogOpening") {
+      dialogs.push(value.params.message);
+      void cdp("Page.handleJavaScriptDialog", { accept: acceptDialogs });
+    }
+    if (value.method === "Fetch.requestPaused") void cdp("Fetch.fulfillRequest", {
+      requestId: value.params.requestId, responseCode: 200,
+      responseHeaders: [{name:'Content-Type',value:'image/png'}],
+      body:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5ZkAAAAASUVORK5CYII=',
+    });
     if (value.id) {
       const p = pending.get(value.id);
       pending.delete(value.id);
@@ -135,13 +144,14 @@ async function run() {
     );
   }
   async function set(selector, value) {
+    await waitFor(`!!document.querySelector(${JSON.stringify(selector)}) && !document.querySelector(${JSON.stringify(selector)}).matches(':disabled')`);
     await evaluate(
       `(()=>{const e=document.querySelector(${JSON.stringify(selector)});e.value=${JSON.stringify(value)};e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));})()`,
     );
   }
   async function click(label) {
     await evaluate(
-      `(()=>{const e=[...document.querySelectorAll('button')].find(e=>e.textContent.trim()===${JSON.stringify(label)});if(!e||e.disabled||!e.checkVisibility())throw Error('Botão indisponível: '+${JSON.stringify(label)});e.click()})()`,
+      `(()=>{const e=[...document.querySelectorAll('button')].find(e=>e.textContent.trim()===${JSON.stringify(label)});if(!e||e.matches(':disabled')||!e.checkVisibility())throw Error('Botão indisponível: '+${JSON.stringify(label)});e.click()})()`,
     );
   }
   async function total(value) {
@@ -161,7 +171,28 @@ async function run() {
     return response.json();
   }
   await cdp("Page.enable");
+  if (process.argv.includes('--profile')) {
+    await cdp('Fetch.enable',{patterns:[{urlPattern:'https://example.test/foto.png'}]});
+    await cdp('Page.addScriptToEvaluateOnNewDocument',{source:`(() => {
+      const original=window.fetch.bind(window);
+      window.fetch=(url,options)=>String(url).endsWith('/auth/session')
+        ? Promise.resolve(new Response(JSON.stringify({configurado:true,sheets_autorizado:true,usuario:{sub:'teste',nome:'Pessoa Teste',email:'oculto@example.test',foto:'https://example.test/foto.png'}}),{headers:{'Content-Type':'application/json'}}))
+        : original(url,options);
+    })()`});
+  }
   await cdp("Page.navigate", { url: `http://127.0.0.1:${vitePort}` });
+  if (process.argv.includes('--profile')) {
+    await waitFor(`document.querySelector('.avatar')?.naturalWidth>0`);
+    assert(await evaluate(`document.querySelector('.perfil').textContent.includes('Pessoa Teste')`));
+    assert.equal(await evaluate(`document.body.textContent.includes('oculto@example.test')`),false);
+    assert.equal(await evaluate(`getComputedStyle(document.querySelector('.avatar')).borderRadius`),'50%');
+    assert.equal(await evaluate(`document.querySelector('.trocar-conta').textContent.trim()`),'Trocar de conta');
+    assert.equal(await evaluate(`new URL(document.querySelector('.perfil form').action).pathname`),'/api/auth/google/login');
+    await cdp('Emulation.setDeviceMetricsOverride',{width:375,height:812,deviceScaleFactor:1,mobile:true});
+    assert(await evaluate('document.documentElement.scrollWidth<=window.innerWidth'));
+    console.log('PASS: perfil com foto circular e nome, e-mail oculto, troca direta de conta e tela móvel. Sessão simulada.');
+    return;
+  }
   if (process.argv.includes("--auth")) {
     await waitFor(`document.body.innerText.includes('Entrar com Google')`);
     assert.equal(await evaluate("document.querySelector('#form-title')"), null);
@@ -283,7 +314,7 @@ async function run() {
   await waitFor(`document.body.innerText.includes('Página 2 de 2')`);
   await click("Cancelar aula");
   await waitFor(
-    `document.body.innerText.includes('Página 1 de 1') && document.querySelectorAll('.aulas li').length===20`,
+    `document.body.innerText.includes('Página 1 de 1') && document.querySelectorAll('#painel-historico .aulas li').length===20`,
   );
   await cdp("Emulation.setDeviceMetricsOverride", {
     width: 375,
@@ -341,7 +372,7 @@ async function run() {
   await waitFor(
     `document.querySelector('.aulas')?.textContent.includes('Preservar durante falha')`,
   );
-  if (process.argv.includes("--google") || process.argv.includes("--sync")) {
+  if (process.argv.includes("--google") || process.argv.includes("--sync") || process.argv.includes("--ux")) {
     await click("Integração Google");
     const link =
       process.env.GOOGLE_TEST_SHEET_URL ||
@@ -364,10 +395,9 @@ async function run() {
     // a configuração carregada após o reload.
     await evaluate("window.__googleAntesReload = true");
     await cdp("Page.reload");
-    await waitFor(
-      `!window.__googleAntesReload && document.querySelector('#google-url')?.value===${JSON.stringify(canonica.toString())} && !document.querySelector('#google-url').matches(':disabled')`,
-    );
+    await waitFor(`!window.__googleAntesReload && !!document.querySelector('#aba-google')`);
     await click("Integração Google");
+    await waitFor(`document.querySelector('#google-url')?.value===${JSON.stringify(canonica.toString())} && !document.querySelector('#google-url').matches(':disabled')`);
     await request("PUT", "/integracoes/google/configuracao", {
       url: "https://docs.google.com/spreadsheets/d/teste-planilha-B/edit",
       versao: 1,
@@ -381,9 +411,11 @@ async function run() {
       await evaluate(`document.querySelector('#google-url').value`),
       link,
     );
-    await click("Recarregar configuração e prévia");
+    await click("Registrar aula");
+    await click("Integração Google");
+    await waitFor(`!document.querySelector('#google-url').matches(':disabled')`);
     await waitFor(
-      `document.querySelector('#google-url').value.includes('teste-planilha-B')`,
+      `document.querySelector('.google-destino a')?.href.includes('teste-planilha-B')`,
     );
     await set("#google-url", "https://example.com/planilha");
     await click("Salvar destino");
@@ -397,7 +429,9 @@ async function run() {
       const { versao, ...novo } = corpo;
       await request("POST", "/aulas", { ...novo, data }, 201);
     }
-    await click("Recarregar configuração e prévia");
+    await click("Registrar aula");
+    await click("Integração Google");
+    await waitFor(`!document.querySelector('#google-url').matches(':disabled')`);
     await waitFor(
       `document.body.innerText.includes('Registros aulas - 10/2027') && document.body.innerText.includes('Registros aulas - 11/2026') && document.body.innerText.includes('Registros aulas - 10/2026')`,
     );
@@ -419,14 +453,14 @@ async function run() {
       "PASS: configuração Google local, link normalizado, persistência, conflito, troca de destino, validação e prévia mensal. Nenhuma chamada ao Google.",
     );
   }
-  if (process.argv.includes("--sync")) {
+  if (process.argv.includes("--sync") || process.argv.includes("--ux")) {
     // Fixtures só no navegador: validam controles e contratos sem credenciais reais.
     // O backend/adaptador é exercitado separadamente nos testes Go.
     const destino = await request("GET", "/integracoes/google/configuracao");
     await evaluate(`(() => {
       const original = window.fetch.bind(window);
       const config = ${JSON.stringify(destino)};
-      window.__syncFixture = { prepared: false, synced: false, attempts: 0, requests: [] };
+      window.__syncFixture = { prepared: false, synced: [], attempts: 0, requests: [] };
       window.fetch = async (input, options = {}) => {
         const url = String(input);
         const f = window.__syncFixture;
@@ -441,13 +475,13 @@ async function run() {
         }
         if (url.endsWith('/sincronizar')) {
           f.requests.push({url, body:JSON.parse(options.body)}); f.attempts++;
-          if (f.attempts === 1) return json({error:'Falha simulada no Google; tente novamente.'},409);
-          f.synced = true; return json({estado:'sincronizado'});
+          if (f.attempts === 1 || f.attempts === f.failAt) return json({error:'Falha simulada no Google; tente novamente.'},409);
+          f.synced.push(Number(url.split('/').at(-2))); return json({estado:'sincronizado'});
         }
         const res = await original(input,options);
         if (url.includes('/aulas?')) {
           const body=await res.json();
-          for (const aula of body.aulas) aula.google={estado:f.synced?'sincronizado':f.attempts?'erro':f.prepared?'pendente':'aguardando_preparacao',destino_id:config.destino.id,config_versao:config.versao,periodo:aula.data.slice(0,7),tentativas:f.attempts};
+          for (const aula of body.aulas) aula.google={estado:f.synced.includes(aula.id)?'sincronizado':f.attempts?'erro':f.prepared?'pendente':'aguardando_preparacao',destino_id:config.destino.id,config_versao:config.versao,periodo:aula.data.slice(0,7),tentativas:f.attempts};
           return json(body,res.status);
         }
         return res;
@@ -466,13 +500,71 @@ async function run() {
     await click("Sincronizar com Google");
     await waitFor(`document.body.innerText.includes('Falha simulada no Google') && document.body.innerText.includes('Tentar envio novamente')`);
     await click("Tentar envio novamente");
-    await waitFor(`document.body.innerText.includes('Último envio confirmado')`);
+    await waitFor(`document.body.innerText.includes('Sincronizado')`);
     const requests = await evaluate("window.__syncFixture.requests");
     assert.equal(requests.length,5);
     assert(requests.every(r=>r.body.config_versao===destino.versao));
     assert.equal(requests[3].body.versao,requests[4].body.versao);
     assert(await evaluate("document.documentElement.scrollWidth <= window.innerWidth"));
     console.log("PASS: interface de inspeção, recusa, confirmação vinculada ao destino, atualização do histórico, erro e nova tentativa; respostas Sheets simuladas no navegador.");
+    if (process.argv.includes("--ux")) {
+      assert(dialogs.some(message=>message.includes('Deseja sincronizar com o Google agora?')));
+      assert.equal(await evaluate("[...document.querySelectorAll('button')].some(b=>b.textContent.includes('Recarregar configuração e prévia'))"),false);
+      assert.equal(await evaluate("document.querySelector('#painel-google').textContent.includes('Abas esperadas por mês')"),false);
+      assert(await evaluate("document.querySelectorAll('.aula-card.sincronizado').length===1 && document.querySelectorAll('.aula-card.envio-pendente').length>0"));
+      // Recusar um lote não executa envio algum.
+      acceptDialogs = false;
+      const before = await evaluate("window.__syncFixture.requests.length");
+      await click("Enviar todas as pendentes");
+      await waitFor(`document.body.innerText.includes('Nenhuma alteração realizada.') && !document.querySelector('#aba-historico').disabled`);
+      assert.equal(await evaluate("window.__syncFixture.requests.length"),before);
+      acceptDialogs = true;
+      await evaluate("window.__syncFixture.failAt=window.__syncFixture.attempts+2");
+      await click("Enviar todas as pendentes");
+      await waitFor(`document.body.innerText.includes('Lote interrompido') && !document.querySelector('#aba-historico').disabled`);
+      assert(dialogs.at(-1).includes('Todas as páginas'));
+      await evaluate("window.__syncFixture.failAt=0");
+      await click("Enviar todas as pendentes");
+      await waitFor(`document.body.innerText.includes('sincronizada(s).') && !document.querySelector('#aba-historico').disabled`);
+      const all = await request("GET", "/aulas?situacao=ativas");
+      assert(all.total_registros > 20);
+      const synced = await evaluate("window.__syncFixture.synced");
+      assert.equal(new Set(synced).size,all.total_registros);
+      assert.equal(synced.length,all.total_registros);
+      // Filtro limita o lote, incluindo a contagem mostrada na confirmação.
+      await set('#data-inicial','2027-01-01');
+      await click('Filtrar');
+      await waitFor(`document.body.innerText.includes('1 aula(s) no filtro')`);
+      acceptDialogs=false;
+      await click('Cancelar todas as aulas');
+      await waitFor(`document.body.innerText.includes('Nenhuma alteração realizada.') && !document.querySelector('#aba-historico').disabled`);
+      assert.equal((await request('GET','/aulas?situacao=ativas')).total_registros,all.total_registros);
+      acceptDialogs=true;
+      await click('Cancelar todas as aulas');
+      await waitFor(`document.body.innerText.includes('Nenhuma aula encontrada') && !document.querySelector('#aba-historico').disabled`);
+      assert(dialogs.at(-1).includes('Cancelar 1 aula(s)'));
+      await click('Limpar');
+      await waitFor(`document.body.innerText.includes('${all.total_registros-1} aula(s) no filtro')`);
+      await click('Cancelar todas as aulas');
+      await waitFor(`document.body.innerText.includes('Nenhuma aula encontrada') && !document.querySelector('#aba-historico').disabled`);
+      assert.equal((await request('GET','/aulas?situacao=ativas')).total_registros,0);
+      assert.equal((await request('GET','/aulas?situacao=todas')).total_registros,all.total_registros+1);
+      assert(await evaluate("document.documentElement.scrollWidth <= window.innerWidth"));
+      await click('Registrar aula');
+      await set('#data','2026-10-20'); await set('#inicio','08:00'); await set('#fim','09:00'); await set('#turma','1'); await set('#conteudo','Sincronizar após cadastro');
+      await click('Salvar aula');
+      await waitFor(`document.body.innerText.includes('Aula salva e sincronizada com o Google.') && !document.querySelector('#aba-historico').disabled`);
+      assert.equal((await evaluate('window.__syncFixture.synced')).length,all.total_registros+1);
+      acceptDialogs=false;
+      await set('#data','2026-10-20'); await set('#inicio','10:00'); await set('#fim','11:00'); await set('#turma','1'); await set('#conteudo','Salvar sem sincronizar');
+      await click('Salvar aula');
+      await waitFor(`document.body.innerText.includes('Aula salva.') && !document.querySelector('#aba-historico').disabled`);
+      assert.equal((await evaluate('window.__syncFixture.synced')).length,all.total_registros+1);
+      assert.equal((await request('GET','/aulas?situacao=ativas')).total_registros,2);
+      acceptDialogs=true;
+      console.log('PASS: convite após cadastro, estados por cor/texto, recusa dos lotes, falha parcial, envio e cancelamento em múltiplas páginas, filtros e preservação dos registros.');
+    }
+
   }
   await evaluate("window.scrollTo(0,0)");
   const tabsShot = await cdp("Page.captureScreenshot", { format: "png" });

@@ -224,3 +224,34 @@ details button {
 .app-brand img {
   flex-shrink: 0;
 }
+
+.aulas li.aula-card {
+  padding: 18px;
+  margin: 14px 0;
+  border: 1px solid;
+  border-left-width: 5px;
+  border-radius: 10px;
+}
+.aulas li.aula-card.envio-pendente {
+  background: #fff3e0;
+  border-color: #e6a23c;
+}
+.aulas li.aula-card.sincronizado {
+  background: #e9f7ee;
+  border-color: #52a56b;
+}
+.envio-status {
+  font-weight: 700;
+}
+.envio-pendente .envio-status {
+  color: #8a4300;
+}
+.sincronizado .envio-status {
+  color: #166534;
+}
+.button-danger {
+  background: #b42318;
+}
+.button-danger:hover:not(:disabled) {
+  background: #912018;
+}

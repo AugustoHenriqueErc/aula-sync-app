@@ -401,7 +401,8 @@ adicionada nesta etapa.
 
 Na seção **Integração com Google Sheets**, cole o link e clique em **Salvar
 destino**. A configuração fica no SQLite e pode ser alterada sem editar código.
-Use **Recarregar configuração e prévia** para conferir os meses das aulas locais.
+A configuração e os meses são atualizados automaticamente ao abrir essa aba e
+após salvar o destino.
 A data da aula determina a aba esperada, como `Registros aulas - 10/2026`.
 
 Salvar o link não valida permissões nem cria abas ou envia aulas. A API migra o
@@ -443,3 +444,8 @@ node scripts/test-etapa9.cjs --sync
 
 O teste de navegador usa dados temporários e respostas Sheets simuladas; a
 validação de escrita na planilha real deve ser feita pelo aplicativo.
+
+As [melhorias de experiência do frontend](docs/melhorias-frontend.md) incluem
+perfil com foto, convite à sincronização após cadastro, cores no histórico e
+ações em lote sobre todas as páginas dos filtros aplicados. O documento registra
+também o pedido futuro de verificar a leitura ao salvar o destino.

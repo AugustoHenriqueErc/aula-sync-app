@@ -114,7 +114,7 @@ func TestLoginAndCallback(t *testing.T) {
 				t.Fatal("PKCE/nonce ausente")
 			}
 			f := g.flows[flowCookieValue.Value]
-			claims := map[string]any{"iss": "https://accounts.google.com", "sub": "user-a", "aud": "client", "exp": time.Now().Add(time.Hour).Unix(), "iat": time.Now().Unix(), "nonce": f.Nonce, "email": "a@example.test", "email_verified": true, "name": "Pessoa A"}
+			claims := map[string]any{"iss": "https://accounts.google.com", "sub": "user-a", "aud": "client", "exp": time.Now().Add(time.Hour).Unix(), "iat": time.Now().Unix(), "nonce": f.Nonce, "email": "a@example.test", "email_verified": true, "name": "Pessoa A", "picture": "https://example.test/foto.png"}
 			signingKey := key
 			switch variant {
 			case "nonce":
@@ -182,6 +182,14 @@ func TestLoginAndCallback(t *testing.T) {
 				}
 				cookie := cookieNamed(t, res, sessionCookie)
 				status := request(t, app, "GET", "/auth/session", cookie, "")
+				profile, readErr := io.ReadAll(status.Body)
+				if readErr != nil {
+					t.Fatal(readErr)
+				}
+				if !strings.Contains(string(profile), `"foto":"https://example.test/foto.png"`) {
+					t.Fatalf("foto ausente da sessão: %s", profile)
+				}
+				status.Body = io.NopCloser(strings.NewReader(string(profile)))
 				body, _ := io.ReadAll(status.Body)
 				if strings.Contains(string(body), "private-access-token") || !strings.Contains(string(body), "user-a") {
 					t.Fatalf("resposta sessão: %s", body)

@@ -1,8 +1,12 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { onDestroy, untrack } from 'svelte'
   import { jsonRequest, duracao } from './api'
 
-  let { apiUrl, onChange }: { apiUrl: string; onChange: () => void } = $props()
+  let {
+    apiUrl,
+    onChange,
+    ativo,
+  }: { apiUrl: string; onChange: () => void; ativo: boolean } = $props()
   type Config = {
     versao: number
     destino: null | { id: number; planilha_id: string; url: string }
@@ -112,14 +116,13 @@
   }
   let controller: AbortController | undefined
 
-  async function carregar() {
+  async function carregar(preservarLink = false) {
+    const linkDigitado = config ? link : null
     if (carregando || salvando || verificando) return
     controller?.abort()
     const request = new AbortController()
     controller = request
     carregando = true
-    erro = ''
-    aviso = ''
     acesso = ''
     inspecoes = {}
     try {
@@ -138,7 +141,10 @@
       if (request.signal.aborted) return
       config = data.configuracao
       meses = data.meses
-      link = config.destino?.url ?? ''
+      link =
+        preservarLink && linkDigitado !== null
+          ? linkDigitado
+          : (config.destino?.url ?? '')
     } catch (error) {
       if (!request.signal.aborted)
         erro =
@@ -159,6 +165,7 @@
     aviso = ''
     acesso = ''
     inspecoes = {}
+    let sucesso = false
     try {
       const data = await jsonRequest(
         `${apiUrl}/integracoes/google/configuracao`,
@@ -175,6 +182,7 @@
         )
       if (request.signal.aborted) return
       config = data
+      sucesso = true
       onChange()
       link = config.destino?.url ?? ''
       aviso =
@@ -186,7 +194,10 @@
             ? error.message
             : 'Não foi possível confirmar a configuração. O link foi preservado; recarregue para conferir antes de tentar novamente.'
     } finally {
-      if (!request.signal.aborted) salvando = false
+      if (!request.signal.aborted) {
+        salvando = false
+        if (sucesso) void carregar(true)
+      }
     }
   }
   async function verificarAcesso() {
@@ -217,10 +228,13 @@
       verificando = false
     }
   }
-  onMount(() => {
-    void carregar()
-    return () => controller?.abort()
+  $effect(() => {
+    if (ativo)
+      untrack(() => {
+        void carregar(true)
+      })
   })
+  onDestroy(() => controller?.abort())
 </script>
 
 <section aria-labelledby="google-title" aria-busy={carregando || salvando}>
@@ -258,13 +272,6 @@
     {#if aviso}<p class="success">{aviso}</p>{/if}
     {#if erro}<p class="error">{erro}</p>{/if}
   </div>
-  <button disabled={carregando || salvando || verificando} onclick={carregar}
-    >Recarregar configuração e prévia</button
-  >
-  <p class="hint">
-    Recarregar substitui o link digitado pela configuração salva e atualiza os
-    meses abaixo.
-  </p>
   <button
     disabled={!config?.destino || verificando || carregando || salvando}
     onclick={verificarAcesso}
@@ -281,11 +288,6 @@
         >
       </p>
     {:else}<p>Nenhuma planilha configurada.</p>{/if}
-    <h3>Abas esperadas por mês</h3>
-    <p>
-      Prévia baseada nas aulas locais. As abas e os cabeçalhos ainda não foram
-      verificados no Google.
-    </p>
     {#if meses.length === 0}<p>
         Cadastre aulas para visualizar os meses correspondentes.
       </p>
