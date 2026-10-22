@@ -16,6 +16,15 @@ type Historico struct {
 
 // A transação mantém página e totais na mesma visão dos dados.
 func (b *Banco) Historico(ctx context.Context, f Filtro) (Historico, error) {
+	return b.consultarHistorico(ctx, f, true)
+}
+
+// Relatorio usa a mesma transação, filtros e totais, sem limitar a uma página.
+func (b *Banco) Relatorio(ctx context.Context, f Filtro) (Historico, error) {
+	return b.consultarHistorico(ctx, f, false)
+}
+
+func (b *Banco) consultarHistorico(ctx context.Context, f Filtro, paginar bool) (Historico, error) {
 	h := Historico{Aulas: make([]Registro, 0)}
 	where := " WHERE 1=1"
 	args := []any{}
@@ -49,8 +58,12 @@ func (b *Banco) Historico(ctx context.Context, f Filtro) (Historico, error) {
 	if f.Pagina < 1 {
 		f.Pagina = 1
 	}
-	args = append(args, 20, (f.Pagina-1)*20)
-	rows, err := tx.QueryContext(ctx, "SELECT "+colunasAula+" FROM aulas"+where+" ORDER BY data DESC,inicio DESC,id DESC LIMIT ? OFFSET ?", args...)
+	query := "SELECT " + colunasAula + " FROM aulas" + where + " ORDER BY data DESC,inicio DESC,id DESC"
+	if paginar {
+		query += " LIMIT ? OFFSET ?"
+		args = append(args, 20, (f.Pagina-1)*20)
+	}
+	rows, err := tx.QueryContext(ctx, query, args...)
 	if err != nil {
 		return h, err
 	}

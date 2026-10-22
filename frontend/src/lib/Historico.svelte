@@ -34,9 +34,72 @@
   let sincronizando = $state(false)
   let lote = $state(false)
   let excluindo = $state(false)
+  let exportando = $state(false)
+  let avisoPDF = $state('')
+  let erroPDF = $state(false)
+  let pdfRequest: AbortController | undefined
+  onDestroy(() => pdfRequest?.abort())
   const ocupado = $derived(
-    alterando || sincronizando || lote || excluindo || bloqueado,
+    alterando || sincronizando || lote || excluindo || exportando || bloqueado,
   )
+  async function exportarPDF() {
+    if (ocupado || carregando || !resultado) return
+    exportando = true
+    onBusy(true)
+    erroPDF = false
+    avisoPDF = 'Gerando PDF dos filtros aplicados…'
+    const controller = new AbortController()
+    pdfRequest = controller
+    try {
+      const params = parametros(1)
+      params.delete('pagina')
+      const response = await fetch(`${apiUrl}/aulas/relatorio.pdf?${params}`, {
+        cache: 'no-store',
+        signal: AbortSignal.any([
+          controller.signal,
+          AbortSignal.timeout(60000),
+        ]),
+      })
+      if (response.status === 401)
+        window.dispatchEvent(new Event('aula-auth-required'))
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(
+          typeof data?.error === 'string'
+            ? data.error
+            : 'Não foi possível exportar o PDF. Tente novamente.',
+        )
+      }
+      if (!response.headers.get('Content-Type')?.startsWith('application/pdf'))
+        throw new Error(
+          'O servidor não retornou um PDF válido. Tente novamente.',
+        )
+      const blob = await response.blob()
+      if (controller.signal.aborted) return
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'relatorio-aulas.pdf'
+      document.body.append(link)
+      link.click()
+      link.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 10000)
+      avisoPDF = 'PDF gerado. Confira o download no navegador.'
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        erroPDF = true
+        avisoPDF =
+          error instanceof Error && error.name === 'Error'
+            ? error.message
+            : 'Não foi possível exportar o PDF. Verifique a conexão e tente novamente.'
+      }
+    } finally {
+      if (!controller.signal.aborted) {
+        exportando = false
+        onBusy(false)
+      }
+    }
+  }
   function mensagemErro(error: unknown) {
     return error instanceof Error && error.name === 'Error'
       ? error.message
@@ -438,6 +501,18 @@
     </fieldset>
   </form>
   <p class="hint">Aulas canceladas não entram na carga horária.</p>
+  <div class="actions">
+    <button
+      disabled={ocupado || carregando || !resultado}
+      onclick={exportarPDF}
+    >
+      {exportando ? 'Gerando PDF…' : 'Exportar PDF'}
+    </button>
+  </div>
+  <p class="hint">O PDF inclui todas as páginas dos filtros aplicados.</p>
+  {#if avisoPDF}
+    <p class:error={erroPDF} role={erroPDF ? 'alert' : 'status'}>{avisoPDF}</p>
+  {/if}
   <div class="actions lote-actions" aria-label="Ações em lote">
     <button
       disabled={ocupado || carregando || !resultado?.total_registros}

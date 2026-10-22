@@ -194,7 +194,7 @@ somente o planejamento, sem concluir tarefas de implementação.
 - [x] Especificar inspeção e confirmação para criar aba ausente ou cabeçalhos em aba vazia; preservar conteúdo incompatível.
 - [x] Definir a troca de destino e seus efeitos sobre o estado de sincronização, sem envio automático.
 - [x] Documentar decisão de API Sheets direta pelo backend com OAuth da conta do login; Apps Script descartado em 19/10/2026 (`docs/google-etapa10.md`).
-- [x] Implementar login Google, sessão e OAuth vinculados à mesma conta, com proteção de credenciais e troca de conta/logout; tokens somente em memória, testes automatizados e roteiro em `docs/login-google.md`. Login e leitura reais confirmados pelo desenvolvedor em 20/10/2026; demais cenários remotos pendentes.
+- [x] Implementar login Google, sessão e OAuth vinculados à mesma conta, com proteção de credenciais e troca de conta/logout; tokens somente em memória, testes automatizados e roteiro em `docs/login-google.md`. Login e leitura reais confirmados em 20/10/2026; testes pendentes confirmados pelo desenvolvedor em 22/10/2026.
 - [x] Validar cliente OAuth, consentimento e leitura de teste pela API Sheets: desenvolvedor confirmou a conta exibida e “Leitura confirmada: test-aula-sync-app” em 20/10/2026. Escrita não comprovada por essa leitura.
 - [x] Definir identificador idempotente, versão do registro, timeouts e política de retentativas.
 - [x] Modelar estado por aula/versão/destino, tentativas, última tentativa e erro no SQLite, distinguindo pendência de preparação de envio confirmado.
@@ -206,8 +206,9 @@ somente o planejamento, sem concluir tarefas de implementação.
 ## Etapa 11 — Sincronização com Sheets
 
 Implementação autorizada pelo desenvolvedor após confirmar login/leitura real.
-Validação automatizada usa simuladores; ensaio de escrita real e revisão dos
-cabeçalhos pela responsável continuam pendentes. Roteiro: `docs/google-etapa11.md`.
+Validação automatizada usa simuladores; ensaio de escrita real e testes pendentes
+confirmados pelo desenvolvedor em 22/10/2026. Revisão dos cabeçalhos pela
+responsável continua pendente. Roteiro: `docs/google-etapa11.md`.
 
 - [x] Implementar cliente Sheets direto no backend com OAuth da conta da sessão.
 - [x] Inspecionar a planilha e a aba mensal inteira, incluindo fórmulas.
@@ -224,24 +225,25 @@ cabeçalhos pela responsável continuam pendentes. Roteiro: `docs/google-etapa11
 - [x] Validar reconciliação de mês e estado independente por destino.
 - [x] Testar controles de inspeção/preparação e nova tentativa no Chrome com respostas simuladas.
 - [x] Validar permissão de escrita real e sincronizar uma aula na planilha de teste: desenvolvedor confirmou o envio pelo botão **Sincronizar com Google** nesta conversa.
-- [ ] Conferir colunas, repetição, correções/cancelamentos e recuperação na planilha real.
-- [ ] **Etapa 11 concluída:** implementação testada e ensaio remoto confirmado.
+- [x] Conferir colunas, repetição, correções/cancelamentos e recuperação na planilha real: desenvolvedor informou em 22/10/2026 que os testes pendentes foram realizados.
+- [x] **Etapa 11 concluída:** implementação testada e ensaio remoto confirmado pelo desenvolvedor; revisão institucional continua separada.
 
 ## Etapa 12 — Relatório de aulas em PDF
 
 Executar após a etapa 11 conforme a sequência acordada. A geração depende das
 consultas e regras locais das etapas 8 e 9, sem dependência técnica do Google.
 
-- [ ] Oferecer exportação em PDF usando os filtros ativos do histórico.
-- [ ] Consultar pelo backend os registros do SQLite e o total de todo o conjunto filtrado, independentemente da paginação da tela.
-- [ ] Criar modelo fixo inicial com período, data, turma/estudante, conteúdo, horários, duração e carga horária total.
-- [ ] Aplicar as mesmas regras do histórico para correções e cancelamentos.
-- [ ] Definir o comportamento sem resultados e apresentar falhas de exportação.
-- [ ] Comparar aulas e total do PDF com o histórico para os mesmos filtros; conferir o exemplo de 3h15.
-- [ ] Validar zero, um e vários registros, múltiplas páginas, textos longos, acentos e legibilidade em leitor de PDF.
-- [ ] Validar a exportação com o serviço Google indisponível.
-- [ ] Documentar o modelo inicial como proposta e registrar os ajustes de campos e apresentação após retorno de Maria Luiza, sem criar editor de relatórios.
-- [ ] **Etapa 12 concluída tecnicamente:** PDF legível e coerente com o histórico, gerado a partir dos dados locais; registrar separadamente a situação da revisão pela cliente.
+- [x] Oferecer exportação em PDF usando os filtros ativos do histórico.
+- [x] Consultar pelo backend os registros do SQLite e o total de todo o conjunto filtrado, independentemente da paginação da tela.
+- [x] Criar modelo fixo inicial com período, data, turma/estudante, conteúdo, horários, duração e carga horária total.
+- [x] Aplicar as mesmas regras do histórico para correções e cancelamentos.
+- [x] Definir o comportamento sem resultados e apresentar falhas de exportação.
+- [x] Comparar aulas e total do PDF com o histórico para os mesmos filtros; conferir o exemplo de 3h15.
+- [x] Validar zero, um e vários registros, múltiplas páginas, textos longos, acentos e legibilidade: extração com Poppler e revisão de páginas renderizadas.
+- [x] Validar a exportação com o serviço Google indisponível: Chrome com endereços Google bloqueados.
+- [x] Documentar o modelo inicial como proposta em `docs/relatorio-pdf.md`.
+- [ ] Registrar ajustes de campos e apresentação após retorno de Maria Luiza; revisão institucional pendente.
+- [x] **Etapa 12 concluída tecnicamente:** PDF legível e coerente com o histórico, gerado a partir dos dados locais. Validação manual pelo desenvolvedor e revisão da cliente permanecem separadas.
 
 ## Etapa 13 — Autenticação, publicação e piloto
 
@@ -298,8 +300,10 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 | 10 — Comportamento inicial documentado | 18/10/2026 | Acordo do desenvolvedor registrado em `docs/integracao-google-mensal.md`; roadmap, checklist, requisitos e README alinhados | Sem código ou acesso ao Google; contrato técnico, cabeçalhos e aprovação institucional pendentes; etapa 10 permanece aberta |
 | 10 — Login e leitura reais | 20/10/2026 | Desenvolvedor confirmou conta exibida e leitura de `test-aula-sync-app` pelo aplicativo | Login e leitura confirmados; escrita e revisão institucional separadas |
 | 11 — Implementação e testes locais | 20/10/2026 | Migração v5; inspeção, confirmação e envio por aula; testes Go com detector de corridas; frontend check/build/formatação; Chrome `--sync` com fixtures | Implementação validada com simuladores; escrita real pendente. Roteiro em `docs/google-etapa11.md` |
+| 11 — Validação manual confirmada | 22/10/2026 | Desenvolvedor informou que os testes pendentes foram realizados e confirmou login com URIs localhost/127.0.0.1 e credenciais recebidas pelo script | Ajustes da etapa 11 encerrados conforme relato; revisão institucional separada |
+| 12 — Relatório PDF | 22/10/2026 | Testes Go com SQLite temporário e extração Poppler: 3h15, filtros, edição/cancelamento, vazio e 25 registros com textos longos em 15 páginas; proteção 401; suíte Go serial, vet e build; frontend check sem erros/avisos e build; Chrome validou download, filtros, Google bloqueado e falha/recuperação; revisão de páginas renderizadas | Conclusão técnica; roteiro em `docs/relatorio-pdf.md`. Teste manual do desenvolvedor e revisão do modelo pela cliente pendentes; etapa 13 não iniciada |
 
-**Próxima ação ao retomar:** o desenvolvedor ainda precisa validar manualmente os ajustes finais da etapa 11 no aplicativo e na planilha real de teste. Seguir `docs/ajustes-integracao-etapa11.md` antes de considerar esses ajustes validados ou avançar para a etapa 12 (PDF).
+**Próxima ação ao retomar:** validar manualmente o PDF seguindo `docs/relatorio-pdf.md` e apresentar o modelo à cliente. A etapa 13 não foi iniciada.
 
 ## Ajustes de experiência após o primeiro envio real
 
@@ -324,22 +328,24 @@ Contrato e roteiro: `docs/ajustes-integracao-etapa11.md`.
 - [x] Oferecer criação de aba/cabeçalhos pelo histórico, cadastro e lote com confirmação.
 - [x] Verificar leitura ao salvar destino, preservando configuração em caso de falha remota.
 - [x] Validar migração v5 → v6, exclusão, resposta perdida e limpeza tardia com testes Go; interface com Chrome usando respostas Google simuladas.
-- [ ] Validar esses novos fluxos na planilha real de teste pelo aplicativo.
+- [x] Validar esses novos fluxos na planilha real de teste pelo aplicativo: confirmação do desenvolvedor em 22/10/2026.
 - [ ] Futuro: detectar dois cadastros distintos com dados iguais. Solicitação explicitamente adiada pelo desenvolvedor.
 
-## Ponto de retomada — validação manual pendente
+## Ponto de retomada — validação manual da etapa 11 confirmada
 
-O desenvolvedor encerrou a sessão para descansar e informou que **ainda não
-validou as últimas alterações**. Os itens de implementação e testes automatizados
-marcados acima não substituem essa validação manual.
+O registro anterior de validação pendente foi superado em 22/10/2026: o
+desenvolvedor informou que os testes pendentes foram realizados e confirmou login
+com localhost e 127.0.0.1 e carregamento das credenciais pelo script.
+Os resultados abaixo são informados pelo desenvolvedor, sem nova execução remota
+pelo agente. A revisão institucional continua pendente.
 
-- [ ] Conferir o aviso ao tentar reenviar uma aula já sincronizada.
-- [ ] Conferir a aula cancelada em vermelho e sincronizar seu cancelamento.
-- [ ] Testar exclusão definitiva somente local e com remoção dos dados no Google.
-- [ ] Conferir a preservação da aula quando a exclusão remota falhar e sua retomada.
-- [ ] Confirmar e recusar a criação de aba pelo popup do histórico.
-- [ ] Conferir a leitura automática ao salvar o destino e a mensagem de falha de acesso.
-- [ ] Registrar os resultados da validação antes de encerrar os ajustes da etapa 11.
+- [x] Conferir o aviso ao tentar reenviar uma aula já sincronizada.
+- [x] Conferir a aula cancelada em vermelho e sincronizar seu cancelamento.
+- [x] Testar exclusão definitiva somente local e com remoção dos dados no Google.
+- [x] Conferir a preservação da aula quando a exclusão remota falhar e sua retomada.
+- [x] Confirmar e recusar a criação de aba pelo popup do histórico.
+- [x] Conferir a leitura automática ao salvar o destino e a mensagem de falha de acesso.
+- [x] Registrar os resultados da validação antes de encerrar os ajustes da etapa 11.
 
 Usar aulas fictícias e a planilha de teste. Roteiro completo:
 [ajustes da etapa 11](docs/ajustes-integracao-etapa11.md).

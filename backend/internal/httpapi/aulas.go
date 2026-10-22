@@ -50,6 +50,7 @@ func respostaAula(r storage.Registro) aulaResponse {
 }
 
 func registrarRotasAulas(app *fiber.App, banco *storage.Banco) {
+	registrarRotaRelatorio(app, banco)
 	registrarRotasCorrecao(app, banco)
 	app.Post("/aulas", func(c fiber.Ctx) error {
 		entrada, err := lerJSON[criarAulaRequest](c)

@@ -454,3 +454,9 @@ Os [ajustes finais da integração](docs/ajustes-integracao-etapa11.md) acrescen
 aviso de aula já sincronizada, cancelamento em vermelho, exclusão definitiva com
 opção de remover no Google, preparação de abas pelo histórico e leitura ao salvar
 o destino. A detecção de dois cadastros iguais permanece uma pendência futura.
+
+## Exportação de aulas em PDF
+
+No **Histórico**, aplique os filtros e clique em **Exportar PDF**. O arquivo
+inclui todas as páginas e o total das aulas ativas, usando os dados locais.
+Instruções, modelo proposto e testes: [relatório PDF](docs/relatorio-pdf.md).
