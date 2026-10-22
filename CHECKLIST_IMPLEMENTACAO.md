@@ -299,7 +299,7 @@ Ao concluir cada etapa, adicionar uma linha. Registrar comandos/cenários execut
 | 10 — Login e leitura reais | 20/10/2026 | Desenvolvedor confirmou conta exibida e leitura de `test-aula-sync-app` pelo aplicativo | Login e leitura confirmados; escrita e revisão institucional separadas |
 | 11 — Implementação e testes locais | 20/10/2026 | Migração v5; inspeção, confirmação e envio por aula; testes Go com detector de corridas; frontend check/build/formatação; Chrome `--sync` com fixtures | Implementação validada com simuladores; escrita real pendente. Roteiro em `docs/google-etapa11.md` |
 
-**Próxima ação:** conferir as melhorias de experiência no aplicativo e continuar os cenários remotos restantes da etapa 11. Roteiro em `docs/melhorias-frontend.md`.
+**Próxima ação ao retomar:** o desenvolvedor ainda precisa validar manualmente os ajustes finais da etapa 11 no aplicativo e na planilha real de teste. Seguir `docs/ajustes-integracao-etapa11.md` antes de considerar esses ajustes validados ou avançar para a etapa 12 (PDF).
 
 ## Ajustes de experiência após o primeiro envio real
 
@@ -326,3 +326,20 @@ Contrato e roteiro: `docs/ajustes-integracao-etapa11.md`.
 - [x] Validar migração v5 → v6, exclusão, resposta perdida e limpeza tardia com testes Go; interface com Chrome usando respostas Google simuladas.
 - [ ] Validar esses novos fluxos na planilha real de teste pelo aplicativo.
 - [ ] Futuro: detectar dois cadastros distintos com dados iguais. Solicitação explicitamente adiada pelo desenvolvedor.
+
+## Ponto de retomada — validação manual pendente
+
+O desenvolvedor encerrou a sessão para descansar e informou que **ainda não
+validou as últimas alterações**. Os itens de implementação e testes automatizados
+marcados acima não substituem essa validação manual.
+
+- [ ] Conferir o aviso ao tentar reenviar uma aula já sincronizada.
+- [ ] Conferir a aula cancelada em vermelho e sincronizar seu cancelamento.
+- [ ] Testar exclusão definitiva somente local e com remoção dos dados no Google.
+- [ ] Conferir a preservação da aula quando a exclusão remota falhar e sua retomada.
+- [ ] Confirmar e recusar a criação de aba pelo popup do histórico.
+- [ ] Conferir a leitura automática ao salvar o destino e a mensagem de falha de acesso.
+- [ ] Registrar os resultados da validação antes de encerrar os ajustes da etapa 11.
+
+Usar aulas fictícias e a planilha de teste. Roteiro completo:
+[ajustes da etapa 11](docs/ajustes-integracao-etapa11.md).
