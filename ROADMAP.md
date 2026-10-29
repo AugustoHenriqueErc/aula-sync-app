@@ -714,3 +714,13 @@ integrar Google Sheets (10 e 11), exportar o PDF (12) e preparar o piloto com
 acesso protegido (13). O primeiro relatório será uma proposta fixa para Maria
 Luiza; os dados e a apresentação serão ajustados após seu retorno. Esta revisão
 documenta o plano, sem marcar funcionalidades futuras como implementadas.
+
+### Atualização de 29/10/2026 — ajustes antes do deploy
+
+O desenvolvedor confirmou login e cadastro pelo celular via ngrok e solicitou
+ajustes antes da implantação. A próxima sequência de trabalho está no
+[plano de ajustes](docs/ajustes-antes-deploy.md): A, corrigir hover e retirar
+diagnóstico visual; B, catálogo de conteúdos no SQLite; C, dropdown no formulário.
+Executar e validar uma etapa por vez. Esta atualização substitui a indicação
+antiga de iniciar a etapa 8 acima; não declara os novos ajustes implementados
+nem conclui as pendências de PDF, revisão institucional ou piloto.

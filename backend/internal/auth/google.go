@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -214,6 +216,24 @@ func (g *Google) callback(c fiber.Ctx) error {
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, g.client)
 	token, err := g.oauth.Exchange(ctx, c.Query("code"), oauth2.VerifierOption(f.Verifier))
 	if err != nil {
+		// Não registrar err diretamente: a resposta OAuth pode conter dados sensíveis.
+		reason := "resposta_inesperada"
+		var oauthErr *oauth2.RetrieveError
+		var networkErr net.Error
+		switch {
+		case errors.As(err, &oauthErr):
+			switch oauthErr.ErrorCode {
+			case "invalid_client", "invalid_grant", "invalid_request", "unauthorized_client":
+				reason = oauthErr.ErrorCode
+			default:
+				reason = "resposta_oauth_rejeitada"
+			}
+		case errors.Is(err, context.DeadlineExceeded):
+			reason = "tempo_esgotado"
+		case errors.As(err, &networkErr):
+			reason = "falha_rede"
+		}
+		log.Printf("Login Google: falha na troca do código por token (motivo=%s)", reason)
 		return fail("falha_autorizacao")
 	}
 	raw, _ := token.Extra("id_token").(string)
@@ -232,6 +252,7 @@ func (g *Google) callback(c fiber.Ctx) error {
 		return fail("identidade_invalida")
 	}
 	if token.AccessToken == "" || !strings.EqualFold(token.TokenType, "Bearer") || token.Expiry.IsZero() || !time.Now().Before(token.Expiry) {
+		log.Print("Login Google: token recebido sem os campos válidos necessários ou expirado")
 		return fail("falha_autorizacao")
 	}
 	scope, _ := token.Extra("scope").(string)

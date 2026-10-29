@@ -349,3 +349,13 @@ pelo agente. A revisão institucional continua pendente.
 
 Usar aulas fictícias e a planilha de teste. Roteiro completo:
 [ajustes da etapa 11](docs/ajustes-integracao-etapa11.md).
+
+## Ajustes antes do deploy — planejados em 29/10/2026
+
+Plano e critérios: [ajustes antes do deploy](docs/ajustes-antes-deploy.md).
+Executar uma etapa por vez, nesta ordem. Nenhum item abaixo foi implementado.
+
+- [ ] A — Corrigir hover das abas no celular e retirar o diagnóstico visual de conexão.
+- [ ] B — Criar catálogo de conteúdos no SQLite, com migração, listagem e cadastro.
+- [ ] C — Integrar dropdown e criação/seleção de conteúdo ao formulário.
+- [ ] Registrar testes automatizados e validação manual no celular de cada etapa.

@@ -25,9 +25,9 @@ if [[ -z "$GOOGLE_CLIENT_SECRET" || "$GOOGLE_CLIENT_SECRET" == *[[:space:]]* ]];
   return 1
 fi
 
-# Preserva URLs já configuradas; usa o frontend local como padrão.
-export GOOGLE_REDIRECT_URI="${GOOGLE_REDIRECT_URI:-http://127.0.0.1:5173/api/auth/google/callback}"
-export APP_URL="${APP_URL:-http://127.0.0.1:5173}"
+# Preserva URLs já configuradas; usa o túnel ngrok de desenvolvimento como padrão.
+export GOOGLE_REDIRECT_URI="${GOOGLE_REDIRECT_URI:-https://transpire-travesty-untagged.ngrok-free.dev/api/auth/google/callback}"
+export APP_URL="${APP_URL:-https://transpire-travesty-untagged.ngrok-free.dev}"
 export GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET
 
 google_config_incompleta=0
@@ -48,5 +48,8 @@ if [[ "$google_config_incompleta" == 1 ]]; then
 fi
 unset google_config_incompleta
 
+printf 'Origem da aplicação: %s\n' "$APP_URL"
+printf 'Confira se esta URL está nos URIs de redirecionamento autorizados do Google OAuth:\n%s\n' "$GOOGLE_REDIRECT_URI"
+printf 'Ao trocar o domínio, atualize APP_URL, GOOGLE_REDIRECT_URI e o cadastro no Google OAuth.\n'
 printf 'Variáveis preenchidas. Agora execute neste terminal: go run ./cmd/api/\n'
 printf 'Esta verificação não valida as credenciais junto ao Google.\n'
