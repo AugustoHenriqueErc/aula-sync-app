@@ -358,5 +358,6 @@ Executar uma etapa por vez, nesta ordem. Resultados e roteiro no plano acima.
 - [x] A — Corrigir hover e retirar diagnóstico visual; checks e Chrome aprovados.
 - [x] A — Confirmar o comportamento das abas no celular real via ngrok (relato do desenvolvedor).
 - [x] B — Criar catálogo de conteúdos no SQLite, com migração, listagem e cadastro; suíte Go aprovada.
-- [ ] C — Integrar dropdown e criação/seleção de conteúdo ao formulário.
+- [x] C — Integrar dropdown e criação/seleção; checks e Chrome `--conteudos`/`--ux` aprovados.
+- [ ] C — Confirmar criação, reutilização e edição pelo celular real via ngrok.
 - [ ] Registrar testes automatizados e validação manual no celular de cada etapa.

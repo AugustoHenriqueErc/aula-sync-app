@@ -725,4 +725,6 @@ Executar e validar uma etapa por vez. Esta atualização substitui a indicação
 antiga de iniciar a etapa 8 acima. A etapa A está implementada, com checks,
 Chrome e confirmação do desenvolvedor no celular real. B está implementada,
 com testes Go aprovados e contrato em [catálogo de conteúdos](docs/catalogo-conteudos.md).
-C ainda não foi iniciada. As pendências de PDF, revisão institucional e piloto permanecem.
+C também está implementada, com checks e Chrome aprovados; a validação manual
+do dropdown no celular real permanece pendente. As pendências de revisão do
+modelo de PDF, revisão institucional e piloto permanecem.

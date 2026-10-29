@@ -194,6 +194,32 @@ async function run() {
       return original(url,options);
     };
   })()`});
+  if (process.argv.includes('--conteudos')) {
+    await cdp('Page.addScriptToEvaluateOnNewDocument', {source:`(() => {
+      const original = window.fetch.bind(window);
+      window.__modoConteudos = 'aguardar';
+      window.__criacaoConteudos = 0;
+      window.fetch = async (url, options = {}) => {
+        if (String(url).endsWith('/conteudos')) {
+          if (options.method === 'POST') {
+            window.__criacaoConteudos++;
+            const response = await original(url, options);
+            if (window.__modoConteudos === 'perder') throw new TypeError('Resposta perdida de teste');
+            return response;
+          }
+          if (window.__modoConteudos === 'aguardar')
+            await new Promise(resolve => { window.__liberarConteudos = () => {window.__modoConteudos = ''; resolve();}; });
+          if (window.__modoConteudos === 'falhar') return new Response('{}', {status:503});
+          if (window.__modoConteudos === 'invalido') return new Response('[{"id":1,"nome":""}]');
+        }
+        return original(url, options);
+      };
+    })()`});
+  } else if (!process.argv.includes('--auth') && !process.argv.includes('--profile')) {
+    // O formulário agora seleciona conteúdos persistidos, em vez de texto livre.
+    for (const nome of ['Rascunho preservado entre abas', 'Conteúdo inicial', 'Minha edição preservada', 'Preservar durante falha', 'Sincronizar após cadastro', 'Salvar sem sincronizar'])
+      await request('POST', '/conteudos', {nome}, 201);
+  }
   await cdp("Page.navigate", { url: `http://127.0.0.1:${vitePort}` });
   if (process.argv.includes('--profile')) {
     await waitFor(`document.querySelector('.avatar')?.naturalWidth>0`);
@@ -223,6 +249,114 @@ async function run() {
   }
   await waitFor(`document.querySelector('#aba-cadastro')?.getAttribute('aria-selected')==='true'`);
   assert.equal(await evaluate("document.querySelectorAll('[role=tabpanel]:not([hidden])').length"), 1);
+  if (process.argv.includes('--conteudos')) {
+    acceptDialogs = false;
+    await waitFor("typeof window.__liberarConteudos === 'function'");
+    assert(await evaluate("document.querySelector('#conteudo').disabled && document.querySelector('button[type=submit]').disabled"));
+    await evaluate('window.__liberarConteudos()');
+    await waitFor("document.body.innerText.includes('Nenhum conteúdo cadastrado')");
+    assert.equal(await evaluate("document.querySelector('#conteudo').tagName"), 'SELECT');
+    await request('POST', '/turmas', {nome:'Turma de teste'}, 201);
+    await click('Atualizar turmas');
+    await set('#turma', '1');
+    await set('#data', '2026-10-20');
+    await set('#inicio', '08:00');
+    await set('#fim', '09:00');
+    await click('Salvar aula');
+    await waitFor("document.querySelector('#conteudo-error')?.textContent.includes('Selecione')");
+    assert.equal(await evaluate('document.activeElement.id'), 'conteudo');
+    assert.equal((await request('GET', '/aulas')).total_registros, 0);
+
+    const nome = 'Leitura\n  e revisão';
+    await evaluate("document.querySelector('#cadastro-conteudo').open=true");
+    await set('#novo-conteudo', nome);
+    await evaluate("document.querySelector('#cadastro-conteudo button').click(); document.querySelector('#cadastro-conteudo button').click()");
+    await waitFor(`document.querySelector('#conteudo').value === ${JSON.stringify(nome)} && !document.querySelector('#data').matches(':disabled')`);
+    assert.equal(await evaluate('window.__criacaoConteudos'), 1);
+    await waitFor("document.activeElement.id === 'conteudo'");
+    assert.equal(await evaluate("document.querySelector('#data').value"), '2026-10-20');
+    assert.equal(await evaluate("document.querySelector('#novo-conteudo').value"), '');
+    assert.equal(await evaluate("document.querySelector('#conteudo-error')"), null);
+    await click('Histórico'); await click('Registrar aula');
+    assert.equal(await evaluate("document.querySelector('#conteudo').value"), nome);
+
+    await set('#novo-conteudo', 'LEITURA E REVISÃO');
+    await evaluate("document.querySelector('#cadastro-conteudo button').click()");
+    await waitFor("document.querySelector('#cadastro-conteudo-error')?.textContent.includes('Já existe')");
+    assert.equal(await evaluate("document.querySelector('#conteudo').value"), nome);
+    assert(await evaluate("document.querySelector('#cadastro-conteudo button').disabled"));
+    await click('Atualizar conteúdos');
+    await waitFor("!document.querySelector('#cadastro-conteudo button').disabled");
+    assert.equal((await request('GET', '/conteudos')).length, 1);
+
+    await evaluate("window.__modoConteudos = 'perder'");
+    await set('#novo-conteudo', 'Frações');
+    await evaluate("document.querySelector('#cadastro-conteudo button').click()");
+    await waitFor("document.querySelector('#cadastro-conteudo-error')?.textContent.includes('Não foi possível confirmar')");
+    assert.equal((await request('GET', '/conteudos')).length, 2);
+    assert.equal(await evaluate("document.querySelector('#novo-conteudo').value"), 'Frações');
+    assert(await evaluate("document.querySelector('#cadastro-conteudo button').disabled"));
+    await evaluate("window.__modoConteudos = ''");
+    await click('Atualizar conteúdos');
+    await waitFor("document.querySelectorAll('#conteudo option').length === 3 && !document.querySelector('#conteudo').disabled");
+    assert.equal(await evaluate("document.querySelector('#conteudo').value"), nome);
+
+    for (const modo of ['falhar', 'invalido']) {
+      await evaluate(`window.__modoConteudos = ${JSON.stringify(modo)}`);
+      await click('Atualizar conteúdos');
+      await waitFor("!!document.querySelector('#conteudos-error')");
+      assert(await evaluate("document.querySelector('button[type=submit]').disabled && document.querySelector('#conteudo').disabled"));
+      assert.equal(await evaluate("document.querySelector('#conteudo').value"), nome);
+      assert.equal(await evaluate("document.querySelector('#data').value"), '2026-10-20');
+    }
+    await evaluate("window.__modoConteudos = ''");
+    await click('Atualizar conteúdos');
+    await waitFor("!document.querySelector('#conteudo').disabled");
+    await click('Salvar aula');
+    await waitFor("document.querySelector('#conteudo').value === '' && !document.querySelector('#aba-historico').disabled");
+    assert.equal((await request('GET', '/aulas/1')).conteudo, nome);
+    await set('#turma', '1'); await set('#data', '2026-10-20');
+    await set('#inicio', '09:00'); await set('#fim', '10:00');
+    await set('#conteudo', nome); await click('Salvar aula');
+    await waitFor("document.querySelector('#conteudo').value === '' && !document.querySelector('#aba-historico').disabled");
+    assert.equal((await request('GET', '/aulas/2')).conteudo, nome);
+    assert.equal((await request('GET', '/conteudos')).length, 2);
+
+    // Texto antigo ausente do catálogo deve sobreviver à edição sem cadastro automático.
+    const antiga = await request('POST', '/aulas', {data:'2026-10-21',inicio:'08:00',fim:'09:00',turma_id:1,conteudo:'Texto antigo\n  preservado',observacoes:'',intervalo_minutos:0}, 201);
+    await click('Histórico');
+    await click('Filtrar');
+    await waitFor("document.querySelector('.aulas')?.textContent.includes('Texto antigo')");
+    await click('Editar');
+    await waitFor("document.querySelector('#form-title').textContent === 'Editar aula'");
+    assert.equal(await evaluate("document.querySelector('#conteudo').value"), antiga.conteudo);
+    assert(await evaluate("document.querySelector('#conteudo').selectedOptions[0].textContent.includes('conteúdo original')"));
+    await set('#observacoes', 'Edição sem alterar conteúdo');
+    await click('Salvar alterações');
+    await waitFor("document.querySelector('#form-title').textContent === 'Dados da aula'");
+    assert.equal((await request('GET', '/aulas/'+antiga.id)).conteudo, antiga.conteudo);
+    assert.equal((await request('GET', '/conteudos')).length, 2);
+
+    const pdf = await fetch(base + '/aulas/relatorio.pdf');
+    assert.equal(pdf.status, 200);
+    const pdfPath = path.join(dir, 'conteudos.pdf');
+    fs.writeFileSync(pdfPath, Buffer.from(await pdf.arrayBuffer()));
+    const textoPdf = execFileSync('pdftotext', [pdfPath, '-'], {encoding:'utf8'}).replace(/\s+/g, ' ');
+    assert(textoPdf.includes('Leitura e revisão') && textoPdf.includes('Texto antigo preservado'));
+
+    await cdp('Page.reload');
+    await waitFor("typeof window.__liberarConteudos === 'function'");
+    await evaluate('window.__liberarConteudos()');
+    await waitFor("document.querySelectorAll('#conteudo option').length === 3 && !document.querySelector('#conteudo').disabled");
+    await cdp('Emulation.setDeviceMetricsOverride', {width:375,height:812,deviceScaleFactor:1,mobile:true});
+    await cdp('Emulation.setTouchEmulationEnabled', {enabled:true,maxTouchPoints:1});
+    assert(await evaluate('document.documentElement.scrollWidth <= window.innerWidth'));
+    await set('#conteudo', 'Frações');
+    await click('Histórico'); await click('Registrar aula');
+    assert.equal(await evaluate("document.querySelector('#conteudo').value"), 'Frações');
+    console.log('PASS: catálogo vazio/carregando, conteúdo obrigatório, criação multilinha com seleção e foco, trava de clique duplo, duplicata, resposta perdida com recuperação, falha/JSON inválido, reutilização, edição antiga, persistência após recarga e viewport de toque.');
+    return;
+  }
   await set("#conteudo", "Rascunho preservado entre abas");
   await click("Histórico");
   await waitFor(`document.body.innerText.includes('Nenhuma aula encontrada')`);

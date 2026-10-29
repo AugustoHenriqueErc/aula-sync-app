@@ -1,9 +1,81 @@
-> Atualização da etapa 8: turma/estudante agora é selecionada em um combobox.
+# Formulário de aula
+
+## Atualização antes do deploy — conteúdos reutilizáveis
+
+**Conteúdo da aula** agora é um select nativo alimentado pelo catálogo SQLite.
+Escolha uma opção ou abra **Cadastrar conteúdo**, digite o texto e clique em
+**Criar e selecionar**. O cadastro preserva quebras de linha internas e seleciona
+a opção criada, sem limpar data, horários, turma ou observações. O texto
+selecionado também aparece abaixo do campo para conferir conteúdos multilinha.
+
+Use **Atualizar conteúdos** para carregar opções criadas em outra janela ou
+recuperar uma falha. Carregamento e erro da lista impedem seleção e envio até
+concluir uma atualização válida. O restante do formulário permanece preenchido.
+Uma falha ao criar preserva o texto digitado e exige atualizar/conferir a lista
+antes de tentar criar novamente: uma resposta perdida pode ocorrer após gravar.
+
+Ao editar, o conteúdo exato da aula é selecionado. Quando ausente do catálogo,
+aparece a opção **conteúdo original da aula**; salvar outros campos não o altera
+nem cria uma opção automaticamente. Cadastro e edição enviam `conteudo` textual,
+sem novo campo de ID. Turma/estudante continua enviando `turma_id`.
+
+Navegar entre abas preserva a seleção e o texto em rascunho do cadastro de conteúdo.
+Após salvar uma aula, o formulário limpa a seleção para o próximo cadastro,
+mantendo o catálogo disponível. Durante criação de conteúdo ou envio da aula,
+campos e abas ficam bloqueados para impedir operações concorrentes.
+
+O diagnóstico visual de conexão foi removido na etapa A. Erros de operações
+continuam visíveis e o endpoint `/health` permanece disponível no terminal.
+Contrato do catálogo e migração: [catálogo de conteúdos](catalogo-conteudos.md).
+
+### Como testar no celular real
+
+1. Execute o backend atualizado e o Vite, mantenha o ngrok ligado e acesse sua URL
+   pública. Se o backend anterior não tiver `/conteudos`, reinicie-o antes de testar.
+   Use uma base/planilha de teste e faça backup antes de migrar dados existentes.
+2. Preencha os dados de uma aula. Em **Cadastrar conteúdo**, informe um texto
+   com duas linhas e use **Criar e selecionar**. Confira a seleção e os demais
+   campos preservados. Um nome vazio não deve habilitar a criação.
+3. Troque de aba e volte: seleção preservada. Salve e recuse inicialmente a
+   sincronização; confira o texto no histórico e a seleção limpa no formulário.
+4. Cadastre outra aula escolhendo o mesmo conteúdo, sem criá-lo novamente.
+   Recarregue a página e confirme que a opção continua disponível.
+5. Tente cadastrar o mesmo nome com diferença de espaços/maiúsculas: deve avisar
+   duplicidade. Atualize a lista e escolha a opção existente.
+6. Edite uma aula antiga e confira seu conteúdo selecionado, inclusive quando
+   identificado como original. Altere outro campo e confirme o texto preservado.
+7. Confira o conteúdo no PDF e, ao aceitar o envio, na planilha de teste real.
+   Essas verificações manuais complementam os testes com Google simulado.
+
+### Verificações executadas
+
+```bash
+# Em frontend/
+npm run format:check
+npm run check
+npm run build
+
+# Na raiz: Chrome instalado; --conteudos também usa pdftotext (Poppler).
+node scripts/test-etapa9.cjs --conteudos
+node scripts/test-etapa9.cjs --ux
+```
+
+Checks e testes de navegador aprovados. Cobrem falhas de carregamento, resposta
+inválida, duplicidade, resposta perdida após gravação, reutilização, edição antiga,
+PDF, conflitos, integração simulada e viewport com toque. A validação do dropdown
+no celular real e o envio real desta alteração ainda não foram confirmados.
+
+## Base histórica — etapa 7 e evolução na etapa 8
+
+O restante deste documento registra a implementação original; os comportamentos
+de conteúdo e diagnóstico descritos acima substituem os trechos históricos.
+
+> Atualização da etapa 8: turma/estudante passou a ser selecionada em um combobox.
 > Use “Criar turma ou estudante” para cadastrar uma opção antes de salvar.
 > O POST envia `turma_id`; consulte [contrato v2](api-v2.md) e
 > [histórico](historico-aulas.md). As validações dos demais campos continuam.
 
-# Formulário de aula — etapa 7
+### Formulário original — etapa 7
 
 A página inicial agora permite cadastrar uma aula. Os campos seguem as
 [hipóteses do MVP](dominio-aula.md), ainda pendentes de revisão com Maria Luzia.

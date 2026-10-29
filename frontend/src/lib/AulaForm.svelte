@@ -1,7 +1,15 @@
 <script lang="ts">
-  import { onDestroy, tick, untrack } from 'svelte'
+  import { onDestroy, onMount, tick, untrack } from 'svelte'
 
-  import { isTurma, isAula, jsonRequest, type Turma, type Aula } from './api'
+  import {
+    isTurma,
+    isAula,
+    isConteudo,
+    jsonRequest,
+    type Turma,
+    type Aula,
+    type Conteudo,
+  } from './api'
   let {
     apiUrl,
     turmas,
@@ -25,8 +33,104 @@
   let criandoTurma = $state(false)
   let erroTurma = $state('')
   let turmaRequest: AbortController | undefined
+  let conteudos = $state<Conteudo[]>([])
+  let conteudosCarregando = $state(true)
+  let conteudosErro = $state('')
+  let novoConteudo = $state('')
+  let criandoConteudo = $state(false)
+  let erroConteudo = $state('')
+  let cadastroConteudoIncerto = $state(false)
+  let conteudosRequest: AbortController | undefined
+  let conteudoRequest: AbortController | undefined
+  const conteudoAntigo = $derived(
+    editando && !conteudos.some((c) => c.nome === editando.conteudo)
+      ? editando.conteudo
+      : null,
+  )
+
+  async function carregarConteudos() {
+    if (criandoConteudo || activeRequest) return
+    conteudosRequest?.abort()
+    const controller = new AbortController()
+    conteudosRequest = controller
+    conteudosCarregando = true
+    conteudosErro = ''
+    try {
+      const data = await jsonRequest(`${apiUrl}/conteudos`, {
+        signal: controller.signal,
+      })
+      if (
+        !Array.isArray(data) ||
+        !data.every(isConteudo) ||
+        new Set(data.map((c) => c.id)).size !== data.length ||
+        new Set(data.map((c) => c.nome)).size !== data.length
+      )
+        throw new Error('Resposta de conteúdos inválida.')
+      if (controller.signal.aborted) return
+      conteudos = data
+      cadastroConteudoIncerto = false
+      erroConteudo = ''
+    } catch {
+      if (!controller.signal.aborted)
+        conteudosErro =
+          'Não foi possível carregar os conteúdos. Tente atualizar a lista.'
+    } finally {
+      if (!controller.signal.aborted) conteudosCarregando = false
+    }
+  }
+
+  async function criarConteudo() {
+    if (
+      criandoConteudo ||
+      criandoTurma ||
+      activeRequest ||
+      conteudosCarregando ||
+      conteudosErro ||
+      cadastroConteudoIncerto ||
+      !novoConteudo.trim()
+    )
+      return
+    criandoConteudo = true
+    onBusy(true)
+    erroConteudo = ''
+    const controller = new AbortController()
+    conteudoRequest = controller
+    try {
+      const data = await jsonRequest(`${apiUrl}/conteudos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome: novoConteudo }),
+        signal: controller.signal,
+      })
+      if (!isConteudo(data)) throw new Error('Resposta de cadastro inválida.')
+      if (controller.signal.aborted) return
+      conteudos = [...conteudos.filter((c) => c.id !== data.id), data].sort(
+        (a, b) => a.nome.localeCompare(b.nome),
+      )
+      values.conteudo = data.nome
+      novoConteudo = ''
+      errors.conteudo = undefined
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        cadastroConteudoIncerto = true
+        const mensagem =
+          error instanceof Error && error.name === 'Error'
+            ? error.message
+            : 'Não foi possível confirmar o cadastro do conteúdo.'
+        erroConteudo = `${mensagem} Atualize os conteúdos e confira a lista antes de tentar cadastrar novamente.`
+      }
+    } finally {
+      criandoConteudo = false
+      onBusy(false)
+      if (!controller.signal.aborted && !erroConteudo) {
+        await tick()
+        document.getElementById('conteudo')?.focus()
+      }
+    }
+  }
+
   async function criarTurma() {
-    if (criandoTurma) return
+    if (criandoTurma || criandoConteudo || activeRequest) return
     criandoTurma = true
     onBusy(true)
     erroTurma = ''
@@ -159,7 +263,12 @@
     else if (start !== null && end <= start)
       result.fim = 'O término deve ser posterior ao início, no mesmo dia.'
     if (!values.turma.trim()) result.turma = 'Informe a turma ou o estudante.'
-    if (!values.conteudo.trim()) result.conteudo = 'Informe o conteúdo da aula.'
+    if (
+      !values.conteudo.trim() ||
+      (!conteudos.some((c) => c.nome === values.conteudo) &&
+        values.conteudo !== conteudoAntigo)
+    )
+      result.conteudo = 'Selecione um conteúdo para a aula.'
     const interval =
       values.intervalo_minutos.trim() === ''
         ? NaN
@@ -187,7 +296,16 @@
 
   async function submit(event: SubmitEvent) {
     event.preventDefault()
-    if (activeRequest || submission.status === 'sending') return
+    if (
+      activeRequest ||
+      submission.status === 'sending' ||
+      criandoTurma ||
+      criandoConteudo ||
+      turmasCarregando ||
+      conteudosCarregando ||
+      conteudosErro
+    )
+      return
     errors = validate()
     if (Object.keys(errors).length > 0) {
       submission = {
@@ -291,9 +409,14 @@
     }
   }
 
+  onMount(() => {
+    void carregarConteudos()
+  })
   onDestroy(() => {
     activeRequest?.abort()
     turmaRequest?.abort()
+    conteudosRequest?.abort()
+    conteudoRequest?.abort()
   })
 </script>
 
@@ -307,9 +430,15 @@
     onsubmit={submit}
     novalidate
     aria-describedby="form-help"
-    aria-busy={submission.status === 'sending'}
+    aria-busy={submission.status === 'sending' ||
+      criandoTurma ||
+      criandoConteudo}
   >
-    <fieldset disabled={submission.status === 'sending' || criandoTurma}>
+    <fieldset
+      disabled={submission.status === 'sending' ||
+        criandoTurma ||
+        criandoConteudo}
+    >
       <legend class="sr-only">Dados para registrar uma aula</legend>
       <div class="form-grid">
         <div class="field full-width">
@@ -419,15 +548,72 @@
         </div>
         <div class="field full-width">
           <label for="conteudo">Conteúdo da aula</label>
-          <textarea
+          <select
             id="conteudo"
             name="conteudo"
-            rows="3"
             required
             bind:value={values.conteudo}
+            disabled={conteudosCarregando || !!conteudosErro}
             aria-invalid={!!errors.conteudo}
-            aria-describedby={errors.conteudo ? 'conteudo-error' : undefined}
-          ></textarea>
+            aria-describedby={`conteudo-help${errors.conteudo ? ' conteudo-error' : ''}${conteudosErro ? ' conteudos-error' : ''}`}
+          >
+            <option value="">Selecione um conteúdo</option>
+            {#if conteudoAntigo !== null}<option value={conteudoAntigo}
+                >{conteudoAntigo} (conteúdo original da aula)</option
+              >{/if}
+            {#each conteudos as conteudo (conteudo.id)}<option
+                value={conteudo.nome}>{conteudo.nome}</option
+              >{/each}
+          </select>
+          <p class="hint" id="conteudo-help">
+            Selecione um conteúdo cadastrado ou cadastre um novo abaixo.
+          </p>
+          {#if values.conteudo}<p class="hint conteudo">
+              {values.conteudo}
+            </p>{/if}
+          {#if conteudosCarregando}<p role="status">Carregando conteúdos…</p>
+          {:else if conteudosErro}<p
+              class="error"
+              id="conteudos-error"
+              role="alert"
+            >
+              {conteudosErro}
+            </p>
+          {:else if conteudos.length === 0}<p role="status">
+              Nenhum conteúdo cadastrado. Cadastre o primeiro abaixo.
+            </p>{/if}
+          <button
+            type="button"
+            onclick={carregarConteudos}
+            disabled={conteudosCarregando}>Atualizar conteúdos</button
+          >
+          <details id="cadastro-conteudo">
+            <summary>Cadastrar conteúdo</summary>
+            <label for="novo-conteudo">Nome do conteúdo</label>
+            <textarea
+              id="novo-conteudo"
+              rows="3"
+              bind:value={novoConteudo}
+              aria-describedby={erroConteudo
+                ? 'cadastro-conteudo-error'
+                : undefined}></textarea>
+            <button
+              type="button"
+              onclick={criarConteudo}
+              disabled={conteudosCarregando ||
+                !!conteudosErro ||
+                cadastroConteudoIncerto ||
+                !novoConteudo.trim()}
+              >{criandoConteudo ? 'Criando…' : 'Criar e selecionar'}</button
+            >
+            {#if erroConteudo}<p
+                class="error"
+                id="cadastro-conteudo-error"
+                role="alert"
+              >
+                {erroConteudo}
+              </p>{/if}
+          </details>
           {#if errors.conteudo}<p class="field-error" id="conteudo-error">
               {errors.conteudo}
             </p>{/if}
@@ -460,7 +646,13 @@
             : 'A duração será confirmada ao salvar a aula.'}
         </p>
       </div>
-      <button type="submit" disabled={criandoTurma || turmasCarregando}
+      <button
+        type="submit"
+        disabled={criandoTurma ||
+          criandoConteudo ||
+          turmasCarregando ||
+          conteudosCarregando ||
+          !!conteudosErro}
         >{submission.status === 'sending'
           ? 'Salvando…'
           : editando

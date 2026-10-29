@@ -1,7 +1,8 @@
 # Catálogo de conteúdos — backend
 
 Implementação da etapa B dos [ajustes antes do deploy](ajustes-antes-deploy.md).
-O dropdown no formulário pertence à etapa C e ainda não foi implementado.
+O dropdown da etapa C também está implementado; seu comportamento e roteiro
+estão em [formulário de aula](formulario-aula.md).
 
 ## Dados e migração
 

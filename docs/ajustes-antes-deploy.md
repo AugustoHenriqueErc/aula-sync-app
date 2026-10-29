@@ -2,7 +2,8 @@
 
 Status: plano de 29/10/2026. Etapa A implementada, com testes automáticos e
 confirmação do desenvolvedor no celular real. Etapa B implementada, com testes
-Go aprovados. Etapa C ainda não implementada.
+Go aprovados. Etapa C implementada, com checks e testes de navegador aprovados;
+validação do dropdown no celular real pendente.
 Executar uma etapa por vez, na ordem abaixo. Deploy não faz parte deste trabalho.
 
 O desenvolvedor confirmou login Google e cadastro pelo celular usando ngrok.
@@ -107,7 +108,7 @@ Em `backend/`: `go test ./...`, `go vet ./...` e
 - Contrato, regras e comandos de teste isolado em
   [catálogo de conteúdos](catalogo-conteudos.md).
 - Banco de desenvolvimento preservado; testes não aplicaram migração nele.
-  Etapa C ainda não iniciada.
+  O formulário foi integrado na etapa C descrita abaixo.
 
 ## C — Dropdown no formulário
 
@@ -143,6 +144,31 @@ Como testar:
 Executar os checks do frontend da etapa A e os testes de integração afetados.
 Acrescentar cobertura de navegador para criação/reutilização/edição e recuperação
 de falhas quando necessário, usando dados fictícios e banco temporário.
+
+### Resultado da implementação da etapa C
+
+- `Conteudo` e `isConteudo` adicionados em `api.ts`. O formulário carrega e
+  valida a lista (inclusive IDs e nomes duplicados) e cancela requisições ao sair.
+- Select nativo com rótulo, placeholder, mensagens acessíveis e prévia textual
+  que preserva quebras de linha. **Cadastrar conteúdo** oferece textarea e
+  **Criar e selecionar**, selecionando a opção criada e levando o foco ao select.
+- Cadastro/edição continuam enviando texto em `conteudo`. Texto antigo ausente
+  do catálogo aparece como **conteúdo original da aula**, sem cadastro automático.
+- Carregamento/falha da lista bloqueiam seleção e envio inconsistente; o botão
+  **Atualizar conteúdos** recupera a lista sem apagar o formulário. Durante
+  criação, os campos e abas ficam bloqueados. Uma falha de criação exige atualizar
+  a lista antes de repetir, inclusive quando o servidor gravou e a resposta se perdeu.
+- Formatação, `npm run check` (zero erros/avisos), build e diff aprovados.
+- `node scripts/test-etapa9.cjs --conteudos` aprovado: carregamento/lista vazia,
+  conteúdo obrigatório, criação multilinha, seleção/foco, clique duplo, duplicata,
+  resposta perdida, recuperação, JSON inválido, reutilização em duas aulas,
+  edição antiga, texto no PDF, persistência após recarga e viewport de toque 375px.
+- `node scripts/test-etapa9.cjs --ux` aprovado: regressão das abas, formulário,
+  histórico, conflitos, recuperação e Google Sheets simulado. O roteiro agora
+  cadastra as opções necessárias antes de selecioná-las no formulário.
+- Testes com SQLite temporário, sem alterar o banco de desenvolvimento ou chamar
+  o Google real. Pendente: conferir criação e reutilização pelo celular real,
+  seguindo [formulário de aula](formulario-aula.md).
 
 ## Limites e acompanhamento
 

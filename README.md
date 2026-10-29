@@ -46,10 +46,12 @@ A regressão automatizada pode ser executada da raiz com
 
 O backend também oferece um catálogo reutilizável de conteúdos: listagem e
 cadastro em `/conteudos` (pelo Vite, `/api/conteudos`). A migração v7 aproveita
-os conteúdos das aulas existentes sem modificá-las. O dropdown no formulário
-será implementado na etapa C dos ajustes antes do deploy; nesta etapa o formulário
-continua com o campo textual. Contrato e teste com banco temporário:
-[catálogo de conteúdos](docs/catalogo-conteudos.md).
+os conteúdos das aulas existentes sem modificá-las. No formulário, selecione um
+conteúdo ou abra **Cadastrar conteúdo** e use **Criar e selecionar** para
+reutilizá-lo em outras aulas. Ao editar, textos antigos ausentes do catálogo são
+preservados como uma opção temporária. Contrato e teste com banco temporário:
+[catálogo de conteúdos](docs/catalogo-conteudos.md). Roteiro do dropdown:
+[formulário de aula](docs/formulario-aula.md).
 
 ## Ferramentas
 

@@ -1,4 +1,5 @@
 export type Turma = { id: number; nome: string }
+export type Conteudo = { id: number; nome: string }
 export type Aula = {
   google?: {
     estado: string
@@ -38,6 +39,14 @@ const inteiro = (v: unknown, min = 0): v is number =>
   Number.isSafeInteger(v) && Number(v) >= min
 export function isTurma(v: unknown): v is Turma {
   return object(v) && inteiro(v.id, 1) && typeof v.nome === 'string'
+}
+export function isConteudo(v: unknown): v is Conteudo {
+  return (
+    object(v) &&
+    inteiro(v.id, 1) &&
+    typeof v.nome === 'string' &&
+    v.nome.trim() !== ''
+  )
 }
 export function isAula(a: unknown): a is Aula {
   return (
