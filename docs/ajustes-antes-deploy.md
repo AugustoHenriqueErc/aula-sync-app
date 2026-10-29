@@ -1,6 +1,7 @@
 # Ajustes antes do deploy — plano
 
-Status: planejado em 29/10/2026; funcionalidades ainda não implementadas.
+Status: plano de 29/10/2026. Etapa A implementada e validada automaticamente;
+conferência no celular real pendente. Etapas B e C ainda não implementadas.
 Executar uma etapa por vez, na ordem abaixo. Deploy não faz parte deste trabalho.
 
 O desenvolvedor confirmou login Google e cadastro pelo celular usando ngrok.
@@ -36,6 +37,26 @@ Como testar:
 
 Em `frontend/`: `npm run format:check`, `npm run check` e `npm run build`.
 Emulação móvel complementa, mas não substitui, a validação no celular real.
+
+### Resultado da implementação da etapa A
+
+- Hover global dos botões e hover das abas restritos à capacidade de mouse.
+  Nas abas, o hover local se aplica apenas às não selecionadas; a seleção
+  permanece azul mesmo com o ponteiro sobre ela. Foco por teclado preservado.
+- Diagnóstico, botão, requisição automática, estado e estilos exclusivos removidos.
+  `/health` permanece no backend e os erros das operações reais continuam ativos.
+- `npm run format:check`, `npm run check` (zero erros e avisos) e `npm run build`
+  aprovados.
+- `node scripts/test-etapa9.cjs` aprovado com Chrome e SQLite temporário: abas,
+  teclado, rascunhos, cadastro, edição, conflitos, paginação e falha/recuperação.
+- Verificação pontual em `/tmp/aula-sync-interface-check.cjs` aprovada, derivada
+  do roteiro existente e sem novo arquivo de teste no repositório: cores com
+  mouse e hover forçado, seleção preservada, toque emulado a 375px, aba anterior
+  sem hover residual, ausência do diagnóstico e da requisição `/api/health`.
+  O Chrome headless foi configurado explicitamente com capacidade de mouse
+  antes de alternar para toque; sua configuração padrão não tinha ponteiro.
+- Pendente: desenvolvedor conferir a troca das abas no celular real via ngrok,
+  seguindo os passos manuais acima. Nenhuma implementação de B ou C iniciada.
 
 ## B — Catálogo de conteúdos no backend
 

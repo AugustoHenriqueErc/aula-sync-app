@@ -353,9 +353,10 @@ Usar aulas fictícias e a planilha de teste. Roteiro completo:
 ## Ajustes antes do deploy — planejados em 29/10/2026
 
 Plano e critérios: [ajustes antes do deploy](docs/ajustes-antes-deploy.md).
-Executar uma etapa por vez, nesta ordem. Nenhum item abaixo foi implementado.
+Executar uma etapa por vez, nesta ordem. Resultados e roteiro no plano acima.
 
-- [ ] A — Corrigir hover das abas no celular e retirar o diagnóstico visual de conexão.
+- [x] A — Corrigir hover e retirar diagnóstico visual; checks e Chrome aprovados.
+- [ ] A — Confirmar o comportamento das abas no celular real via ngrok.
 - [ ] B — Criar catálogo de conteúdos no SQLite, com migração, listagem e cadastro.
 - [ ] C — Integrar dropdown e criação/seleção de conteúdo ao formulário.
 - [ ] Registrar testes automatizados e validação manual no celular de cada etapa.

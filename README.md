@@ -34,8 +34,9 @@ permanecem pendentes. Veja o [roteiro da etapa 11](docs/google-etapa11.md).
 A interface separa **Registrar aula**, **Histórico** e **Integração Google**.
 Trocar de aba preserva o formulário, os filtros e o link digitado enquanto a
 aplicação permanece aberta. Editar pelo histórico abre a aba de cadastro e leva
-o foco à data da aula. A conta conectada permanece no topo; o diagnóstico da
-conexão fica recolhido abaixo do painel ativo.
+o foco à data da aula. A conta conectada permanece no topo. O hover das abas é
+aplicado somente em dispositivos com mouse; a seleção e o foco por teclado têm
+indicação própria.
 
 Para testar, alterne entre as abas com um formulário parcialmente preenchido.
 Use Tab para chegar à aba selecionada e setas esquerda/direita, Home e End para
@@ -70,7 +71,8 @@ npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 
 Abra http://127.0.0.1:5173 para preencher o formulário **Registrar aula**.
 Com a API ligada, o cadastro grava no SQLite e confirma a duração calculada.
-O diagnóstico abaixo do formulário mostra se o backend está acessível.
+Falhas de acesso à API aparecem nas operações de cadastro e consulta. Para
+diagnosticar o backend pelo terminal, use o endpoint `/health` descrito abaixo.
 
 ## Executar o backend
 

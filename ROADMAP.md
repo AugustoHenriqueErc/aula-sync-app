@@ -722,5 +722,6 @@ ajustes antes da implantação. A próxima sequência de trabalho está no
 [plano de ajustes](docs/ajustes-antes-deploy.md): A, corrigir hover e retirar
 diagnóstico visual; B, catálogo de conteúdos no SQLite; C, dropdown no formulário.
 Executar e validar uma etapa por vez. Esta atualização substitui a indicação
-antiga de iniciar a etapa 8 acima; não declara os novos ajustes implementados
-nem conclui as pendências de PDF, revisão institucional ou piloto.
+antiga de iniciar a etapa 8 acima. A etapa A está implementada, com checks e
+Chrome aprovados; a conferência no celular real permanece pendente. B e C não
+foram iniciadas. As pendências de PDF, revisão institucional e piloto permanecem.
