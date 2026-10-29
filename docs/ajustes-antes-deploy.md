@@ -1,7 +1,8 @@
 # Ajustes antes do deploy — plano
 
-Status: plano de 29/10/2026. Etapa A implementada e validada automaticamente;
-conferência no celular real pendente. Etapas B e C ainda não implementadas.
+Status: plano de 29/10/2026. Etapa A implementada, com testes automáticos e
+confirmação do desenvolvedor no celular real. Etapa B implementada, com testes
+Go aprovados. Etapa C ainda não implementada.
 Executar uma etapa por vez, na ordem abaixo. Deploy não faz parte deste trabalho.
 
 O desenvolvedor confirmou login Google e cadastro pelo celular usando ngrok.
@@ -11,7 +12,7 @@ conteúdos reutilizáveis em um dropdown como turma/estudante.
 
 ## A — Abas no celular e retirada do diagnóstico
 
-O CSS atual contém `:hover` global e nas abas sem distinguir dispositivos de toque.
+O CSS anterior continha `:hover` global e nas abas sem distinguir dispositivos de toque.
 Navegadores móveis podem manter esse estado após tocar. Seleção e foco devem ser
 tratados separadamente: `aria-selected` indica a aba ativa e `:focus-visible`
 mantém a orientação para quem navega pelo teclado.
@@ -55,8 +56,8 @@ Emulação móvel complementa, mas não substitui, a validação no celular real
   sem hover residual, ausência do diagnóstico e da requisição `/api/health`.
   O Chrome headless foi configurado explicitamente com capacidade de mouse
   antes de alternar para toque; sua configuração padrão não tinha ponteiro.
-- Pendente: desenvolvedor conferir a troca das abas no celular real via ngrok,
-  seguindo os passos manuais acima. Nenhuma implementação de B ou C iniciada.
+- Desenvolvedor confirmou que testou no celular e que o comportamento ficou
+  correto, antes de autorizar a implementação da etapa B.
 
 ## B — Catálogo de conteúdos no backend
 
@@ -91,6 +92,22 @@ Como testar, com SQLite temporário:
 
 Em `backend/`: `go test ./...`, `go vet ./...` e
 `go build -o /tmp/aula-sync-backend ./cmd/api`.
+
+### Resultado da implementação da etapa B
+
+- Migração 007 e catálogo implementados, com nomes únicos normalizados e
+  preservação do texto multilinha. Importação de conteúdos existentes, inclusive
+  de aulas canceladas, sem modificar as aulas ou seus vínculos.
+- GET/POST `/conteudos` implementados sob a mesma proteção das rotas de turmas.
+- Suíte `go test ./...` aprovada com bancos temporários: persistência,
+  concorrência, migração v6 → v7, rollback/retomada, preservação de auditoria e
+  sincronização, contrato HTTP, acesso sem sessão e política de origem.
+- `go vet ./...`, build de `cmd/api`, formatação Go e `git diff --check`
+  aprovados.
+- Contrato, regras e comandos de teste isolado em
+  [catálogo de conteúdos](catalogo-conteudos.md).
+- Banco de desenvolvimento preservado; testes não aplicaram migração nele.
+  Etapa C ainda não iniciada.
 
 ## C — Dropdown no formulário
 

@@ -25,6 +25,7 @@ func NewWithAuth(banco *storage.Banco, login *auth.Google) *fiber.App {
 	login.Register(app)
 	registrarRotasAulas(app, banco)
 	registrarRotasTurmas(app, banco)
+	registrarRotasConteudos(app, banco)
 	registrarRotasGoogle(app, banco, login)
 	return app
 }
@@ -33,7 +34,7 @@ func handleError(c fiber.Ctx, err error) error {
 	if errors.Is(err, storage.ErrConflito) || errors.Is(err, storage.ErrCancelada) || errors.Is(err, storage.ErrExclusaoPendente) {
 		return c.Status(409).JSON(fiber.Map{"error": err.Error()})
 	}
-	if errors.Is(err, storage.ErrTurmaDuplicada) {
+	if errors.Is(err, storage.ErrTurmaDuplicada) || errors.Is(err, storage.ErrConteudoDuplicado) {
 		return c.Status(409).JSON(fiber.Map{"error": err.Error()})
 	}
 	if errors.Is(err, storage.ErrTurmaAusente) {

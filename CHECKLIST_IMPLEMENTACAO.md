@@ -356,7 +356,7 @@ Plano e critérios: [ajustes antes do deploy](docs/ajustes-antes-deploy.md).
 Executar uma etapa por vez, nesta ordem. Resultados e roteiro no plano acima.
 
 - [x] A — Corrigir hover e retirar diagnóstico visual; checks e Chrome aprovados.
-- [ ] A — Confirmar o comportamento das abas no celular real via ngrok.
-- [ ] B — Criar catálogo de conteúdos no SQLite, com migração, listagem e cadastro.
+- [x] A — Confirmar o comportamento das abas no celular real via ngrok (relato do desenvolvedor).
+- [x] B — Criar catálogo de conteúdos no SQLite, com migração, listagem e cadastro; suíte Go aprovada.
 - [ ] C — Integrar dropdown e criação/seleção de conteúdo ao formulário.
 - [ ] Registrar testes automatizados e validação manual no celular de cada etapa.

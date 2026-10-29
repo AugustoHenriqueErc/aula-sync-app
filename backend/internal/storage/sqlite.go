@@ -93,10 +93,10 @@ func (b *Banco) migrar(ctx context.Context) error {
 		if _, err := tx.ExecContext(ctx, "PRAGMA user_version = 1"); err != nil {
 			return fmt.Errorf("registrar migração 001: %w", err)
 		}
-	case 1, 2, 3, 4, 5, 6:
+	case 1, 2, 3, 4, 5, 6, 7:
 		// A migração já foi aplicada. Não recriar nem apagar tabelas.
 	default:
-		return fmt.Errorf("versão de banco não suportada: %d (máxima: 6)", versao)
+		return fmt.Errorf("versão de banco não suportada: %d (máxima: 7)", versao)
 	}
 	if versao < 2 {
 		if err := migrarTurmas(ctx, tx); err != nil {
@@ -121,6 +121,11 @@ func (b *Banco) migrar(ctx context.Context) error {
 	if versao < 6 {
 		if _, err := tx.ExecContext(ctx, sextaMigracao); err != nil {
 			return fmt.Errorf("aplicar migração 006: %w", err)
+		}
+	}
+	if versao < 7 {
+		if err := migrarConteudos(ctx, tx); err != nil {
+			return fmt.Errorf("aplicar migração 007: %w", err)
 		}
 	}
 	if err := tx.Commit(); err != nil {

@@ -194,7 +194,7 @@ func TestMigracoesCincoESeisPreservamConfiguracaoEIdentidade(t *testing.T) {
 		t.Fatal(id, err)
 	}
 	var v int
-	if err = b.db.QueryRow("PRAGMA user_version").Scan(&v); err != nil || v != 6 {
+	if err = b.db.QueryRow("PRAGMA user_version").Scan(&v); err != nil || v != 7 {
 		t.Fatal(v, err)
 	}
 }

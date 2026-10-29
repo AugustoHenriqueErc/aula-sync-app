@@ -11,7 +11,7 @@ func TestOAuthProtegeRotasDaAplicacao(t *testing.T) {
 	_, banco := novaAPITeste(t)
 	login := auth.New(auth.Config{ClientID: "test-client", ClientSecret: "test-secret", RedirectURI: "http://localhost:5173/api/auth/google/callback", AppURL: "http://localhost:5173"})
 	app := NewWithAuth(banco, login)
-	for _, path := range []string{"/aulas", "/aulas/relatorio.pdf", "/turmas", "/integracoes/google/configuracao", "/integracoes/google/planejamento", "/integracoes/google/acesso"} {
+	for _, path := range []string{"/aulas", "/aulas/relatorio.pdf", "/turmas", "/conteudos", "/integracoes/google/configuracao", "/integracoes/google/planejamento", "/integracoes/google/acesso"} {
 		res, err := app.Test(httptest.NewRequest("GET", path, nil))
 		if err != nil {
 			t.Fatal(err)
@@ -21,7 +21,7 @@ func TestOAuthProtegeRotasDaAplicacao(t *testing.T) {
 			t.Fatalf("%s: status %d; esperado 401", path, res.StatusCode)
 		}
 	}
-	for _, path := range []string{"/integracoes/google/inspecionar", "/integracoes/google/preparar", "/aulas/1/sincronizar"} {
+	for _, path := range []string{"/conteudos", "/integracoes/google/inspecionar", "/integracoes/google/preparar", "/aulas/1/sincronizar"} {
 		res, err := app.Test(httptest.NewRequest("POST", path, nil))
 		if err != nil {
 			t.Fatal(err)

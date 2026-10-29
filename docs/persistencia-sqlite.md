@@ -1,4 +1,8 @@
-> Etapa 9: o esquema atual é v3, com versão, situação, updated_at e trilha
+> Ajustes antes do deploy: o esquema atual é v7, com catálogo de conteúdos.
+> A migração importa textos existentes sem alterar aulas, auditoria ou envios.
+> Consulte [catálogo de conteúdos](catalogo-conteudos.md).
+
+> Etapa 9: o esquema passou a v3, com versão, situação, updated_at e trilha
 > transacional de alterações. Consulte [correção e backup](correcao-backup.md).
 
 > Evolução na etapa 8: o esquema atual é v2, com catálogo de turmas,

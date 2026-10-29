@@ -44,6 +44,13 @@ navegar. Confira também editar/salvar pelo histórico e o layout em celular.
 A regressão automatizada pode ser executada da raiz com
 `node scripts/test-etapa9.cjs --google` (Chrome necessário).
 
+O backend também oferece um catálogo reutilizável de conteúdos: listagem e
+cadastro em `/conteudos` (pelo Vite, `/api/conteudos`). A migração v7 aproveita
+os conteúdos das aulas existentes sem modificá-las. O dropdown no formulário
+será implementado na etapa C dos ajustes antes do deploy; nesta etapa o formulário
+continua com o campo textual. Contrato e teste com banco temporário:
+[catálogo de conteúdos](docs/catalogo-conteudos.md).
+
 ## Ferramentas
 
 Ambiente validado em Linux, com instalação em uma cópia limpa do projeto:
